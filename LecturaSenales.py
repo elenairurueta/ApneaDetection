@@ -7,7 +7,7 @@ def LecturaSenalPandasDF():
     dfCON = pd.read_csv(r'SenalesCONapnea.csv')
     tiempo = dfCON.pop('tiempo')
     dfCON = dfCON.transpose()
-    #print(dfCON.shape)
+    print(dfCON.shape)
     dfSIN = pd.read_csv(r'SenalesSINapnea.csv')
     dfSIN.drop(columns=dfSIN.columns[0], inplace=True)
     dfSIN = dfSIN.transpose()
