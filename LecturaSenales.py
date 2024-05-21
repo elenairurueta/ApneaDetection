@@ -1,15 +1,14 @@
 from Imports import *
 
-
 def LecturaSenalPandasDF():
     dfCON = pd.read_csv(r'SenalesCONapnea.csv')
     tiempo = dfCON.pop('tiempo')
     dfCON = dfCON.transpose()
-    #print(dfCON.shape)
+    print(dfCON.shape)
     dfSIN = pd.read_csv(r'SenalesSINapnea.csv')
     dfSIN.drop(columns=dfSIN.columns[0], inplace=True)
     dfSIN = dfSIN.transpose()
-    #print(dfSIN.shape)
+    print(dfSIN.shape)
 
     targetCON = np.ones(dfCON.shape[0])
     targetSIN = np.zeros(dfSIN.shape[0])
@@ -24,11 +23,8 @@ def LecturaSenalPandasDF():
         element.append(lista_dfTarget[lista_df.index(element)][0])
 
     dfFinal = pd.DataFrame(lista_df)
-    #print(dfFinal.head)
-    #print(dfFinal.tail)
 
     dfFinal = dfFinal.sample(frac=1.0).reset_index(drop=True) #shuffle
-    #print(dfFinal.head)
 
     return dfFinal, tiempo
 
@@ -37,9 +33,12 @@ def LecturaSenalTensor():
     
     dfCON = pd.read_csv(r'SenalesCONapnea.csv')
     dfCON.drop(columns=dfCON.columns[0], inplace=True)
+    print('Cantidad de señales con apnea: ', dfCON.shape[1], ' de ', dfCON.shape[0], ' puntos')
     dfCON = dfCON.transpose()
+
     dfSIN = pd.read_csv(r'SenalesSINapnea.csv')
     dfSIN.drop(columns=dfSIN.columns[0], inplace=True)
+    print('Cantidad de señales sin apnea: ', dfSIN.shape[1], ' de ', dfSIN.shape[0], ' puntos')
     dfSIN = dfSIN.transpose()
 
     X = np.concatenate((dfCON, dfSIN))

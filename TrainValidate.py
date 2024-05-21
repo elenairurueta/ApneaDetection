@@ -36,33 +36,56 @@ def validate_one_step(model, data):
     return loss
 '''
 
-#The Dataset is responsible for accessing and processing single instances of data.
-#The DataLoader pulls instances of data from the Dataset collects them in batches, and returns them for consumption by your training loop.
-
 
 def Train1(model, trainset, testset):
-    n_epochs = 100
+    n_epochs = 20
     loader = DataLoader(trainset, shuffle=True, batch_size=32)
 
     X_test, y_test = default_collate(testset)
-    loss_fn = nn.BCELoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.01) #se puede agregar momentum=0.9
+    loss_fn = nn.BCELoss() #Binary Cross Entropy
+    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9) #Stochastic Gradient Descent
+
+    accuracies = []
 
     for epoch in range(n_epochs):
         model.train()
         for X_batch, y_batch in loader:
             y_pred = model(X_batch)
             loss = loss_fn(y_pred, y_batch)
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+            optimizer.zero_grad()  #restablece los gradientes de todos los parámetros a cero
+            loss.backward() #cálculo de gradientes de la pérdida con respecto a los parámetros del modelo
+            optimizer.step() #actualiza los parámetros
         model.eval()
-        y_pred = model(X_test)
-        acc = (y_pred.round() == y_test).float().mean()
-        print(f"End of epoch {epoch}: accuracy = {float(acc)*100:.2f}%")
+        with torch.no_grad():  # no calcular los gradientes durante la evaluación
+            y_pred = model(X_test)
+            acc = (y_pred.round() == y_test).float().mean()  # promedio
+            accuracies.append(float(acc))
+            print(f"End of epoch {epoch + 1}: accuracy = {float(acc) * 100:.4f}%")
+    
+    plt.plot(range(1, n_epochs + 1), accuracies, marker='o')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.title('Epoch vs Accuracy')
+    plt.show()    
+
+
+    return model
 
 #Hiperparámetros: batch_size, loss_fn, optimizer
+def Test(model, testset):
+    test_loader = DataLoader(testset, shuffle=False, batch_size=32)
+    test_correct = 0
+    test_total = 0
+    for X_test, y_test in test_loader:
+        y_test_pred = model(X_test)
+        test_correct += (y_test_pred.round() == y_test).float().sum().item()
+        test_total += y_test.size(0)
+    test_acc = test_correct / test_total
 
+    print(f"Final accuracy = {test_acc * 100:.2f}%")
+
+
+    
 
 def Train2(model, trainset, valset):
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=4, shuffle=True)
@@ -169,7 +192,7 @@ def Train3(model, trainset, testset):
             loss = criterion(y_pred, y_train) #compare predictions to correct answers
 
             predicted = torch.max(y_pred.data, 1)[1] #add up the number of correct predictions
-            trn_corr += (predicted == y_train).sum() #keep track of how many are correct in this batc
+            trn_corr += (predicted == y_train).sum() #keep track of how many are correct in this batch
 
             optimizer.zero_grad()
             loss.backward()
