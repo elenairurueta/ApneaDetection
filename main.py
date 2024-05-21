@@ -22,6 +22,11 @@ print('Cantidad de datos de prueba: ', len(testset))
 
 model = Modelo(input_size)
 
-
-model = Train1(model, trainset, valset)
+n_epochs = 100
+model = Train1(model, trainset, valset, n_epochs)
 Test(model, testset)
+saveModel(model, 'models/modelo_210524.pt')
+
+#model = loadModel('models/modelo_21524.pt', input_size)
+#Test(model, testset)
+

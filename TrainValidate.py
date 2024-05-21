@@ -37,11 +37,10 @@ def validate_one_step(model, data):
 '''
 
 
-def Train1(model, trainset, testset):
-    n_epochs = 20
+def Train1(model, trainset, valset, n_epochs):
     loader = DataLoader(trainset, shuffle=True, batch_size=32)
 
-    X_test, y_test = default_collate(testset)
+    X_val, y_val = default_collate(valset)
     loss_fn = nn.BCELoss() #Binary Cross Entropy
     optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9) #Stochastic Gradient Descent
 
@@ -57,8 +56,8 @@ def Train1(model, trainset, testset):
             optimizer.step() #actualiza los parámetros
         model.eval()
         with torch.no_grad():  # no calcular los gradientes durante la evaluación
-            y_pred = model(X_test)
-            acc = (y_pred.round() == y_test).float().mean()  # promedio
+            y_pred = model(X_val)
+            acc = (y_pred.round() == y_val).float().mean()  # promedio
             accuracies.append(float(acc))
             print(f"End of epoch {epoch + 1}: accuracy = {float(acc) * 100:.4f}%")
     
@@ -71,7 +70,7 @@ def Train1(model, trainset, testset):
 
     return model
 
-#Hiperparámetros: batch_size, loss_fn, optimizer
+
 def Test(model, testset):
     test_loader = DataLoader(testset, shuffle=False, batch_size=32)
     test_correct = 0
@@ -86,7 +85,7 @@ def Test(model, testset):
 
 
     
-
+'''
 def Train2(model, trainset, valset):
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=4, shuffle=True)
     validation_loader = torch.utils.data.DataLoader(valset, batch_size=4, shuffle=False)
@@ -163,7 +162,6 @@ def train_one_epoch(epoch_index, train_loader, optimizer, loss_fn, model):
 
     return last_loss
 
-
 def Train3(model, trainset, testset):
 
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=4, shuffle=True)
@@ -221,6 +219,7 @@ def Train3(model, trainset, testset):
     print(f'Training took {total/60}min')
 
 
+'''
 '''
 cost = torch.nn.CrossEntropyLoss()
 
