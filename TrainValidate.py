@@ -1,43 +1,8 @@
 from Imports import *
 
-'''
-#Scheduler: programador de tasa de aprendizaje
+def Train(model, nombre, trainset, valset, n_epochs):
+    start_time_training = datetime.now()
 
-def train_one_epoch(model, data_loader, optimizer, scheduler):
-    model.train() #modo entrenamiento
-    total_loss = 0
-
-    for batch_index, data in enumerate(data_loader):
-        loss = train_one_step(model, data, optimizer)
-        scheduler.step()
-        total_loss += loss
-    return total_loss
-
-def train_one_step(model, data, optimizer):
-    optimizer.zero_grad()
-    loss = model(data[0], data[1]) #'**data' desempaqueta un diccionario en datos y labels
-    loss.backward() #se calculan los gradientes de la pérdida respecto a los parámetros del modelo 
-    optimizer.step() #se actualizan los parámetros del modelo utilizando el optimizador
-    return loss
-
-def validate_one_epoch(model, data_loader):
-    model.eval() #modo de evaluación
-    total_loss = 0
-
-    for batch_index, data in enumerate(data_loader):
-        with torch.no_grad():
-            loss = validate_one_step(model, data)
-        total_loss += loss
-
-    return total_loss
-
-def validate_one_step(model, data):
-    loss = model(data[0], data[1])  #'**data' desempaqueta un diccionario en datos y labels
-    return loss
-'''
-
-
-def Train1(model, trainset, valset, n_epochs):
     loader = DataLoader(trainset, shuffle=True, batch_size=32)
 
     X_val, y_val = default_collate(valset)
@@ -45,245 +10,118 @@ def Train1(model, trainset, valset, n_epochs):
     optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9) #Stochastic Gradient Descent
 
     accuracies = []
+    losses = []
 
     for epoch in range(n_epochs):
+        start_time_epoch = datetime.now()
         model.train()
+        running_loss = 0.0
         for X_batch, y_batch in loader:
             y_pred = model(X_batch)
             loss = loss_fn(y_pred, y_batch)
             optimizer.zero_grad()  #restablece los gradientes de todos los parámetros a cero
             loss.backward() #cálculo de gradientes de la pérdida con respecto a los parámetros del modelo
             optimizer.step() #actualiza los parámetros
+            running_loss += loss.item() #para acumular la pérdida
+        avg_loss = running_loss / len(loader) #pérdida promedio por época
+        losses.append(avg_loss)
+
         model.eval()
         with torch.no_grad():  # no calcular los gradientes durante la evaluación
             y_pred = model(X_val)
             acc = (y_pred.round() == y_val).float().mean()  # promedio
             accuracies.append(float(acc))
-            print(f"End of epoch {epoch + 1}: accuracy = {float(acc) * 100:.4f}%")
-    
+            print(f"End of epoch {epoch + 1} - Accuracy = {float(acc) * 100:.2f}% - Loss = {float(avg_loss) * 100:.2f}% - {(datetime.now()-start_time_epoch).total_seconds():.2f} seconds")
+    print(f"End of training - {epoch + 1} epochs - {(datetime.now()-start_time_training).total_seconds():.2f} seconds")
+    plot_accuracies_losses(accuracies, losses, n_epochs, nombre)
+
+    return model
+
+def plot_accuracies_losses(accuracies, losses, n_epochs, nombre):
+    plt.figure(figsize=(12, 5))
+    plt.subplot(1, 2, 1)
     plt.plot(range(1, n_epochs + 1), accuracies, marker='o')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
     plt.title('Epoch vs Accuracy')
-    plt.show()    
+    plt.subplot(1, 2, 2)
+    plt.plot(range(1, n_epochs + 1), losses, marker='o')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Epoch vs Loss')
+    plt.tight_layout()
+    
+    PATH = 'models/' + nombre + '_acc_loss.png'
+    plt.savefig(PATH)
+    plt.show()  
 
 
-    return model
-
-
-def Test(model, testset):
+def Test(model, nombre, testset):
     test_loader = DataLoader(testset, shuffle=False, batch_size=32)
-    test_correct = 0
-    test_total = 0
+    all_preds = []
+    all_labels = []
     for X_test, y_test in test_loader:
         y_test_pred = model(X_test)
-        test_correct += (y_test_pred.round() == y_test).float().sum().item()
-        test_total += y_test.size(0)
-    test_acc = test_correct / test_total
+        y_test_pred = y_test_pred.round()
+        all_preds.extend(y_test_pred.cpu().detach().numpy().tolist())
+        all_labels.extend(y_test.cpu().numpy().tolist())
 
-    print(f"Final accuracy = {test_acc * 100:.2f}%")
+    metrics(all_labels, all_preds)
+
+    cm = confusion_matrix(all_labels, all_preds)
+    formatted_metrics = metrics(all_labels, all_preds)
+    plot_roc_curve(all_labels, all_preds, nombre)
+    plot_metrics_confusion_matrix(cm, formatted_metrics, nombre)
 
 
+def plot_confusion_matrix(cm):
+    cm_display = ConfusionMatrixDisplay(confusion_matrix = cm, display_labels = ['sin apnea', 'con apnea'])
+    cm_display.plot(cmap ='Blues')
+    plt.show()
+
+def metrics(all_labels, all_preds):
+
+    metrics = {
+        "Accuracy": accuracy_score(all_labels, all_preds) * 100,
+        "Precision": precision_score(all_labels, all_preds) * 100,
+        "Sensitivity_recall": recall_score(all_labels, all_preds) * 100,
+        "Specificity": recall_score(all_labels, all_preds, pos_label=0) * 100
+    }
+
+    formatted_metrics = {k: f"{v:.2f}" for k, v in metrics.items()}
+    return formatted_metrics
+
+def plot_metrics_confusion_matrix(cm, formatted_metrics, nombre):
+    fig, ax = plt.subplots(figsize=(10, 8))
+    cm_display = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['sin apnea', 'con apnea'])
+    cm_display.plot(cmap='Blues', ax=ax)
+    ax.set_title("Confusion Matrix")
+    metric_text = "\n".join([f"{k}: {v}%" for k, v in formatted_metrics.items()])
+    plt.gcf().text(0.1, 0.1, metric_text, ha='center', fontsize=10, bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray'))
     
-'''
-def Train2(model, trainset, valset):
-    train_loader = torch.utils.data.DataLoader(trainset, batch_size=4, shuffle=True)
-    validation_loader = torch.utils.data.DataLoader(valset, batch_size=4, shuffle=False)
+    manager = plt.get_current_fig_manager()
+    manager.window.state('zoomed')
 
-    loss_fn = nn.CrossEntropyLoss() #BCELoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.1) #se puede agregar momentum=0.9
+    PATH = 'models/'+nombre+'_cm_metrics.png'
+    plt.savefig(PATH)
 
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    plt.show()
 
-    epoch_number = 0
-    EPOCHS = 5
-    best_vloss = 1_000_000.
+def plot_roc_curve(all_labels, all_preds, nombre):
+    fpr, tpr, thresholds = roc_curve(all_labels, all_preds)
+    plt.figure()
+    lw = 2
+    roc_auc = auc(fpr, tpr)
+    plt.plot(fpr, tpr, color='darkorange',
+            lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic')
+    plt.legend(loc="lower right")
 
-    for epoch in range(EPOCHS):
-        print('EPOCH {}:'.format(epoch_number + 1))
-    
-        # Make sure gradient tracking is on, and do a pass over the data
-        model.train(True)
-        avg_loss = train_one_epoch(epoch_number, train_loader, optimizer, loss_fn, model)
-
-        running_vloss = 0.0
-        # Set the model to evaluation mode, disabling dropout and using population
-        # statistics for batch normalization.
-        model.eval()
-
-        # Disable gradient computation and reduce memory consumption.
-        with torch.no_grad():
-            for i, vdata in enumerate(validation_loader):
-                vinputs, vlabels = vdata
-                voutputs = model(vinputs)
-                vloss = loss_fn(voutputs, vlabels)
-                running_vloss += vloss
-
-        avg_vloss = running_vloss / (i + 1)
-        print('LOSS train {} valid {}'.format(avg_loss, avg_vloss))
-
-
-        # Track best performance, and save the model's state
-       # if avg_vloss < best_vloss:
-       #     best_vloss = avg_vloss
-       #     model_path = 'model_{}_{}.pt'.format(timestamp, epoch_number)
-       #     torch.save(model.state_dict(), model_path)
-
-        epoch_number += 1
-
-
-def train_one_epoch(epoch_index, train_loader, optimizer, loss_fn, model):
-    running_loss = 0.
-    last_loss = 0.
-    
-    for i, data in enumerate(train_loader):
-        # Every data instance is an input + label pair
-        inputs, labels = data
-
-        # Zero your gradients for every batch!
-        optimizer.zero_grad()
-
-        # Make predictions for this batch
-        outputs = model(inputs)
-
-        # Compute the loss and its gradients
-        loss = loss_fn(outputs, labels)
-        loss.backward()
-
-        # Adjust learning weights
-        optimizer.step()
-
-        # Gather data and report
-        running_loss += loss.item()
-        if i % 1000 == 999:
-            last_loss = running_loss / 1000 # loss per batch
-            print('  batch {} loss: {}'.format(i + 1, last_loss))
-            running_loss = 0.
-
-    return last_loss
-
-def Train3(model, trainset, testset):
-
-    train_loader = torch.utils.data.DataLoader(trainset, batch_size=4, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(testset, batch_size=4, shuffle=False)
-
-
-    criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-
-
-    start_time = time.time()
-    epochs = 5
-    train_losses = []
-    test_losses = []
-    train_correct = []
-    test_correct = []
-
-    #TRAIN
-    for i in range(epochs):
-        trn_corr = 0
-        tst_corr = 0
-
-        for idx, (X_train, y_train) in enumerate(train_loader):
-            idx +=1 #start batches at 1
-            y_pred = model(X_train) #predicted values for the training set
-            loss = criterion(y_pred, y_train) #compare predictions to correct answers
-
-            predicted = torch.max(y_pred.data, 1)[1] #add up the number of correct predictions
-            trn_corr += (predicted == y_train).sum() #keep track of how many are correct in this batch
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            if idx%10 == 0: #imprimir cada 10
-                print(f'Epoch: {i}. Batch: {idx}. Loss: {loss.item()}')
-            
-        train_losses.append(loss)
-        train_correct.append(trn_corr)
-
-    #TEST
-    with torch.no_grad(): #no gradient so we don't update our weights and biases
-        for idx, (X_test, y_test) in enumerate (test_loader):
-            y_val = model(X_test)
-            predicted = torch.max(y_val.data, 1)[1]
-            tst_corr += (predicted == y_test).sum()
-
-    loss = criterion(y_val, y_test)
-    test_losses.append(loss)
-    test_correct.append(tst_corr)
-
-
-    current_time = time.time()
-    total = current_time - start_time
-    print(f'Training took {total/60}min')
-
-
-'''
-'''
-cost = torch.nn.CrossEntropyLoss()
-
-# used to create optimal parameters
-learning_rate = 0.0001
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-
-# Create the training function
-
-def train(dataloader, model, loss, optimizer):
-    model.train()
-    size = len(dataloader.dataset)
-    for batch, (X, Y) in enumerate(dataloader):
-        
-        X, Y = X.to(device), Y.to(device)
-        optimizer.zero_grad()
-        pred = model(X)
-        loss = cost(pred, Y)
-        loss.backward()
-        optimizer.step()
-
-        if batch % 100 == 0:
-            loss, current = loss.item(), batch * len(X)
-            print(f'loss: {loss:>7f}  [{current:>5d}/{size:>5d}]')
-
-
-# Create the validation/test function
-
-def test(dataloader, model):
-    size = len(dataloader.dataset)
-    model.eval()
-    test_loss, correct = 0, 0
-
-    with torch.no_grad():
-        for batch, (X, Y) in enumerate(dataloader):
-            X, Y = X.to(device), Y.to(device)
-            pred = model(X)
-
-            test_loss += cost(pred, Y).item()
-            correct += (pred.argmax(1)==Y).type(torch.float).sum().item()
-
-    test_loss /= size
-    correct /= size
-
-    print(f'\nTest Error:\nacc: {(100*correct):>0.1f}%, avg loss: {test_loss:>8f}\n')
-    '''
-'''
-epochs = 15
-for t in range(epochs):
-    print(f'Epoch {t+1}\n-------------------------------')
-    train(train_dataloader, model, cost, optimizer)
-    test(test_dataloader, model)
-print('Done!')
-'''
-'''
-model.eval()
-test_loss, correct = 0, 0
-class_map = ['no', 'yes']
-
-with torch.no_grad():
-    for batch, (X, Y) in enumerate(test_dataloader):
-        X, Y = X.to(device), Y.to(device)
-        pred = model(X)
-        print("Predicted:\nvalue={}, class_name= {}\n".format(pred[0].argmax(0),class_map[pred[0].argmax(0)]))
-        print("Actual:\nvalue={}, class_name= {}\n".format(Y[0],class_map[Y[0]]))
-        break
-'''
+    PATH = 'models/'+nombre+'_roc.png'
+    plt.savefig(PATH)
+    plt.show()
