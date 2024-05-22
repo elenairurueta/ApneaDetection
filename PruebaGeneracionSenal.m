@@ -10,7 +10,7 @@ TconApnea.tiempo = t';
 TsinApnea = table();
 TsinApnea.tiempo = t';
 
-while(i < 2001)
+while(i < 3001)
 
 %frecuencia1 = 6; 
 frecuencia1 = randi([1,4])/10;
