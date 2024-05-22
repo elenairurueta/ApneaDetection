@@ -21,12 +21,12 @@ print('Cantidad de datos de validacion: ', len(valset))
 print('Cantidad de datos de prueba: ', len(testset))
 
 model = Modelo(input_size)
+nombre = 'modelo_INTERMEDIO'
 
-n_epochs = 100
-model = Train1(model, trainset, valset, n_epochs)
-Test(model, testset)
-saveModel(model, 'models/modelo_210524.pt')
+# n_epochs = 5
+# model = Train(model, nombre, trainset, valset, n_epochs)
+# Test(model, nombre, testset)
+# saveModel(model, nombre)
 
-#model = loadModel('models/modelo_21524.pt', input_size)
-#Test(model, testset)
-
+model = loadModel(nombre, input_size)
+Test(model, nombre, testset)

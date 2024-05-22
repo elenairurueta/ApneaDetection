@@ -47,10 +47,12 @@ def Modelo(input_size):
     return Model(input_size)
 
 
-def saveModel(model, PATH):
+def saveModel(model, nombre):
+    PATH = 'models/'+nombre+'.pt'
     torch.save(model.state_dict(), PATH)
 
-def loadModel(PATH, input_size):
+def loadModel(nombre, input_size):
+    PATH = 'models/'+nombre+'.pt'
     model = Modelo(input_size)
     model.load_state_dict(torch.load(PATH))
     model.eval()
