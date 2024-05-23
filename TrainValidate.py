@@ -1,6 +1,6 @@
 from Imports import *
 
-def Train(model, nombre, trainset, valset, n_epochs):
+def Train(model, nombre, trainset, valset, n_epochs, text = ""):
     start_time_training = datetime.now()
 
     loader = DataLoader(trainset, shuffle=True, batch_size=32)
@@ -8,10 +8,10 @@ def Train(model, nombre, trainset, valset, n_epochs):
     X_val, y_val = default_collate(valset)
     loss_fn = nn.BCELoss() #Binary Cross Entropy
     optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9) #Stochastic Gradient Descent
-
+    text += '\n\n' + 'Loss function: ' + str(loss_fn.__init__) + '\n\n' + 'Optimizer: ' + str(optimizer.__init__)
     accuracies = []
     losses = []
-
+    text += '\n\n' + 'Start of training' 
     for epoch in range(n_epochs):
         start_time_epoch = datetime.now()
         model.train()
@@ -31,10 +31,15 @@ def Train(model, nombre, trainset, valset, n_epochs):
             y_pred = model(X_val)
             acc = (y_pred.round() == y_val).float().mean()  # promedio
             accuracies.append(float(acc))
-            print(f"End of epoch {epoch + 1} - Accuracy = {float(acc) * 100:.2f}% - Loss = {float(avg_loss) * 100:.2f}% - {(datetime.now()-start_time_epoch).total_seconds():.2f} seconds")
-    print(f"End of training - {epoch + 1} epochs - {(datetime.now()-start_time_training).total_seconds():.2f} seconds")
-    plot_accuracies_losses(accuracies, losses, n_epochs, nombre)
+            end_of_epoch = f"End of epoch {epoch + 1} - Accuracy = {float(acc) * 100:.2f}% - Loss = {float(avg_loss) * 100:.2f}% - {(datetime.now()-start_time_epoch).total_seconds():.2f} seconds"
+            print(end_of_epoch)
+            text += '\n\t' + end_of_epoch
 
+    end_of_training = f"End of training - {epoch + 1} epochs - {(datetime.now()-start_time_training).total_seconds():.2f} seconds"
+    print(end_of_training)
+    text += '\n' + end_of_training
+    plot_accuracies_losses(accuracies, losses, n_epochs, nombre)
+    write_txt(nombre, text)
     return model
 
 def plot_accuracies_losses(accuracies, losses, n_epochs, nombre):
@@ -45,7 +50,7 @@ def plot_accuracies_losses(accuracies, losses, n_epochs, nombre):
     plt.ylabel('Accuracy')
     plt.title('Epoch vs Accuracy')
     plt.subplot(1, 2, 2)
-    plt.plot(range(1, n_epochs + 1), losses, marker='o')
+    plt.plot(range(1, n_epochs + 1), losses, marker='o', color='darkorange')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.title('Epoch vs Loss')
@@ -55,6 +60,11 @@ def plot_accuracies_losses(accuracies, losses, n_epochs, nombre):
     plt.savefig(PATH)
     plt.show()  
 
+def write_txt(nombre, text):
+    PATH = 'models/' + nombre + '_training.txt'
+    f = open(PATH, "w")
+    f.write(text)
+    f.close()
 
 def Test(model, nombre, testset):
     test_loader = DataLoader(testset, shuffle=False, batch_size=32)
@@ -71,7 +81,7 @@ def Test(model, nombre, testset):
     cm = confusion_matrix(all_labels, all_preds)
     formatted_metrics = metrics(all_labels, all_preds)
     plot_roc_curve(all_labels, all_preds, nombre)
-    plot_metrics_confusion_matrix(cm, formatted_metrics, nombre)
+    plot_metrics_confusion_matrix(cm, formatted_metrics, nombre, len(testset))
 
 
 def plot_confusion_matrix(cm):
@@ -91,14 +101,14 @@ def metrics(all_labels, all_preds):
     formatted_metrics = {k: f"{v:.2f}" for k, v in metrics.items()}
     return formatted_metrics
 
-def plot_metrics_confusion_matrix(cm, formatted_metrics, nombre):
+def plot_metrics_confusion_matrix(cm, formatted_metrics, nombre, cantdatos):
     fig, ax = plt.subplots(figsize=(10, 8))
     cm_display = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['sin apnea', 'con apnea'])
     cm_display.plot(cmap='Blues', ax=ax)
     ax.set_title("Confusion Matrix")
-    metric_text = "\n".join([f"{k}: {v}%" for k, v in formatted_metrics.items()])
+    metric_text = "Cantidad de datos de prueba: " + str(cantdatos) + "\n" + "\n".join([f"{k}: {v}%" for k, v in formatted_metrics.items()])
     plt.gcf().text(0.1, 0.1, metric_text, ha='center', fontsize=10, bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray'))
-    
+
     manager = plt.get_current_fig_manager()
     manager.window.state('zoomed')
 
