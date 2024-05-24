@@ -1,6 +1,7 @@
 from Imports import *
 
 def LecturaSenalPandasDF():
+
     dfCON = pd.read_csv(r'SenalesCONapnea.csv')
     tiempo = dfCON.pop('tiempo')
     dfCON = dfCON.transpose()
@@ -48,17 +49,18 @@ def LecturaSenalTensor():
 
     return X, y
 
-
-#colores = ['blue', 'red']
-#for index, row in datos.iterrows():
-#    eeg_signal = row[:-1]
-#    target = int(row.iloc[-1])
-#    titulo = f'Señal EEG - Target: {target}'
+def analisis_datos(trainset, valset, testset):
+    cant_datos = len(trainset)
+    con_apnea = int(sum(sum((trainset[:][1]).tolist(), [])))
+    text = '\nCantidad de datos de entrenamiento: ' + str(cant_datos) + '\t' + 'Con apnea: ' + str(con_apnea) + '\t\t' + 'Sin apnea: ' + str(cant_datos-con_apnea)
+    cant_datos = len(valset)
+    con_apnea = int(sum(sum((valset[:][1]).tolist(), [])))
+    text += '\nCantidad de datos de validación: ' + str(cant_datos) + '\t\t' + 'Con apnea: ' + str(con_apnea) + '\t\t' + 'Sin apnea: ' + str(cant_datos-con_apnea)
+    cant_datos = len(testset)
+    con_apnea = int(sum(sum((testset[:][1]).tolist(), [])))
+    text += '\nCantidad de datos de prueba: ' + str(cant_datos) + '\t\t' + 'Con apnea: ' + str(con_apnea) + '\t\t' + 'Sin apnea: ' + str(cant_datos-con_apnea) + '\n'
     
-#    plt.figure()
-#    plt.plot(tiempo, eeg_signal, color=colores[target])
-#    plt.title(titulo)
-#    plt.xlabel('Tiempo')
-#    plt.ylabel('Amplitud')
-#    plt.ylim(-3, 3)
-#    plt.show()
+    return text
+
+
+
