@@ -1,9 +1,11 @@
 from Imports import *
 
+wrong_predictions = [] #forma: señal, predicción, target
+
 def Train(model, nombre, trainset, valset, n_epochs, text = ""):
     start_time_training = datetime.now()
 
-    loader = DataLoader(trainset, shuffle=True, batch_size=32)
+    loader = DataLoader(trainset, shuffle=True, batch_size=32) #¿¿EN SGD batch_size=1??
 
     X_val, y_val = default_collate(valset)
     loss_fn = nn.BCELoss() #Binary Cross Entropy
@@ -76,12 +78,13 @@ def Test(model, nombre, testset):
         all_preds.extend(y_test_pred.cpu().detach().numpy().tolist())
         all_labels.extend(y_test.cpu().numpy().tolist())
 
-    metrics(all_labels, all_preds)
+        save_wrong_predictions(X_test, y_test, y_test_pred)
 
     cm = confusion_matrix(all_labels, all_preds)
     formatted_metrics = metrics(all_labels, all_preds)
     plot_roc_curve(all_labels, all_preds, nombre)
     plot_metrics_confusion_matrix(cm, formatted_metrics, nombre, len(testset))
+    plot_wrong_predictions(nombre)
 
 
 def plot_confusion_matrix(cm):
@@ -102,6 +105,7 @@ def metrics(all_labels, all_preds):
     return formatted_metrics
 
 def plot_metrics_confusion_matrix(cm, formatted_metrics, nombre, cantdatos):
+
     fig, ax = plt.subplots(figsize=(10, 8))
     cm_display = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['sin apnea', 'con apnea'])
     cm_display.plot(cmap='Blues', ax=ax)
@@ -119,7 +123,7 @@ def plot_metrics_confusion_matrix(cm, formatted_metrics, nombre, cantdatos):
 
 def plot_roc_curve(all_labels, all_preds, nombre):
     fpr, tpr, thresholds = roc_curve(all_labels, all_preds)
-    plt.figure()
+    plt.figure(1)
     lw = 2
     roc_auc = auc(fpr, tpr)
     plt.plot(fpr, tpr, color='darkorange',
@@ -135,3 +139,53 @@ def plot_roc_curve(all_labels, all_preds, nombre):
     PATH = 'models/'+nombre+'_roc.png'
     plt.savefig(PATH)
     plt.show()
+
+def save_wrong_predictions(X_test, y_test, y_test_pred):
+    idx = 0
+    for signal in X_test:
+        if(y_test[idx][0] != y_test_pred[idx][0]):
+                wrong_predictions.extend([[signal[0], int(y_test_pred[idx][0]), int(y_test[idx][0])]])
+        idx += 1
+
+def plot_wrong_predictions(nombre):
+    colores = ['blue', 'red']
+    idx = 1
+    label_decoder = {0: 'sin', 1: 'con'}
+    plt.figure(3)
+    for data in wrong_predictions:
+        plt.subplot(math.ceil(len(wrong_predictions)/3), 3, idx)
+        signal, pred, target = data
+        titulo = f'Targ: {label_decoder[target]} - Pred: {label_decoder[pred]}'
+        eje_x = [i for i in range(len(signal))]
+        plt.plot(eje_x, signal, color=colores[target])
+        plt.title(titulo)
+        # plt.xlabel('t')
+        # plt.ylabel('uV')
+        plt.xticks([], [])
+        plt.yticks([], [])
+        plt.xlim(0, len(signal))
+        plt.ylim(-3, 3)
+        idx += 1
+    plt.subplots_adjust(left=0.1,
+                    bottom=0.1, 
+                    right=0.9, 
+                    top=0.9, 
+                    wspace=0.1, 
+                    hspace=0.5)
+    
+    manager = plt.get_current_fig_manager()
+    manager.window.state('zoomed')
+
+    PATH = 'models/'+nombre+'_wrongpreds.png'
+    plt.savefig(PATH)
+
+    plt.show() 
+
+
+
+
+
+
+
+
+
