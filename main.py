@@ -1,4 +1,4 @@
-from LecturaSenales import *
+from LecturaSenalesSimuladas import *
 from Modelo import *
 from TrainValidate import *
 
@@ -19,13 +19,13 @@ text = analisis_datos(trainset, valset, testset)
 print(text)
 
 model = Modelo(input_size)
-nombre = 'modelo_'
+nombre = 'modelo_lr01m0'
 
-n_epochs = 150
-model = Train(model, nombre, trainset, valset, n_epochs, text)
-Test(model, nombre, testset)
-saveModel(model, nombre)
-
-# model = loadModel(nombre, input_size)
+# n_epochs = 150
+# model = Train(model, nombre, trainset, valset, n_epochs, text)
 # Test(model, nombre, testset)
+# saveModel(model, nombre)
+
+model = loadModel(nombre, input_size)
+Test(model, nombre, testset)
 
