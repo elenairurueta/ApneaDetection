@@ -117,9 +117,18 @@ def metrics(all_labels, all_preds):
 
 def plot_metrics_confusion_matrix(cm, formatted_metrics, nombre, cantdatos):
 
+    cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis] * 100
+
     fig, ax = plt.subplots(figsize=(10, 8))
-    cm_display = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['sin apnea', 'con apnea'])
+    cm_display = ConfusionMatrixDisplay(confusion_matrix=cm_normalized, display_labels=['sin apnea', 'con apnea'])
     cm_display.plot(cmap='Blues', ax=ax)
+
+    for text in ax.texts:
+        text.set_visible(False)
+
+    for i in range(cm_normalized.shape[0]):
+        for j in range(cm_normalized.shape[1]):
+            text = ax.text(j, i, f'{cm_normalized[i, j]:.2f}%', ha='center', va='center', color='black')
     ax.set_title("Confusion Matrix")
     metric_text = "Cantidad de datos de prueba: " + str(cantdatos) + "\n" + "\n".join([f"{k}: {v}%" for k, v in formatted_metrics.items()])
     plt.gcf().text(0.1, 0.1, metric_text, ha='center', fontsize=10, bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray'))
