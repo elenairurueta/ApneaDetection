@@ -5,13 +5,15 @@ wrong_predictions = [] #forma: señal, predicción, target
 def Train(model, nombre, trainset, valset, n_epochs, text = ""):
     start_time_training = datetime.now()
 
-    loader = DataLoader(trainset, shuffle=True, batch_size=32) #¿¿EN SGD batch_size=1??
+    batch_size = 32
+    loader = DataLoader(trainset, shuffle=True, batch_size=batch_size) #Probar otros valores
 
     X_val, y_val = default_collate(valset)
     loss_fn = nn.BCELoss() #Binary Cross Entropy
     optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9) #Stochastic Gradient Descent
-    text += '\n\n' + 'Loss function: ' + str(loss_fn.__init__) + '\n\n' + 'Optimizer: ' + str(optimizer.__init__)
+    text += '\n\n' + 'Batch size: ' + str(batch_size) + '\n\n' + 'Loss function: ' + str(loss_fn.__init__) + '\n\n' + 'Optimizer: ' + str(optimizer.__init__)
     accuracies = []
+    f1score = []
     losses = []
     text += '\n\n' + 'Start of training' 
     for epoch in range(n_epochs):
@@ -31,27 +33,35 @@ def Train(model, nombre, trainset, valset, n_epochs, text = ""):
         model.eval()
         with torch.no_grad():  # no calcular los gradientes durante la evaluación
             y_pred = model(X_val)
-            acc = (y_pred.round() == y_val).float().mean()  # promedio
+            acc = accuracy_score(y_val, y_pred.round())
+            f1 = f1_score(y_val, y_pred.round())
+            #acc = (y_pred.round() == y_val).float().mean()  # promedio
             accuracies.append(float(acc))
-            end_of_epoch = f"End of epoch {epoch + 1} - Accuracy = {float(acc) * 100:.2f}% - Loss = {float(avg_loss) * 100:.2f}% - {(datetime.now()-start_time_epoch).total_seconds():.2f} seconds"
+            f1score.append(float(f1))
+            end_of_epoch = f"End of epoch {epoch + 1} - Accuracy = {float(acc) * 100:.2f}% - F1 = {float(f1) * 100:.2f}% - Loss = {float(avg_loss) * 100:.2f}% - {(datetime.now()-start_time_epoch).total_seconds():.2f} seconds"
             print(end_of_epoch)
             text += '\n\t' + end_of_epoch
 
     end_of_training = f"End of training - {epoch + 1} epochs - {(datetime.now()-start_time_training).total_seconds():.2f} seconds"
     print(end_of_training)
     text += '\n' + end_of_training
-    plot_accuracies_losses(accuracies, losses, n_epochs, nombre)
+    plot_accuracies_losses(accuracies, f1score, losses, n_epochs, nombre)
     write_txt(nombre, text)
     return model
 
-def plot_accuracies_losses(accuracies, losses, n_epochs, nombre):
+def plot_accuracies_losses(accuracies, f1score, losses, n_epochs, nombre):
     plt.figure(figsize=(12, 5))
-    plt.subplot(1, 2, 1)
+    plt.subplot(1, 3, 1)
     plt.plot(range(1, n_epochs + 1), accuracies, marker='o')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy')
     plt.title('Epoch vs Accuracy')
-    plt.subplot(1, 2, 2)
+    plt.subplot(1, 3, 2)
+    plt.plot(range(1, n_epochs + 1), f1score, marker='o', color='green')
+    plt.xlabel('Epoch')
+    plt.ylabel('F1 Score')
+    plt.title('Epoch vs F1 Score')
+    plt.subplot(1, 3, 3)
     plt.plot(range(1, n_epochs + 1), losses, marker='o', color='darkorange')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
@@ -67,6 +77,7 @@ def write_txt(nombre, text):
     f = open(PATH, "w")
     f.write(text)
     f.close()
+
 
 def Test(model, nombre, testset):
     test_loader = DataLoader(testset, shuffle=False, batch_size=32)
@@ -86,7 +97,6 @@ def Test(model, nombre, testset):
     plot_metrics_confusion_matrix(cm, formatted_metrics, nombre, len(testset))
     plot_wrong_predictions(nombre)
 
-
 def plot_confusion_matrix(cm):
     cm_display = ConfusionMatrixDisplay(confusion_matrix = cm, display_labels = ['sin apnea', 'con apnea'])
     cm_display.plot(cmap ='Blues')
@@ -98,7 +108,8 @@ def metrics(all_labels, all_preds):
         "Accuracy": accuracy_score(all_labels, all_preds) * 100,
         "Precision": precision_score(all_labels, all_preds) * 100,
         "Sensitivity_recall": recall_score(all_labels, all_preds) * 100,
-        "Specificity": recall_score(all_labels, all_preds, pos_label=0) * 100
+        "Specificity": recall_score(all_labels, all_preds, pos_label=0) * 100,
+        "F1": f1_score(all_labels, all_preds) * 100
     }
 
     formatted_metrics = {k: f"{v:.2f}" for k, v in metrics.items()}

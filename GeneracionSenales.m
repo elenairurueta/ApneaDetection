@@ -12,17 +12,14 @@ TsinApnea.tiempo = t';
 
 while(i < 4001)
 
-%frecuencia1 = 6; 
 frecuencia1 = randi([1,4])/10;
 amplitud1 = 0.1; 
 senal1 = amplitud1 * sin(2 * pi * frecuencia1 * t);
 
-%frecuencia2 = 2; 
 frecuencia2 = rand();
 amplitud2 = 0.05; 
 senal2 = amplitud2 * cos(2 * pi * frecuencia2 * t); 
 
-%frecuencia3 = 2; 
 frecuencia3 = rand();
 amplitud3 = 0.05; 
 senal3 = amplitud3 * cos(2 * pi * frecuencia3 * t); 

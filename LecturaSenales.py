@@ -29,7 +29,6 @@ def LecturaSenalPandasDF():
 
     return dfFinal, tiempo
 
-
 def LecturaSenalTensor():
     
     dfCON = pd.read_csv(r'SenalesCONapnea.csv')
@@ -55,7 +54,7 @@ def analisis_datos(trainset, valset, testset):
     text = '\nCantidad de datos de entrenamiento: ' + str(cant_datos) + '\t' + 'Con apnea: ' + str(con_apnea) + '\t\t' + 'Sin apnea: ' + str(cant_datos-con_apnea)
     cant_datos = len(valset)
     con_apnea = int(sum(sum((valset[:][1]).tolist(), [])))
-    text += '\nCantidad de datos de validación: ' + str(cant_datos) + '\t\t' + 'Con apnea: ' + str(con_apnea) + '\t\t' + 'Sin apnea: ' + str(cant_datos-con_apnea)
+    text += '\nCantidad de datos de validacion: ' + str(cant_datos) + '\t\t' + 'Con apnea: ' + str(con_apnea) + '\t\t' + 'Sin apnea: ' + str(cant_datos-con_apnea)
     cant_datos = len(testset)
     con_apnea = int(sum(sum((testset[:][1]).tolist(), [])))
     text += '\nCantidad de datos de prueba: ' + str(cant_datos) + '\t\t' + 'Con apnea: ' + str(con_apnea) + '\t\t' + 'Sin apnea: ' + str(cant_datos-con_apnea) + '\n'
