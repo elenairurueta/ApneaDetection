@@ -2,83 +2,6 @@ from Imports import *
 
 wrong_predictions = [] #forma: señal, predicción, target
 
-def Train(model, nombre, trainset, valset, n_epochs, text = ""):
-    start_time_training = datetime.now()
-
-    batch_size = 32
-    loader = DataLoader(trainset, shuffle=True, batch_size=batch_size) #Probar otros valores
-
-    X_val, y_val = default_collate(valset)
-    loss_fn = nn.BCELoss() #Binary Cross Entropy
-    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9) #Stochastic Gradient Descent
-    text += '\n\n' + 'Batch size: ' + str(batch_size) + '\n\n' + 'Loss function: ' + str(loss_fn.__init__) + '\n\n' + 'Optimizer: ' + str(optimizer.__init__)
-    accuracies = []
-    f1score = []
-    losses = []
-    text += '\n\n' + 'Start of training' 
-    for epoch in range(n_epochs):
-        start_time_epoch = datetime.now()
-        model.train()
-        running_loss = 0.0
-        for X_batch, y_batch in loader:
-            y_pred = model(X_batch)
-            loss = loss_fn(y_pred, y_batch)
-            optimizer.zero_grad()  #restablece los gradientes de todos los parámetros a cero
-            loss.backward() #cálculo de gradientes de la pérdida con respecto a los parámetros del modelo
-            optimizer.step() #actualiza los parámetros
-            running_loss += loss.item() #para acumular la pérdida
-        avg_loss = running_loss / len(loader) #pérdida promedio por época
-        losses.append(avg_loss)
-
-        model.eval()
-        with torch.no_grad():  # no calcular los gradientes durante la evaluación
-            y_pred = model(X_val)
-            acc = accuracy_score(y_val, y_pred.round())
-            f1 = f1_score(y_val, y_pred.round())
-            #acc = (y_pred.round() == y_val).float().mean()  # promedio
-            accuracies.append(float(acc))
-            f1score.append(float(f1))
-            end_of_epoch = f"End of epoch {epoch + 1} - Accuracy = {float(acc) * 100:.2f}% - F1 = {float(f1) * 100:.2f}% - Loss = {float(avg_loss) * 100:.2f}% - {(datetime.now()-start_time_epoch).total_seconds():.2f} seconds"
-            print(end_of_epoch)
-            text += '\n\t' + end_of_epoch
-
-    end_of_training = f"End of training - {epoch + 1} epochs - {(datetime.now()-start_time_training).total_seconds():.2f} seconds"
-    print(end_of_training)
-    text += '\n' + end_of_training
-    plot_accuracies_losses(accuracies, f1score, losses, n_epochs, nombre)
-    write_txt(nombre, text)
-    return model
-
-def plot_accuracies_losses(accuracies, f1score, losses, n_epochs, nombre):
-    plt.figure(figsize=(12, 5))
-    plt.subplot(1, 3, 1)
-    plt.plot(range(1, n_epochs + 1), accuracies, marker='o')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.title('Epoch vs Accuracy')
-    plt.subplot(1, 3, 2)
-    plt.plot(range(1, n_epochs + 1), f1score, marker='o', color='green')
-    plt.xlabel('Epoch')
-    plt.ylabel('F1 Score')
-    plt.title('Epoch vs F1 Score')
-    plt.subplot(1, 3, 3)
-    plt.plot(range(1, n_epochs + 1), losses, marker='o', color='darkorange')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.title('Epoch vs Loss')
-    plt.tight_layout()
-    
-    PATH = 'models/' + nombre + '_acc_loss.png'
-    plt.savefig(PATH)
-    plt.show()  
-
-def write_txt(nombre, text):
-    PATH = 'models/' + nombre + '_training.txt'
-    f = open(PATH, "w")
-    f.write(text)
-    f.close()
-
-
 def Test(model, nombre, testset):
     test_loader = DataLoader(testset, shuffle=False, batch_size=32)
     all_preds = []
@@ -200,12 +123,3 @@ def plot_wrong_predictions(nombre):
     plt.savefig(PATH)
 
     plt.show() 
-
-
-
-
-
-
-
-
-

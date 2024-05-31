@@ -1,7 +1,7 @@
 from LecturaSenalesSimuladas import *
 from Modelo import *
-from TrainValidate import *
-
+from Training import *
+from Testing import *
 
 X, y = LecturaSenalTensor()
 X = torch.tensor(X, dtype=torch.float32)
@@ -19,13 +19,12 @@ text = analisis_datos(trainset, valset, testset)
 print(text)
 
 model = Modelo(input_size)
-nombre = 'modelo_lr01m0'
+nombre = 'modelo_nombre'
 
-# n_epochs = 150
-# model = Train(model, nombre, trainset, valset, n_epochs, text)
-# Test(model, nombre, testset)
-# saveModel(model, nombre)
-
-model = loadModel(nombre, input_size)
+n_epochs = 100
+model = Train(model, nombre, trainset, valset, n_epochs, text)
 Test(model, nombre, testset)
+saveModel(model, nombre)
 
+# model = loadModel(nombre, input_size)
+# Test(model, nombre, testset)

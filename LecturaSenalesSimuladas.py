@@ -51,15 +51,12 @@ def LecturaSenalTensor():
 def analisis_datos(trainset, valset, testset):
     cant_datos = len(trainset)
     con_apnea = int(sum(sum((trainset[:][1]).tolist(), [])))
-    text = '\nCantidad de datos de entrenamiento: ' + str(cant_datos) + '\t' + 'Con apnea: ' + str(con_apnea) + '\t\t' + 'Sin apnea: ' + str(cant_datos-con_apnea)
+    text = '\nCantidad de datos de entrenamiento: ' + str(cant_datos) + '\t' + 'Con apnea: ' + str(con_apnea) + '\t' + 'Sin apnea: ' + str(cant_datos-con_apnea)
     cant_datos = len(valset)
     con_apnea = int(sum(sum((valset[:][1]).tolist(), [])))
-    text += '\nCantidad de datos de validacion: ' + str(cant_datos) + '\t\t' + 'Con apnea: ' + str(con_apnea) + '\t\t' + 'Sin apnea: ' + str(cant_datos-con_apnea)
+    text += '\nCantidad de datos de validacion: ' + str(cant_datos) + '\t' + 'Con apnea: ' + str(con_apnea) + '\t' + 'Sin apnea: ' + str(cant_datos-con_apnea)
     cant_datos = len(testset)
     con_apnea = int(sum(sum((testset[:][1]).tolist(), [])))
-    text += '\nCantidad de datos de prueba: ' + str(cant_datos) + '\t\t' + 'Con apnea: ' + str(con_apnea) + '\t\t' + 'Sin apnea: ' + str(cant_datos-con_apnea) + '\n'
+    text += '\nCantidad de datos de prueba: ' + str(cant_datos) + '\t' + 'Con apnea: ' + str(con_apnea) + '\t' + 'Sin apnea: ' + str(cant_datos-con_apnea) + '\n'
     
     return text
-
-
-
