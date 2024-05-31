@@ -29,13 +29,18 @@ def Modelo(input_size):
             )
 
             self.fc_layers = nn.Sequential(
-                nn.Linear(256 * int(input_size/8), 1024), #(batch_size, 32000) -> (batch_size, 1024)
+                nn.Linear(256 * int(input_size/8), 2048), #(batch_size, 32000) -> (batch_size, 2048)
+                nn.ReLU(),
+                nn.Linear(2048, 1024), #(batch_size, 2048) -> (batch_size, 1024)
                 nn.ReLU(),
                 nn.Linear(1024, 512), #(batch_size, 1024) -> (batch_size, 512)
                 nn.ReLU(),
-                nn.Linear(512, 1), #(batch_size, 512) -> (batch_size, 1)
+                nn.Linear(512, 128), #(batch_size, 512) -> (batch_size, 128)
+                nn.ReLU(),
+                nn.Linear(128, 1), #(batch_size, 128) -> (batch_size, 1)
                 nn.Sigmoid()
             )
+            
 
         def forward(self, x):
             x = self.conv_layers(x)
