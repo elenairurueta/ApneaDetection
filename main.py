@@ -3,28 +3,37 @@ from Modelo import *
 from Training import *
 from Testing import *
 
-X, y = LecturaSenalTensor()
-X = torch.tensor(X, dtype=torch.float32)
-input_size = len(X[0])
+dataset = ApneaDataset('SenalesCONapnea.csv', 'SenalesSINapnea.csv')
+input_size = dataset.signal_len()
+dataset.split_dataset(train_perc = 0.6, 
+                      val_perc = 0.2, 
+                      test_perc = 0.2)
+print(dataset.analisis_datos())
 
-X = X.unsqueeze(1)
-y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1)
+nombre = 'modelo_prueba'
 
-dataset = TensorDataset(X, y)
-train_size = int(0.6 * len(dataset))  # 60% para entrenamiento
-val_size = int(0.2 * len(dataset))   # 20% para validación
-test_size = len(dataset) - train_size - val_size  # 20% para prueba
-trainset, valset, testset = random_split(dataset, [train_size, val_size, test_size])
-text = analisis_datos(trainset, valset, testset)
-print(text)
+## Nuevo modelo ##
+model = Model(input_size, nombre)
+trainer = Trainer(
+    model = model, 
+    trainset = dataset.trainset, 
+    valset = dataset.valset, 
+    n_epochs = 5, 
+    batch_size = 32, 
+    loss_fn = 'BCE', 
+    optimizer = 'SGD', 
+    lr = 0.01, 
+    momentum = 0.9)
+trainer.train(verbose = True, plot = True)
+tester = Tester(model = model, 
+                testset = dataset.testset, 
+                batch_size = 32)
+tester.evaluate(plot = True)
+model.save_model()
 
-model = Modelo(input_size)
-nombre = 'modelo_nombre'
-
-n_epochs = 100
-model = Train(model, nombre, trainset, valset, n_epochs, text)
-Test(model, nombre, testset)
-saveModel(model, nombre)
-
-# model = loadModel(nombre, input_size)
-# Test(model, nombre, testset)
+## Cargar modelo ##
+# model = Model.load_model(nombre, input_size)
+# tester = Tester(model = model, 
+#                 testset = dataset.testset, 
+#                 batch_size = 32)
+# tester.evaluate(plot = True)

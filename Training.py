@@ -1,122 +1,136 @@
 from Imports import *
 
-def train_one_epoch(model, train_loader, loss_fn, optimizer):
-    model.train()
-    running_loss = 0.0
-    all_y_true = []
-    all_y_pred = []
-    for X_batch, y_batch in train_loader:
-        y_pred = model(X_batch)
-        loss = loss_fn(y_pred, y_batch)
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        running_loss += loss.item()
-        all_y_true.append(y_batch)
-        all_y_pred.append(y_pred)
-    avg_loss = running_loss / len(train_loader)
-    y_true = torch.cat(all_y_true).detach().numpy().tolist()
-    y_pred = torch.cat(all_y_pred).round().detach().numpy().tolist()
-    train_acc = accuracy_score(y_true, y_pred)
-    return avg_loss, train_acc
+class Trainer:
 
-def val_one_epoch(model, val_loader, loss_fn):
-    model.eval()
-    val_running_loss = 0.0
-    all_y_true = []
-    all_y_pred = []
-    with torch.no_grad():
-        for X_val, y_val in val_loader:
-            y_pred = model(X_val)
-            val_loss = loss_fn(y_pred, y_val)
-            val_running_loss += val_loss.item()
-            all_y_true.append(y_val)
+    def __init__(self, model, trainset, valset, n_epochs = 100, batch_size = 32, loss_fn:str = 'BCE', optimizer:str = 'SGD', lr = 0.01, momentum = 0):
+        self.__model__ = model
+        self.train_loader = DataLoader(trainset, shuffle=True, batch_size=batch_size)
+        self.val_loader = DataLoader(valset, shuffle=False, batch_size=batch_size)
+        if loss_fn == 'BCE':
+            self.loss_fn = nn.BCELoss()  # Binary Cross Entropy
+        if optimizer == 'SGD':
+            self.optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)  # Stochastic Gradient Descent
+        self.batch_size = batch_size
+        self.lr = lr
+        self.n_epochs = n_epochs
+        self.train_accuracies = []
+        self.train_losses = []
+        self.val_accuracies = []
+        self.val_losses = []
+        self.f1score = []
+        self.momentum = momentum
+        self.text = ""
+
+    def train_one_epoch(self):
+        self.__model__.train()
+        running_loss = 0.0
+        all_y_true = []
+        all_y_pred = []
+        for X_batch, y_batch in self.train_loader:
+            y_pred = self.__model__(X_batch)
+            loss = self.loss_fn(y_pred, y_batch)
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+            running_loss += loss.item()
+            all_y_true.append(y_batch)
             all_y_pred.append(y_pred)
-    avg_val_loss = val_running_loss / len(val_loader)
-    y_true = torch.cat(all_y_true)
-    y_pred = torch.cat(all_y_pred).round()
-    acc = accuracy_score(y_true, y_pred)
-    f1 = f1_score(y_true, y_pred)
-    return avg_val_loss, acc, f1
+        avg_loss = running_loss / len(self.train_loader)
+        y_true = torch.cat(all_y_true).detach().numpy().tolist()
+        y_pred = torch.cat(all_y_pred).round().detach().numpy().tolist()
+        train_acc = accuracy_score(y_true, y_pred)
+        return avg_loss, train_acc
 
-def Train(model, nombre, trainset, valset, n_epochs, text=""):
-    start_time_training = datetime.now()
+    def val_one_epoch(self):
+        self.__model__.eval()
+        val_running_loss = 0.0
+        all_y_true = []
+        all_y_pred = []
+        with torch.no_grad():
+            for X_val, y_val in self.val_loader:
+                y_pred = self.__model__(X_val)
+                val_loss = self.loss_fn(y_pred, y_val)
+                val_running_loss += val_loss.item()
+                all_y_true.append(y_val)
+                all_y_pred.append(y_pred)
+        avg_val_loss = val_running_loss / len(self.val_loader)
+        y_true = torch.cat(all_y_true)
+        y_pred = torch.cat(all_y_pred).round()
+        acc = accuracy_score(y_true, y_pred)
+        f1 = f1_score(y_true, y_pred)
+        return avg_val_loss, acc, f1
 
-    batch_size = 32
-    train_loader = DataLoader(trainset, shuffle=True, batch_size=batch_size)
-    val_loader = DataLoader(valset, shuffle=False, batch_size=batch_size)
+    def train(self, verbose:bool = True, plot:bool = True):
+        start_time_training = datetime.now()
+        self.text += f'\n\nBatch size: {self.batch_size}\n\nLoss function: {self.loss_fn}\n\nOptimizer: {self.optimizer}'
+        self.text += '\n\nStart of training'
 
-    loss_fn = nn.BCELoss() # Binary Cross Entropy
-    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.5) # Stochastic Gradient Descent
-    #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=10, threshold=0.001)
+        for epoch in range(self.n_epochs):
+            start_time_epoch = datetime.now()
 
-    text += f'\n\nBatch size: {batch_size}\n\nLoss function: {loss_fn}\n\nOptimizer: {optimizer}'
-    val_accuracies = []
-    train_accuracies = []
-    f1score = []
-    train_losses = []
-    val_losses = []
-    text += '\n\nStart of training'
+            # Training
+            avg_train_loss, train_acc = self.train_one_epoch()
+            self.train_losses.append(avg_train_loss)
+            self.train_accuracies.append(train_acc)
 
-    for epoch in range(n_epochs):
-        start_time_epoch = datetime.now()
+            # Validation
+            avg_val_loss, val_acc, f1 = self.val_one_epoch()
+            self.val_losses.append(avg_val_loss)
+            self.val_accuracies.append(val_acc)
+            self.f1score.append(f1)
 
-        # Training
-        avg_train_loss, train_acc = train_one_epoch(model, train_loader, loss_fn, optimizer)
-        train_losses.append(avg_train_loss)
-        train_accuracies.append(train_acc)
+            end_of_epoch = (f"End of epoch {epoch + 1} - Accuracy = {val_acc * 100:.2f}% - F1 = {f1 * 100:.2f}% "
+                            f"- Train Loss = {avg_train_loss*100:.2f}% - Val Loss = {avg_val_loss*100:.2f}% - "
+                            f"{(datetime.now()-start_time_epoch).total_seconds():.2f} seconds")
+            if(verbose):
+                print(end_of_epoch)
+            self.text += '\n\t' + end_of_epoch
 
-        # Validation
-        avg_val_loss, val_acc, f1 = val_one_epoch(model, val_loader, loss_fn)
-        val_losses.append(avg_val_loss)
-        val_accuracies.append(val_acc)
-        f1score.append(f1)
+        end_of_training = (f"End of training - {self.n_epochs} epochs - "
+                           f"{(datetime.now()-start_time_training).total_seconds():.2f} seconds")
+        if(verbose):
+            print(end_of_training)
+        self.text += '\n' + end_of_training
+        self.plot_accuracies_losses(plot)
+        self.write_txt()
+        return self.__model__
 
-        # Scheduler step
-        #scheduler.step(avg_val_loss)
+    def plot_accuracies_losses(self, plot:bool):
+        plt.figure(figsize=(12, 5))
+        plt.subplot(1, 3, 1)
+        plt.plot(range(1, self.n_epochs + 1), self.train_accuracies, marker='o', color='blue', label='Train')
+        plt.plot(range(1, self.n_epochs + 1), self.val_accuracies, marker='o', color='green', label='Val')
+        plt.xlabel('Epoch')
+        plt.ylabel('Accuracy')
+        plt.title('Epoch vs Accuracy')
+        plt.subplot(1, 3, 2)
+        plt.plot(range(1, self.n_epochs + 1), self.f1score, marker='o', color='brown')
+        plt.xlabel('Epoch')
+        plt.ylabel('F1 Score')
+        plt.title('Epoch vs F1 Score')
+        plt.subplot(1, 3, 3)
+        plt.plot(range(1, self.n_epochs + 1), self.val_losses, marker='o', color='orange', label='Val')
+        plt.plot(range(1, self.n_epochs + 1), self.train_losses, marker='o', color='red', label='Train')
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.title('Epoch vs Loss')
+        plt.tight_layout()
+        
+        if not os.path.exists(f'models/{self.__model__.get_nombre()}'):
+            os.makedirs(f'models/{self.__model__.get_nombre()}')
+        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
+        plt.savefig(PATH)
+        
+        if(plot):
+            plt.show()  
+        else:
+            plt.close()
 
-        end_of_epoch = (f"End of epoch {epoch + 1} - Accuracy = {val_acc * 100:.2f}% - F1 = {f1 * 100:.2f}% "
-                        f"- Train Loss = {avg_train_loss*100:.2f}% - Val Loss = {avg_val_loss*100:.2f}% - "
-                        f"{(datetime.now()-start_time_epoch).total_seconds():.2f} seconds")
-                        #f" - Current lr = {scheduler.optimizer.param_groups[0]['lr']}")
-        print(end_of_epoch)
-        text += '\n\t' + end_of_epoch
+    def write_txt(self):
+        if not os.path.exists(f'models/{self.__model__.get_nombre()}'):
+            os.makedirs(f'models/{self.__model__.get_nombre()}')
+        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
+        f = open(PATH, "w")
+        f.write(self.text)
+        f.close()
 
-    end_of_training = (f"End of training - {n_epochs} epochs - "
-                       f"{(datetime.now()-start_time_training).total_seconds():.2f} seconds")
-    print(end_of_training)
-    text += '\n' + end_of_training
-    plot_accuracies_losses(train_accuracies, val_accuracies, val_losses, train_losses, f1score, n_epochs, nombre)
-    write_txt(nombre, text)
-    return model
-
-def plot_accuracies_losses(train_accuracies, val_accuracies, val_losses, train_losses, f1score, n_epochs, nombre):
-    plt.figure(figsize=(12, 5))
-    plt.subplot(1, 3, 1)
-    plt.plot(range(1, n_epochs + 1), train_accuracies, marker='o', color='blue', label='Train')
-    plt.plot(range(1, n_epochs + 1), val_accuracies, marker='o', color='green', label='Val')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.title('Epoch vs Accuracy')
-    plt.subplot(1, 3, 2)
-    plt.plot(range(1, n_epochs + 1), f1score, marker='o', color='brown')
-    plt.xlabel('Epoch')
-    plt.ylabel('F1 Score')
-    plt.title('Epoch vs F1 Score')
-    plt.subplot(1, 3, 3)
-    plt.plot(range(1, n_epochs + 1), val_losses, marker='o', color='orange', label='Val')
-    plt.plot(range(1, n_epochs + 1), train_losses, marker='o', color='red', label='Train')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.title('Epoch vs Loss')
-    plt.tight_layout()
-    
-    PATH = 'models/' + nombre + '_acc_loss.png'
-    plt.savefig(PATH)
-    plt.show()  
-
-def write_txt(nombre, text):
-    PATH = 'models/' + nombre + '_training.txt'
-    f = open(PATH, "w")
-    f.write(text)
-    f.close()
