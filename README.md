@@ -1,6 +1,6 @@
 # ApneaDetection
 ## Overview
-This project is the final assignment for the Biomedical Engineering degree. It involves developing a machine learning model based on Convolutional Neural Networks (CNN) to detect sleep apnea in EEG signals.
+This project is the final assignment for my Biomedical Engineering degree. It involves developing a machine learning model based on Convolutional Neural Networks (CNN) to detect sleep apnea in EEG signals.
 ## Initial Version
 In the initial version of this project, simulated signals with characteristics similar to real EEG signals were used to test the model.
 ## Installation
