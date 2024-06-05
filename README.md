@@ -96,7 +96,7 @@ tester = Tester(model = model,
 tester.evaluate(plot = True)
 ```
 You can modify the following hiperparameters:
-- ```nombre``` (string): name used to upload the model. The file extension should be ```'.pt'``` or ```'.pth'```. The path should look like: ```'models\modelo_name\modelo_name.pt/pth'```
+- ```nombre``` (string): name used to upload the model. The path should look like: ```'models\nombre\nombre.pt/pth'```. The file extension should be ```'.pt'``` or ```'.pth'```. 
 - ```test_perc``` (float): percentage of test data (0 < test_perc < 1)
 - ```batch_size``` (int): number of data used in one iteration
 - ```plot``` (bool): if plot = False the figures will not be displayed but will be saved in the ```model_name_'''.png``` files
