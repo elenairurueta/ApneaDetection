@@ -1,16 +1,33 @@
 from Imports import *
 
 class ApneaDataset(Dataset):
+    """Dataset custom class"""
+    def __init__(self, csv_path_con:str, csv_path_sin:str):
+        """
+        Initializes the Apnea Dataset.
 
-    def __init__(self, csv_path_con, csv_path_sin):
-        dfCON = pd.read_csv(csv_path_con)
+        Args:
+            csv_path_con (str): path to the 'SenalesCONapnea.csv' file.
+            csv_path_sin (str): path to the 'SenalesSINapnea.csv' file.
+
+        Returns: none.
+        """
+
+        #Read .csv files and drop time column
+        try:
+            dfCON = pd.read_csv(csv_path_con)
+        except FileNotFoundError:
+            raise FileNotFoundError("File not found. Path should look like 'Data\ApneaDetection_SimulatedSignals\SenalesCONapnea.csv'")
         dfCON.drop(columns=dfCON.columns[0], inplace=True)
         dfCON = dfCON.transpose()
-
-        dfSIN = pd.read_csv(csv_path_sin)
+        try:
+            dfSIN = pd.read_csv(csv_path_sin)
+        except FileNotFoundError:
+            raise FileNotFoundError("File not found. Path should look like 'Data\ApneaDetection_SimulatedSignals\SenalesSINapnea.csv'")
         dfSIN.drop(columns=dfSIN.columns[0], inplace=True)
         dfSIN = dfSIN.transpose()
 
+        #Label and join dataframes 
         self.__X = np.concatenate((dfCON, dfSIN))
         targetCON = np.ones(dfCON.shape[0])
         targetSIN = np.zeros(dfSIN.shape[0])
@@ -26,31 +43,55 @@ class ApneaDataset(Dataset):
     def __len__(self):
         return len(self.__y)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx:int):
         return self.__X[idx], self.__y[idx]
     
     def signal_len(self):
         return self.__X.shape[2]
 
-    def split_dataset(self, train_perc, val_perc, test_perc = 0.0):
-        if((test_perc == 0.0) or ((train_perc + val_perc + test_perc) < 1.0)):
+    def split_dataset(self, train_perc:float, val_perc:float, test_perc:float = 0.0):
+        """
+        Split the ApneaDataset into train, validation and test Subsets and save them as attrbiutes of the ApneaDataset object.
+
+        Note: train_perc + val_perc + test_perc must be = 1, otherwise test_perc will be automatically calculated to ensure this condition is satisfied.
+        
+        Args: 
+        - train_perc (float): percentage of training data (0 < train_perc < 1).
+        - val_perc (float): percentage of validation data (0 < val_perc < 1).
+        - test_perc (float): percentage of test data (0 < test_perc < 1).
+
+        Returns: none.
+        """
+
+        if((train_perc + val_perc + test_perc) < 1.0):
             test_perc = 1.0 - (train_perc + val_perc)
         if((train_perc + val_perc + test_perc) > 1.0):
             raise Exception("La suma de los porcentajes no puede superar 1.0")
+        
         train_size = int(train_perc * self.__len__())  # 60% para entrenamiento
         val_size = int(val_perc * self.__len__())    # 20% para validación
         test_size = int(test_perc * self.__len__())  # 20% para prueba
+
         self.trainset, self.valset, self.testset = random_split(self, [train_size, val_size, test_size])
     
     def analisis_datos(self):
+        """
+        Calculates and returns a string containing the analysis of the dataset, including the count of data for training, validation, and testing sets, as well as the count of data with and without apnea in each set.
+        
+        Args: none.
+
+        Returns: 
+        - string containing the analysis of the dataset. 
+        """
+
         cant_datos = len(self.trainset)
         con_apnea = int(sum(sum((self.trainset[:][1]).tolist(), [])))
-        text = '\nCantidad de datos de entrenamiento: ' + str(cant_datos) + '\n\t' + 'Con apnea: ' + str(con_apnea) + '\n\t' + 'Sin apnea: ' + str(cant_datos-con_apnea)
+        text = '\nTraining data count: ' + str(cant_datos) + '\n\t' + 'With apnea: ' + str(con_apnea) + '\n\t' + 'Without apnea: ' + str(cant_datos-con_apnea)
         cant_datos = len(self.valset)
         con_apnea = int(sum(sum((self.valset[:][1]).tolist(), [])))
-        text += '\nCantidad de datos de validacion: ' + str(cant_datos) + '\n\t' + 'Con apnea: ' + str(con_apnea) + '\n\t' + 'Sin apnea: ' + str(cant_datos-con_apnea)
+        text += '\nValidation data count: ' + str(cant_datos) + '\n\t' + 'With apnea: ' + str(con_apnea) + '\n\t' + 'Without apnea: ' + str(cant_datos-con_apnea)
         cant_datos = len(self.testset)
         con_apnea = int(sum(sum((self.testset[:][1]).tolist(), [])))
-        text += '\nCantidad de datos de prueba: ' + str(cant_datos) + '\n\t' + 'Con apnea: ' + str(con_apnea) + '\n\t' + 'Sin apnea: ' + str(cant_datos-con_apnea) + '\n'
+        text += '\nTest data count: ' + str(cant_datos) + '\n\t' + 'With apnea: ' + str(con_apnea) + '\n\t' + 'Without apnea: ' + str(cant_datos-con_apnea) + '\n'
         
         return text

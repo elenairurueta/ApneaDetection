@@ -1,8 +1,20 @@
 from Imports import *
+from Modelo import Model
 
 class Tester:
+    """Class to test the model with testset"""
+    def __init__(self, model:Model, testset:Subset, batch_size:int=32):
+        """
+        Initializes the Tester object.
 
-    def __init__(self, model, testset, batch_size=32):
+        Args:
+            - model (Model): model to test.
+            - testset (Subset): data to test.
+            - batch_size (int): number of data used in one iteration.
+
+        Returns: none.
+        """
+
         self.__model__ = model
         self.__test_loader__ = DataLoader(testset, shuffle=False, batch_size=batch_size)
         self.__cm__ = []
@@ -12,32 +24,73 @@ class Tester:
         self.__wrong_predictions__ = []
 
     def test(self):
-        
+        """
+        Tests the model on the test dataset, storing predictions and labels.
+
+        Args: none.
+
+        Returns: none.
+        """
+
+        #Iterate over each batch in the test_loader:
         for X_test, y_test in self.__test_loader__:
+            #Get the model's predictions for the batch:
             y_test_pred = self.__model__(X_test)
             y_test_pred = y_test_pred.round()
             self.__all_preds__.extend(y_test_pred.cpu().detach().numpy().tolist())
             self.__all_labels__.extend(y_test.cpu().numpy().tolist())
-
+            #Save instances where the predictions were incorrect:
             self.__save_wrong_predictions__(X_test, y_test, y_test_pred)
 
-    def __save_wrong_predictions__(self, X_test, y_test, y_test_pred):
+    def __save_wrong_predictions__(self, X_test:Tensor, y_test:Tensor, y_test_pred:Tensor):
+        """
+        Saves instances where the model's predictions were incorrect.
+
+        Args:
+        - X_test (Tensor): The input test data.
+        - y_test (Tensor): The true labels of the test data.
+        - y_test_pred (Tensor): The model's predictions for the test data.
+
+        Returns: none.
+        """
+
+        # Iterate over each instance in the test data:
         for idx, signal in enumerate(X_test):
+            #If the prediction does not match the true label, append the instance to the list of wrong predictions
             if y_test[idx][0] != y_test_pred[idx][0]:
                 self.__wrong_predictions__.append([signal[0], int(y_test_pred[idx][0]), int(y_test[idx][0])])
 
     def __plot_wrong_predictions__(self, plot: bool):
+        """
+        Plots instances where the model's predictions were incorrect and saves plot as .png.
+        
+        Args:
+        - plot (bool): If True, shows the plot of the incorrect predictions. If False the figures will not be displayed but will be saved in the 'models\nombre\nombre_wrongpreds.png' file.
+        
+        Returns: none.
+        """
+
         plotter = Plotter(self.__model__.get_nombre(), self.__wrong_predictions__)
         plotter.plot_wrong_predictions(plot)
 
     def __plot_confusion_matrix__(self, plot:bool):
+        """
+        Plots the confusion matrix and saves plot as .png.
+
+        Args:
+        - plot (bool): If True, shows the plot of the confusion matrix. If False the figure will not be displayed but will be saved in the 'models\nombre\nombre_cm.png' file.
+        
+        Returns: none.
+        """
+
+        #Create a ConfusionMatrixDisplay object with the confusion matrix and class labels:
         cm_display = ConfusionMatrixDisplay(confusion_matrix=self.__cm__, display_labels=['sin apnea', 'con apnea'])
         cm_display.plot(cmap='Blues')
         plt.title("Confusion Matrix")
 
         if not os.path.exists(f'models/{self.__model__.get_nombre()}'):
             os.makedirs(f'models/{self.__model__.get_nombre()}')
-        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm.png'
+        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now()}.png'
         plt.savefig(PATH)
 
         if(plot):
@@ -46,10 +99,22 @@ class Tester:
             plt.close()
 
     def __plot_roc_curve__(self, plot:bool):
+        """
+        Plots Receiver Operating Characteristic curve and saves plot as .png.
+
+        Args:
+        - plot (bool): If True, shows the plot of the ROC curve. If False the figure will not be displayed but will be saved in the 'models\nombre\nombre_roc.png' file.
+        
+        Returns: none.
+        """
+
+        #Compute the False Positive Rate, True Positive Rate, and thresholds for the ROC curve:
         fpr, tpr, thresholds = roc_curve(self.__all_labels__, self.__all_preds__)
-        plt.figure()
+        plt.figure(figsize=(13, 6))
         lw = 2
+        #Compute the Area Under the Curve (AUC) for the ROC curve:
         roc_auc = auc(fpr, tpr)
+
         plt.plot(fpr, tpr, color='darkorange', lw=lw, label=f'ROC curve (area = {roc_auc:.2f})')
         plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
         plt.xlim([0.0, 1.0])
@@ -61,47 +126,61 @@ class Tester:
 
         if not os.path.exists(f'models/{self.__model__.get_nombre()}'):
             os.makedirs(f'models/{self.__model__.get_nombre()}')
-        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc.png'
+        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now()}.png'
         plt.savefig(PATH)
 
         if(plot):
-            manager = plt.get_current_fig_manager()
-            manager.window.state('zoomed')
             plt.show()
         else:
             plt.close()
 
     def __plot_metrics_confusion_matrix__(self, plot:bool):
-        cm_normalized = self.__cm__.astype('float') / self.__cm__.sum(axis=1)[:, np.newaxis] * 100
+        """
+        Plots the confusion matrix with normalized values and additional metrics, and saves the plot as a .png file.
+        
+        Args:
+            - plot (bool): If True, shows the confusion matrix with metrics. If False the figure will not be displayed but will be saved in the 'models\nombre\nombre_cm_metrics.png' file.
+        
+        Returns: none.
+        """
 
-        fig, ax = plt.subplots(figsize=(10, 8))
+        #Normalize the confusion matrix to percentage values:
+        cm_normalized = self.__cm__.astype('float') / self.__cm__.sum(axis=1)[:, np.newaxis] * 100
+        fig, ax = plt.subplots(figsize=(13, 6))
+        #Create a ConfusionMatrixDisplay object with the normalized confusion matrix and class labels:
         cm_display = ConfusionMatrixDisplay(confusion_matrix=cm_normalized, display_labels=['sin apnea', 'con apnea'])
         cm_display.plot(cmap='Blues', ax=ax)
-
         for text in ax.texts:
             text.set_visible(False)
-
         for i in range(cm_normalized.shape[0]):
             for j in range(cm_normalized.shape[1]):
                 text = ax.text(j, i, f'{cm_normalized[i, j]:.2f}%', ha='center', va='center', color='black')
         ax.set_title("Confusion Matrix")
+
+        #Generate additional metric text to display below the confusion matrix plot:
         metric_text = (f"Cantidad de datos de prueba: {len(self.__test_loader__.dataset)}\n" +
                        "\n".join([f"{k}: {v}%" for k, v in self.__metrics__.items()]))
         plt.gcf().text(0.1, 0.1, metric_text, ha='center', fontsize=10, bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray'))
 
         if not os.path.exists(f'models/{self.__model__.get_nombre()}'):
             os.makedirs(f'models/{self.__model__.get_nombre()}')
-        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics.png'
+        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now()}.png'
         plt.savefig(PATH)
 
         if(plot):
-            manager = plt.get_current_fig_manager()
-            manager.window.state('zoomed')
             plt.show()
         else:
             plt.close()
 
     def __calculate_metrics__(self):
+        """
+        Calculates various evaluation metrics based on the predictions and true labels.
+        
+        Args: none.
+        
+        Returns: none.
+        """
+
         metrics = {
             "Accuracy": accuracy_score(self.__all_labels__, self.__all_preds__) * 100,
             "Precision": precision_score(self.__all_labels__, self.__all_preds__) * 100,
@@ -113,6 +192,15 @@ class Tester:
         self.__metrics__ = {k: f"{v:.2f}" for k, v in metrics.items()}
 
     def evaluate(self, plot:bool = True):
+        '''
+        Tests the model, computes metrics and plots evaluation results.
+
+        Args:
+            - plot (bool): If True, shows the plots of evaluation results. If False, the figures will not be displayed but will be saved.
+        
+        Returns: none.
+        '''
+
         self.test()
         self.__cm__ = confusion_matrix(self.__all_labels__, self.__all_preds__)
         self.__calculate_metrics__()
@@ -121,7 +209,18 @@ class Tester:
         self.__plot_wrong_predictions__(plot)
 
 class Plotter:
-    def __init__(self, model_name, wrong_predictions):
+    """Class to plot instances where the model's predictions were incorrect"""
+    def __init__(self, model_name:str, wrong_predictions:list):
+        """
+        Initializes the Plotter object.
+        
+        Args:
+            - model_name (str): The name of the model.
+            - wrong_predictions (list): A list of wrong predictions made by the model.
+
+        Returns: none.
+        """
+
         self.__model_name = model_name
         self.__wrong_predictions = wrong_predictions
         self.max_rows = 5
@@ -131,29 +230,44 @@ class Plotter:
         self.num_pages = math.ceil(len(self.__wrong_predictions) / self.plots_per_fig)
         self.fig = None
 
-    def plot_wrong_predictions(self, plot: bool):
+    def plot_wrong_predictions(self, plot:bool):
+        """
+        Plots the instances of wrong predictions.
+
+        Args:
+            - plot (bool): If True, shows the plot of the wrong predictions. If False, the plot will be saved but not displayed.
+        
+        Returns: none.
+        """
+         
         self.plot = plot
-        self.fig, self.ax = plt.subplots(figsize=(15, 10))
+        self.fig, self.ax = plt.subplots(figsize=(13, 6))
         plt.subplots_adjust(left=0.1, bottom=0.2, right=0.9, top=0.9, wspace=0.1, hspace=0.5)
         
         # Botón de siguiente
         axnext = plt.axes([0.8, 0.05, 0.1, 0.075])
         self.bnext = Button(axnext, 'Next')
-        self.bnext.on_clicked(self.next_page)
+        self.bnext.on_clicked(self.__next_page__)
 
         # Botón de anterior
         axprev = plt.axes([0.7, 0.05, 0.1, 0.075])
         self.bprev = Button(axprev, 'Previous')
-        self.bprev.on_clicked(self.prev_page)
+        self.bprev.on_clicked(self.__prev_page__)
 
-        self.update_plot()
-        manager = plt.get_current_fig_manager()
-        manager.window.state('zoomed')
+        self.__update_plot__()
         plt.show()
 
-    def update_plot(self):
+    def __update_plot__(self):
+        """
+        Updates the plot based on the current page.
+        
+        Args: none.
+        
+        Returns: none.
+        """
+
         self.fig.clf()
-        self.ax = self.fig.add_subplot(111)  # Redefinir self.ax después de limpiar la figura
+        self.ax = self.fig.add_subplot(111)
         colores = ['blue', 'red']
         label_decoder = {0: 'sin', 1: 'con'}
 
@@ -179,12 +293,12 @@ class Plotter:
         # Botón de siguiente
         axnext = plt.axes([0.8, 0.05, 0.1, 0.075])
         self.bnext = Button(axnext, 'Next')
-        self.bnext.on_clicked(self.next_page)
+        self.bnext.on_clicked(self.__next_page__)
 
         # Botón de anterior
         axprev = plt.axes([0.7, 0.05, 0.1, 0.075])
         self.bprev = Button(axprev, 'Previous')
-        self.bprev.on_clicked(self.prev_page)
+        self.bprev.on_clicked(self.__prev_page__)
 
         if not os.path.exists(f'models/{self.__model_name}'):
             os.makedirs(f'models/{self.__model_name}')
@@ -194,12 +308,30 @@ class Plotter:
         if self.plot:
             self.fig.canvas.draw()
 
-    def next_page(self, event):
+    def __next_page__(self, event):
+        """
+        Handles the event when the next button is clicked.
+
+        Args:
+            - event: event triggered by clicking the next button.
+
+        Returns: none.
+        """
+
         if self.current_page < self.num_pages - 1:
             self.current_page += 1
-            self.update_plot()
+            self.__update_plot__()
 
-    def prev_page(self, event):
+    def __prev_page__(self, event):
+        """
+        Handles the event when the prev button is clicked.
+
+        Args:
+            - event: event triggered by clicking the prev button.
+
+        Returns: none.
+        """
+
         if self.current_page > 0:
             self.current_page -= 1
-            self.update_plot()
+            self.__update_plot__()

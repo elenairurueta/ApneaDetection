@@ -1,13 +1,22 @@
 from Imports import *
 
 class Model(nn.Module):
-
+    """Neural network model class"""
     def __init__(self, input_size, nombre:str):
+        """
+        Initializes the neural network model.
+
+        Args:
+            input_size (int): size of the input data.
+            nombre (str): name of the model.
+        """
+
         super().__init__()
         self.nombre = nombre
-        self.conv_layers = nn.Sequential(
 
-            #entrada de dimensiones (batch_size, 1, input_size)
+        #Define the convolutional layers:
+        self.conv_layers = nn.Sequential(
+            #input (batch_size, 1, input_size)
             nn.Conv1d(1, 32, kernel_size=3, stride=1, padding=1), #output (batch_size, 32, input_size)
             nn.ReLU(),
             nn.Conv1d(32, 64, kernel_size=3, stride=1, padding=1), #output (batch_size, 64, input_size)
@@ -26,46 +35,85 @@ class Model(nn.Module):
             nn.ReLU(),
             nn.MaxPool1d(2) #output (batch_size, 256, input_size/8)
         )
-
+        #Define the fully connected layers:
         self.fc_layers = nn.Sequential(
-            
-            # nn.Linear(256 * int(input_size/8), 2048), #(batch_size, 32000) -> (batch_size, 2048)
-            # nn.ReLU(),
-            # nn.Linear(2048, 1024), #(batch_size, 2048) -> (batch_size, 1024)
-            # nn.ReLU(),
-            # nn.Linear(1024, 512), #(batch_size, 1024) -> (batch_size, 512)
-            # nn.ReLU(),
-            # nn.Linear(512, 128), #(batch_size, 512) -> (batch_size, 128)
-            # nn.ReLU(),
-            # nn.Linear(128, 1), #(batch_size, 128) -> (batch_size, 1)
-            # nn.Sigmoid()
-            
-            ## VIEJO: ##
-            nn.Linear(256 * int(input_size/8), 1024), #(batch_size, 32000) -> (batch_size, 1024)
+            #input (batch_size, 256, input_size/8)
+            nn.Linear(256 * int(input_size/8), 2048), #with input_size=1000: (batch_size, 32000) -> (batch_size, 2048)
+            nn.ReLU(),
+            nn.Linear(2048, 1024), #(batch_size, 2048) -> (batch_size, 1024)
             nn.ReLU(),
             nn.Linear(1024, 512), #(batch_size, 1024) -> (batch_size, 512)
             nn.ReLU(),
-            nn.Linear(512, 1), #(batch_size, 512) -> (batch_size, 1)
+            nn.Linear(512, 128), #(batch_size, 512) -> (batch_size, 128)
+            nn.ReLU(),
+            nn.Linear(128, 1), #(batch_size, 128) -> (batch_size, 1)
             nn.Sigmoid()
+            
+            ## VIEJO: ##
+            # nn.Linear(256 * int(input_size/8), 1024), #(batch_size, 32000) -> (batch_size, 1024)
+            # nn.ReLU(),
+            # nn.Linear(1024, 512), #(batch_size, 1024) -> (batch_size, 512)
+            # nn.ReLU(),
+            # nn.Linear(512, 1), #(batch_size, 512) -> (batch_size, 1)
+            # nn.Sigmoid()
         )
             
     def forward(self, x):
+        """
+        Defines the forward pass of the neural network model.
+        """
         x = self.conv_layers(x)
         batch_size = x.size(0)
-        x = x.view(batch_size, -1)  # Flatten the output of the convolutional layers: (batch_size, 256, 750) -> (batch_size, 192000)
+        x = x.view(batch_size, -1) #flatten
         x = self.fc_layers(x)
         return x
     
     def get_nombre(self):
+        """
+        Args: none.
+
+        Returns:
+            - str: the name of the model.
+        """
         return self.nombre
-        
+
+    def get_architecture(self):
+        """
+        Args: none.
+
+        Returns:
+            - str: the architecture of the model.
+        """
+        return '\n\n' + str(self)
+
     def save_model(self, extension:str = '.pth'):
-        PATH = 'models/' + self.nombre + extension
+        """
+        Saves the parameters of the model to a file.
+
+        Args:
+            - extension (str, optional): extension of the file ('.pt' or '.pth'). Defaults to '.pth'.
+
+        Returns: none
+        """
+        if not os.path.exists(f'models/{self.nombre}'):
+            os.makedirs(f'models/{self.nombre}')
+        PATH = f'models/{self.nombre}/{self.nombre + extension}'
         torch.save(self.state_dict(), PATH)
 
     @staticmethod
     def load_model(nombre, input_size, extension:str = '.pth'):
-        PATH = 'models/' + nombre + extension
+        """
+        Loads a pre-trained model from a file.
+
+        Args:
+            - nombre (str): name of the model.
+            - input_size (int): size of the input data.
+            - extension (str, optional): extension of the file ('.pt' or '.pth'). Defaults to '.pth'.
+            
+        Returns:
+            - Model: the loaded model.
+        """
+        PATH = f'models/{nombre}/{nombre + extension}'
         model = Model(input_size, nombre)
         model.load_state_dict(torch.load(PATH))
         model.eval()
