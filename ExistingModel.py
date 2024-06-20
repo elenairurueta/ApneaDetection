@@ -17,12 +17,14 @@ dataset.split_dataset(train_perc = 0.6,
 analisis_datos = dataset.analisis_datos()
 print(analisis_datos)
 
-nombre = 'modelo' #CHANGE, name used to upload the model
+nombre = 'modelo_280524' #CHANGE, name used to upload the model
 
 #Load and test model
-model = Model.load_model(nombre, input_size, extension = '.pth')
+model = Model.load_model(nombre, input_size, extension = '.pt')
 print(model.get_architecture())
 tester = Tester(model = model, 
                 testset = dataset.testset, 
                 batch_size = 32)
 tester.evaluate(plot = True)
+
+model.plot_filters()

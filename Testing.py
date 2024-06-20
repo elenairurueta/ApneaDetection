@@ -90,7 +90,7 @@ class Tester:
 
         if not os.path.exists(f'models/{self.__model__.get_nombre()}'):
             os.makedirs(f'models/{self.__model__.get_nombre()}')
-        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now()}.png'
+        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
         plt.savefig(PATH)
 
         if(plot):
@@ -126,7 +126,7 @@ class Tester:
 
         if not os.path.exists(f'models/{self.__model__.get_nombre()}'):
             os.makedirs(f'models/{self.__model__.get_nombre()}')
-        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now()}.png'
+        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
         plt.savefig(PATH)
 
         if(plot):
@@ -164,7 +164,7 @@ class Tester:
 
         if not os.path.exists(f'models/{self.__model__.get_nombre()}'):
             os.makedirs(f'models/{self.__model__.get_nombre()}')
-        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now()}.png'
+        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
         plt.savefig(PATH)
 
         if(plot):

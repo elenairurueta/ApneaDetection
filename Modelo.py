@@ -1,4 +1,5 @@
 from Imports import *
+from scipy.ndimage import zoom
 
 class Model(nn.Module):
     """Neural network model class"""
@@ -38,24 +39,24 @@ class Model(nn.Module):
         #Define the fully connected layers:
         self.fc_layers = nn.Sequential(
             #input (batch_size, 256, input_size/8)
-            nn.Linear(256 * int(input_size/8), 2048), #with input_size=1000: (batch_size, 32000) -> (batch_size, 2048)
-            nn.ReLU(),
-            nn.Linear(2048, 1024), #(batch_size, 2048) -> (batch_size, 1024)
-            nn.ReLU(),
-            nn.Linear(1024, 512), #(batch_size, 1024) -> (batch_size, 512)
-            nn.ReLU(),
-            nn.Linear(512, 128), #(batch_size, 512) -> (batch_size, 128)
-            nn.ReLU(),
-            nn.Linear(128, 1), #(batch_size, 128) -> (batch_size, 1)
-            nn.Sigmoid()
-            
-            ## VIEJO: ##
-            # nn.Linear(256 * int(input_size/8), 1024), #(batch_size, 32000) -> (batch_size, 1024)
+            # nn.Linear(256 * int(input_size/8), 2048), #with input_size=1000: (batch_size, 32000) -> (batch_size, 2048)
+            # nn.ReLU(),
+            # nn.Linear(2048, 1024), #(batch_size, 2048) -> (batch_size, 1024)
             # nn.ReLU(),
             # nn.Linear(1024, 512), #(batch_size, 1024) -> (batch_size, 512)
             # nn.ReLU(),
-            # nn.Linear(512, 1), #(batch_size, 512) -> (batch_size, 1)
+            # nn.Linear(512, 128), #(batch_size, 512) -> (batch_size, 128)
+            # nn.ReLU(),
+            # nn.Linear(128, 1), #(batch_size, 128) -> (batch_size, 1)
             # nn.Sigmoid()
+            
+            ## VIEJO: ##
+            nn.Linear(256 * int(input_size/8), 1024), #(batch_size, 32000) -> (batch_size, 1024)
+            nn.ReLU(),
+            nn.Linear(1024, 512), #(batch_size, 1024) -> (batch_size, 512)
+            nn.ReLU(),
+            nn.Linear(512, 1), #(batch_size, 512) -> (batch_size, 1)
+            nn.Sigmoid()
         )
             
     def forward(self, x):
@@ -118,3 +119,4 @@ class Model(nn.Module):
         model.load_state_dict(torch.load(PATH))
         model.eval()
         return model
+    

@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 
-def Anotaciones(eventos = ['Obstructive Apnea', 'Central Apnea', 'Mixed Apnea']):
-    tree = ET.parse('Data\homepap-lab-full-1600003-profusion.xml')
+def Anotaciones(path:str, eventos = ['Obstructive Apnea', 'Central Apnea', 'Mixed Apnea']):
+    tree = ET.parse(path)
     root = tree.getroot()
 
     annotations = {}

@@ -10,6 +10,7 @@ def read_signals_EDF(path:str):
         signal = EDF.readSignal(channel)
         eje_x = np.arange(0, EDF.getFileDuration(), 1/EDF.getSampleFrequency(channel))
         all_signals[labels[channel]] = {'Signal': signal, 'Time': eje_x, 'Dimension': EDF.getPhysicalDimension(channel), 'SamplingRate': EDF.getSampleFrequency(channel)}
+    
     return all_signals
 
 def plot_signal(key):
@@ -130,17 +131,18 @@ def get_signal_segments(signal, tiempo, sampling_rate, annotations, period_lengt
             end_index = len(signal)
 
         for annotation in annotations:
-            start, duration = annotation
-            apnea_start = start
-            apnea_end = start + duration
-            
-            if (apnea_start < period_end and apnea_end > period_start):
-                order = [period_start, apnea_start, apnea_end, period_end]
-                order.sort()
-                apnea_in_segment = order[2] - order[1]
-                if(apnea_in_segment >= 0.3*duration):
-                    label = 1
-                break
+            for anot in annotations[annotation]:
+                start, duration = anot
+                apnea_start = start
+                apnea_end = start + duration
+                
+                if (apnea_start < period_end and apnea_end > period_start):
+                    order = [period_start, apnea_start, apnea_end, period_end]
+                    order.sort()
+                    apnea_in_segment = order[2] - order[1]
+                    if(apnea_in_segment >= 0.3*duration):
+                        label = 1
+                    break
         segments.append({'Signal': signal[start_index:end_index], 'Label': label, 'Start': period_start, 'End': period_end, 'SamplingRate': sampling_rate})
     return segments
 
@@ -171,8 +173,8 @@ def plot_all_segments(segments):
 all_signals = read_signals_EDF('Data\homepap-lab-full-1600003.edf')
 #print(all_signals.keys())
 
-annotations = Anotaciones()
-plot_bipolar_signal('E1', 'M2', 'min', annotations)
+#annotations = Anotaciones('Data\homepap-lab-full-1600003-profusion.xml')
+#plot_bipolar_signal('E1', 'M2', 'min', annotations)
 # senalbipolar, tiempo, sampling = get_bipolar_signal('E1', 'M2')
 # segments = get_signal_segments(senalbipolar, tiempo, sampling, annotations)
 # plot_apnea_segments(segments)
