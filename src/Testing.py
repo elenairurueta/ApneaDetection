@@ -1,5 +1,10 @@
-from Imports import *
-from Modelo import Model
+try:
+    from Imports import *
+    from Modelo import Model
+except:
+    from src.Imports import *
+    from src.Modelo import Model
+
 
 class Tester:
     """Class to test the model with testset"""
@@ -84,13 +89,17 @@ class Tester:
         """
 
         #Create a ConfusionMatrixDisplay object with the confusion matrix and class labels:
-        cm_display = ConfusionMatrixDisplay(confusion_matrix=self.__cm__, display_labels=['sin apnea', 'con apnea'])
+        cm_display = ConfusionMatrixDisplay(confusion_matrix=self.__cm__, display_labels=['without apnea', 'with apnea'])
         cm_display.plot(cmap='Blues')
         plt.title("Confusion Matrix")
-
-        if not os.path.exists(f'models/{self.__model__.get_nombre()}'):
-            os.makedirs(f'models/{self.__model__.get_nombre()}')
-        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        if os.path.exists(f'./models'):
+            if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
+                os.makedirs(f'./models/{self.__model__.get_nombre()}')
+            PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        elif os.path.exists(f'../models'):
+            if not os.path.exists(f'../models/{self.__model__.get_nombre()}'):
+                os.makedirs(f'../models/{self.__model__.get_nombre()}')
+            PATH = f'../models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
         plt.savefig(PATH)
 
         if(plot):
@@ -124,9 +133,14 @@ class Tester:
         plt.title('Receiver Operating Characteristic')
         plt.legend(loc="lower right")
 
-        if not os.path.exists(f'models/{self.__model__.get_nombre()}'):
-            os.makedirs(f'models/{self.__model__.get_nombre()}')
-        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        if os.path.exists(f'./models'):
+            if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
+                os.makedirs(f'./models/{self.__model__.get_nombre()}')
+            PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        elif os.path.exists(f'../models'):
+            if not os.path.exists(f'../models/{self.__model__.get_nombre()}'):
+                os.makedirs(f'../models/{self.__model__.get_nombre()}')
+            PATH = f'../models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
         plt.savefig(PATH)
 
         if(plot):
@@ -148,7 +162,7 @@ class Tester:
         cm_normalized = self.__cm__.astype('float') / self.__cm__.sum(axis=1)[:, np.newaxis] * 100
         fig, ax = plt.subplots(figsize=(13, 6))
         #Create a ConfusionMatrixDisplay object with the normalized confusion matrix and class labels:
-        cm_display = ConfusionMatrixDisplay(confusion_matrix=cm_normalized, display_labels=['sin apnea', 'con apnea'])
+        cm_display = ConfusionMatrixDisplay(confusion_matrix=cm_normalized, display_labels=['without apnea', 'with apnea'])
         cm_display.plot(cmap='Blues', ax=ax)
         for text in ax.texts:
             text.set_visible(False)
@@ -158,13 +172,17 @@ class Tester:
         ax.set_title("Confusion Matrix")
 
         #Generate additional metric text to display below the confusion matrix plot:
-        metric_text = (f"Cantidad de datos de prueba: {len(self.__test_loader__.dataset)}\n" +
+        metric_text = (f"Test data count: {len(self.__test_loader__.dataset)}\n" +
                        "\n".join([f"{k}: {v}%" for k, v in self.__metrics__.items()]))
         plt.gcf().text(0.1, 0.1, metric_text, ha='center', fontsize=10, bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray'))
-
-        if not os.path.exists(f'models/{self.__model__.get_nombre()}'):
-            os.makedirs(f'models/{self.__model__.get_nombre()}')
-        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        if os.path.exists(f'./models'):
+            if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
+                os.makedirs(f'./models/{self.__model__.get_nombre()}')
+            PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        elif os.path.exists(f'../models'):
+            if not os.path.exists(f'../models/{self.__model__.get_nombre()}'):
+                os.makedirs(f'../models/{self.__model__.get_nombre()}')
+            PATH = f'../models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
         plt.savefig(PATH)
 
         if(plot):
@@ -184,7 +202,7 @@ class Tester:
         metrics = {
             "Accuracy": accuracy_score(self.__all_labels__, self.__all_preds__) * 100,
             "Precision": precision_score(self.__all_labels__, self.__all_preds__) * 100,
-            "Sensitivity_recall": recall_score(self.__all_labels__, self.__all_preds__) * 100,
+            "Sensitivity": recall_score(self.__all_labels__, self.__all_preds__) * 100,
             "Specificity": recall_score(self.__all_labels__, self.__all_preds__, pos_label=0) * 100,
             "F1": f1_score(self.__all_labels__, self.__all_preds__) * 100
         }
@@ -269,7 +287,7 @@ class Plotter:
         self.fig.clf()
         self.ax = self.fig.add_subplot(111)
         colores = ['blue', 'red']
-        label_decoder = {0: 'sin', 1: 'con'}
+        label_decoder = {0: 'without', 1: 'with'}
 
         start_idx = self.current_page * self.plots_per_fig
         end_idx = min(start_idx + self.plots_per_fig, len(self.__wrong_predictions))
@@ -287,7 +305,7 @@ class Plotter:
             ax.set_xlim(0, len(signal))
             ax.set_ylim(-3, 3)
 
-        self.ax.text(0.5, -0.1, f'Página {self.current_page + 1}/{self.num_pages}', ha='center', transform=self.ax.transAxes)
+        self.ax.text(0.5, -0.1, f'Page {self.current_page + 1}/{self.num_pages}', ha='center', transform=self.ax.transAxes)
         self.ax.axis('off')
 
         # Botón de siguiente
@@ -300,10 +318,16 @@ class Plotter:
         self.bprev = Button(axprev, 'Previous')
         self.bprev.on_clicked(self.__prev_page__)
 
-        if not os.path.exists(f'models/{self.__model_name}'):
-            os.makedirs(f'models/{self.__model_name}')
-        PATH = f'models/{self.__model_name}/{self.__model_name}_wrongpreds_page{self.current_page + 1}.png'
+        if os.path.exists(f'./models'):
+            if not os.path.exists(f'./models/{self.__model_name}'):
+                os.makedirs(f'./models/{self.__model_name}')
+            PATH = f'./models/{self.__model_name}/{self.__model_name}__wrongpreds_page{self.current_page + 1}.png'
+        elif os.path.exists(f'../models'):
+            if not os.path.exists(f'../models/{self.__model_name}'):
+                os.makedirs(f'../models/{self.__model_name}')
+            PATH = f'../models/{self.__model_name}/{self.__model_name}_wrongpreds_page{self.current_page + 1}.png'
         plt.savefig(PATH)
+
 
         if self.plot:
             self.fig.canvas.draw()

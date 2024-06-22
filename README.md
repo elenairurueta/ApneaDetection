@@ -22,8 +22,8 @@ Download folder ApneaDetection_SimulatedSignals from: https://1drv.ms/f/s!Akd0CZ
 
 Password: ApneaDetection
 
-Move folder to Data directory.
-The path should look like: ```'Data\ApneaDetection_SimulatedSignals\SenalesCONapnea.csv'``` and ```'Data\ApneaDetection_SimulatedSignals\SenalesSINapnea.csv'```
+Move folder to data directory.
+The path should look like: ```'data\ApneaDetection_SimulatedSignals\SenalesCONapnea.csv'``` and ```'data\ApneaDetection_SimulatedSignals\SenalesSINapnea.csv'```
 
 ## Usage
 To create, train and test a new model, open ```NewModel.py```. To upload and test existing model, open ```ExistingModel.py```.
@@ -35,9 +35,9 @@ from Modelo import *
 from Training import *
 from Testing import *
 ```
-Line 8 will create a custom Dataset (ApneaDataset) with the simulated signals from the Data directory.
+Line 8 will create a custom Dataset (ApneaDataset) with the simulated signals from the data directory.
 ```python
-dataset = ApneaDataset('Data\ApneaDetection_SimulatedSignals\SenalesCONapnea.csv', 'Data\ApneaDetection_SimulatedSignals\SenalesSINapnea.csv')
+dataset = ApneaDataset('data\ApneaDetection_SimulatedSignals\SenalesCONapnea.csv', 'data\ApneaDetection_SimulatedSignals\SenalesSINapnea.csv')
 ```
 
 Line 13 will split the Dataset into train, validation and test Subsets. 
@@ -100,14 +100,15 @@ Lines 20 to 36 will create and train the new model.
 Lines 20 to 28 will upload and test an existing model. 
   ```pyhton
   nombre = 'modelo'
-  model = Model.load_model(nombre, input_size)
+  model = Model.load_model(nombre, input_size, extension)
   tester = Tester(model = model, 
                   testset = dataset.testset, 
                   batch_size = 32)
   tester.evaluate(plot = True)
   ```
   You can modify the following hiperparameters:
-  - ```nombre``` (string): name used to upload the model. The path should look like: ```'models\nombre\nombre.pt/pth'```. The file extension should be ```'.pt'``` or ```'.pth'```. 
+  - ```nombre``` (string): name used to upload the model. The path should look like: ```'models\nombre\nombre.pt/pth'```. 
+  - ```extension``` (string): the file extension should be ```'.pt'``` or ```'.pth'```. 
   - ```batch_size``` (int): number of data used in one iteration
   - ```plot``` (bool): if plot = False the figures will not be displayed but will be saved in the ```models\nombre\nombre_''.png``` files
 

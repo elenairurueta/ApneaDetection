@@ -1,5 +1,10 @@
-from Imports import *
-from Modelo import Model
+try:
+    from Imports import *
+    from Modelo import Model
+except:
+    from src.Imports import *
+    from src.Modelo import Model
+
 
 class Trainer:
     """Class to train the model with trainset and validate training with valset"""
@@ -206,9 +211,9 @@ class Trainer:
         plt.tight_layout()
         
         #Save figure in path 'models\nombre\nombre_acc_loss.png'
-        if not os.path.exists(f'models/{self.__model__.get_nombre()}'):
-            os.makedirs(f'models/{self.__model__.get_nombre()}')
-        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
+        if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
+            os.makedirs(f'./models/{self.__model__.get_nombre()}')
+        PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
         plt.savefig(PATH)
         
         if(plot):
@@ -230,10 +235,14 @@ class Trainer:
         
         Returns: none.
         """
-
-        if not os.path.exists(f'models/{self.__model__.get_nombre()}'):
-            os.makedirs(f'models/{self.__model__.get_nombre()}')
-        PATH = f'models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
+        if os.path.exists(f'./models'):
+            if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
+                os.makedirs(f'./models/{self.__model__.get_nombre()}')
+            PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
+        elif os.path.exists(f'../models'):
+            if not os.path.exists(f'../models/{self.__model__.get_nombre()}'):
+                os.makedirs(f'../models/{self.__model__.get_nombre()}')
+            PATH = f'../models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
         f = open(PATH, "w")
         f.write(self.text)
         f.close()

@@ -1,4 +1,7 @@
-from Imports import *
+try:
+    from Imports import *
+except:
+    from src.Imports import *
 
 class ApneaDataset(Dataset):
     """Dataset custom class"""
@@ -17,13 +20,13 @@ class ApneaDataset(Dataset):
         try:
             dfCON = pd.read_csv(csv_path_con)
         except FileNotFoundError:
-            raise FileNotFoundError("File not found. Path should look like 'Data\ApneaDetection_SimulatedSignals\SenalesCONapnea.csv'")
+            raise FileNotFoundError("File not found. Path should look like 'data\ApneaDetection_SimulatedSignals\SenalesCONapnea.csv'")
         dfCON.drop(columns=dfCON.columns[0], inplace=True)
         dfCON = dfCON.transpose()
         try:
             dfSIN = pd.read_csv(csv_path_sin)
         except FileNotFoundError:
-            raise FileNotFoundError("File not found. Path should look like 'Data\ApneaDetection_SimulatedSignals\SenalesSINapnea.csv'")
+            raise FileNotFoundError("File not found. Path should look like 'data\ApneaDetection_SimulatedSignals\SenalesSINapnea.csv'")
         dfSIN.drop(columns=dfSIN.columns[0], inplace=True)
         dfSIN = dfSIN.transpose()
 
