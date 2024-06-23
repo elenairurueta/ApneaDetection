@@ -1,6 +1,5 @@
 from Imports import *
 from pyedflib import EdfReader
-from LecturaAnotaciones import *
 
 def read_signals_EDF(path:str):
     EDF = EdfReader(path)
@@ -22,13 +21,11 @@ def plot_signal(key):
     plt.xlim(0, signal['Time'][-1])
     plt.show() 
 
-def plot_bipolar_signal(key1, key2, t = 'min', annotations = None):
+def plot_bipolar_signal(signal1, signal2, t = 'min', annotations = None):
     """
     t puede ser min, h, seg
     Las señales deben tener el mismo vector de tiempo y la misma unidad.
     """
-    signal1 = all_signals.get(key1)
-    signal2 = all_signals.get(key2)
     signal = signal1['Signal'] - signal2['Signal']
     if((signal1['Time'] == signal2['Time']).all() and (signal1['Dimension'] == signal2['Dimension'])):
         tiempo = signal1['Time']
@@ -46,7 +43,7 @@ def plot_bipolar_signal(key1, key2, t = 'min', annotations = None):
         plt.subplot(3,1,3)
         plt.plot(tiempo, signal)
 
-        plt.title(key1 + '-' + key2)
+        plt.title('bipolar')
         plt.xlabel(f't[{t}]')
         plt.ylabel(signal1['Dimension'])
         plt.xlim(0, tiempo[-1])
@@ -108,9 +105,7 @@ def plot_bipolar_signal(key1, key2, t = 'min', annotations = None):
     else:
         print('Not compatible signals')
     
-def get_bipolar_signal(key1, key2):
-    signal1 = all_signals.get(key1)
-    signal2 = all_signals.get(key2)
+def get_bipolar_signal(signal1, signal2):
     signal = signal1['Signal'] - signal2['Signal']
     tiempo = signal1['Time']
     sampling = signal1['SamplingRate']
@@ -162,22 +157,9 @@ def plot_all_segments(segments):
     plt.figure(1)
     for segment in segments:
         tiempo_segmento = np.arange(0, 30, 1/segment['SamplingRate'])
-        plt.plot(tiempo_segmento, segment['Senal'])
+        plt.plot(tiempo_segmento, segment['Signal'])
         start = segment['Start']
         end = segment['End']
         label = segment['Label']
         plt.title(f'Senal: {start} a {end}seg - Label: {label}')
         plt.show()
- 
-
-all_signals = read_signals_EDF('Data\homepap-lab-full-1600003.edf')
-#print(all_signals.keys())
-
-#annotations = Anotaciones('Data\homepap-lab-full-1600003-profusion.xml')
-#plot_bipolar_signal('E1', 'M2', 'min', annotations)
-# senalbipolar, tiempo, sampling = get_bipolar_signal('E1', 'M2')
-# segments = get_signal_segments(senalbipolar, tiempo, sampling, annotations)
-# plot_apnea_segments(segments)
-# plot_all_segments(segments)
-
-

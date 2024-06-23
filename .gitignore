@@ -1,11 +1,5 @@
-SenalesCONapnea.csv
-SenalesSINapnea.csv
 /models
 *.edf
-homepap-lab-full-1600001-profusion.xml
-M1.csv
-M2.csv
-E2.csv
-E1.csv
+*.csv
 *.xml
 src/Prueba.py

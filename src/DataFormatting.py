@@ -5,40 +5,18 @@ except:
 
 class ApneaDataset(Dataset):
     """Dataset custom class"""
-    def __init__(self, csv_path_con:str, csv_path_sin:str):
+
+    def __init__(self, X, y):
         """
         Initializes the Apnea Dataset.
 
         Args:
-            csv_path_con (str): path to the 'SenalesCONapnea.csv' file.
-            csv_path_sin (str): path to the 'SenalesSINapnea.csv' file.
+            COMPLETAR
 
         Returns: none.
         """
-
-        #Read .csv files and drop time column
-        try:
-            dfCON = pd.read_csv(csv_path_con)
-        except FileNotFoundError:
-            raise FileNotFoundError("File not found. Path should look like 'data\ApneaDetection_SimulatedSignals\SenalesCONapnea.csv'")
-        dfCON.drop(columns=dfCON.columns[0], inplace=True)
-        dfCON = dfCON.transpose()
-        try:
-            dfSIN = pd.read_csv(csv_path_sin)
-        except FileNotFoundError:
-            raise FileNotFoundError("File not found. Path should look like 'data\ApneaDetection_SimulatedSignals\SenalesSINapnea.csv'")
-        dfSIN.drop(columns=dfSIN.columns[0], inplace=True)
-        dfSIN = dfSIN.transpose()
-
-        #Label and join dataframes 
-        self.__X = np.concatenate((dfCON, dfSIN))
-        targetCON = np.ones(dfCON.shape[0])
-        targetSIN = np.zeros(dfSIN.shape[0])
-        self.__y = np.concatenate((targetCON, targetSIN))
-
-        self.__X = torch.tensor(self.__X, dtype=torch.float32).unsqueeze(1)
-        self.__y = torch.tensor(self.__y, dtype=torch.float32).reshape(-1, 1)
-
+        self.__X = torch.tensor(X)
+        self.__y = torch.tensor(y)
         self.trainset = []
         self.valset = []
         self.testset = []
@@ -66,14 +44,14 @@ class ApneaDataset(Dataset):
         Returns: none.
         """
 
-        if((train_perc + val_perc + test_perc) < 1.0):
+        if((train_perc + val_perc + test_perc) != 1.0):
             test_perc = 1.0 - (train_perc + val_perc)
         if((train_perc + val_perc + test_perc) > 1.0):
             raise Exception("La suma de los porcentajes no puede superar 1.0")
         
-        train_size = int(train_perc * self.__len__())  # 60% para entrenamiento
-        val_size = int(val_perc * self.__len__())    # 20% para validación
-        test_size = int(test_perc * self.__len__())  # 20% para prueba
+        train_size = round(train_perc * self.__len__()) 
+        val_size = round(val_perc * self.__len__())
+        test_size = self.__len__() - train_size - val_size
 
         self.trainset, self.valset, self.testset = random_split(self, [train_size, val_size, test_size])
     
@@ -98,3 +76,59 @@ class ApneaDataset(Dataset):
         text += '\nTest data count: ' + str(cant_datos) + '\n\t' + 'With apnea: ' + str(con_apnea) + '\n\t' + 'Without apnea: ' + str(cant_datos-con_apnea) + '\n'
         
         return text
+    
+    @staticmethod
+    def from_csv(csv_path_con:str, csv_path_sin:str):
+        """
+        Args:
+            csv_path_con (str): path to the 'SenalesCONapnea.csv' file.
+            csv_path_sin (str): path to the 'SenalesSINapnea.csv' file.
+
+        Returns: none.
+        """
+
+        #Read .csv files and drop time column
+        try:
+            dfCON = pd.read_csv(csv_path_con)
+        except FileNotFoundError:
+            raise FileNotFoundError("File not found. Path should look like 'data\ApneaDetection_SimulatedSignals\SenalesCONapnea.csv'")
+        dfCON.drop(columns=dfCON.columns[0], inplace=True)
+        dfCON = dfCON.transpose()
+        try:
+            dfSIN = pd.read_csv(csv_path_sin)
+        except FileNotFoundError:
+            raise FileNotFoundError("File not found. Path should look like 'data\ApneaDetection_SimulatedSignals\SenalesSINapnea.csv'")
+        dfSIN.drop(columns=dfSIN.columns[0], inplace=True)
+        dfSIN = dfSIN.transpose()
+
+        #Label and join dataframes 
+        X = np.concatenate((dfCON, dfSIN))
+        targetCON = np.ones(dfCON.shape[0])
+        targetSIN = np.zeros(dfSIN.shape[0])
+        y = np.concatenate((targetCON, targetSIN))
+
+        X = torch.tensor(X, dtype=torch.float32).unsqueeze(1)
+        y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1)
+        return X,y
+
+    @staticmethod
+    def from_segments(segments):
+        X = []
+        y = []
+
+        # Recorremos cada segmento y añadimos los valores a las listas X y y
+        for segment in segments[:-1]:
+            X.append(segment['Signal'])
+            y.append(segment['Label'])
+
+        # Convertimos las listas en arreglos numpy
+        X = np.vstack(X)
+        y = np.array(y)
+        
+        X = torch.tensor(X, dtype=torch.float32).unsqueeze(1)
+        y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1)
+
+        return X,y
+
+
+        

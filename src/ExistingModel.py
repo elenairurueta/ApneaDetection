@@ -1,11 +1,12 @@
 #Import the required modules:
-from LecturaSenalesSimuladas import *
+from DataFormatting import ApneaDataset
 from Modelo import *
 from Training import *
 from Testing import *
 
 #Create a custom Dataset with the simulated signals from the Data directory
-dataset = ApneaDataset('.\data\ApneaDetection_SimulatedSignals\SenalesCONapnea.csv', '.\data\ApneaDetection_SimulatedSignals\SenalesSINapnea.csv')
+X,y = ApneaDataset.from_csv(csv_path_con = '.\data\ApneaDetection_SimulatedSignals\SenalesCONapnea.csv', csv_path_sin = '.\data\ApneaDetection_SimulatedSignals\SenalesSINapnea.csv')
+dataset = ApneaDataset(X,y)
 
 #Get signal length
 input_size = dataset.signal_len()
