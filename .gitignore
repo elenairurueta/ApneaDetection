@@ -3,3 +3,4 @@
 *.csv
 *.xml
 src/Prueba.py
+/src/__pycache__
