@@ -3,7 +3,7 @@ try:
 except:
     from src.Imports import *
     
-class Model(nn.Module):
+class Model1(nn.Module):
     """Neural network model class"""
     def __init__(self, input_size, nombre:str):
         """
@@ -120,3 +120,117 @@ class Model(nn.Module):
         model.eval()
         return model
     
+
+class Model2(nn.Module):
+    """Neural network model class"""
+    def __init__(self, input_size, nombre:str):
+        """
+        Initializes the neural network model.
+
+        Args:
+            input_size (int): size of the input data.
+            nombre (str): name of the model.
+        """
+
+        super().__init__()
+        self.nombre = nombre
+
+        #Convolutional layers:
+        self.conv_layers = nn.Sequential(
+            nn.Conv1d(1, 8, kernel_size=35, stride=1), #(input_size - (35-1) - 1)/1 + 1 = input_size - 34
+            nn.ELU(),
+            nn.BatchNorm1d(8),
+            nn.MaxPool1d(7, stride=1), #(input_size - 34) - 7 + 1 = input_size - 40
+            nn.Dropout(0.5),
+
+            nn.Conv1d(8, 128, kernel_size=175, stride=1), #(input_size - 40) - 175 + 1 = input_size - 214
+            nn.ELU(),
+            nn.BatchNorm1d(128),
+            nn.MaxPool1d(7, stride=1), #(input_size - 214) - 7 + 1 = input_size - 220
+            nn.Dropout(0.5),
+
+            nn.Conv1d(128, 16, kernel_size=175, stride=1), #(input_size - 220) - 175 + 1 = input_size - 394
+            nn.ELU(),
+            nn.BatchNorm1d(16),
+            nn.MaxPool1d(7, stride=1), #(input_size - 394) - 7 + 1 = input_size - 400
+            nn.Dropout(0.5)
+        )
+        #Fully connected layers:
+        self.fc_layers = nn.Sequential(
+            nn.Linear(16 * (input_size - 400), 64),
+            nn.ELU(),
+            nn.Linear(64, 32),
+            nn.ELU(),
+            nn.Linear(32, 1),
+            nn.Sigmoid() 
+            )
+          
+    def forward(self, x):
+        """
+        Defines the forward pass of the neural network model.
+        """
+        x = self.conv_layers(x)
+        batch_size = x.size(0)
+        x = x.view(batch_size, -1) #flatten
+        x = self.fc_layers(x)
+        return x
+    
+    def get_nombre(self):
+        """
+        Args: none.
+
+        Returns:
+            - str: the name of the model.
+        """
+        return self.nombre
+
+    def get_architecture(self):
+        """
+        Args: none.
+
+        Returns:
+            - str: the architecture of the model.
+        """
+        return '\n\n' + str(self)
+
+    def save_model(self, extension:str = '.pth'):
+        """
+        Saves the parameters of the model to a file.
+
+        Args:
+            - extension (str, optional): extension of the file ('.pt' or '.pth'). Defaults to '.pth'.
+
+        Returns: none
+        """
+        if os.path.exists(f'./models'):
+            if not os.path.exists(f'./models/{self.nombre}'):
+                os.makedirs(f'./models/{self.nombre}')
+            PATH = f'./models/{self.nombre}/{self.nombre + extension}'
+        elif os.path.exists(f'../models'):
+            if not os.path.exists(f'../models/{self.nombre}'):
+                os.makedirs(f'../models/{self.nombre}')
+            PATH = f'../models/{self.nombre}/{self.nombre + extension}'
+        torch.save(self.state_dict(), PATH)
+
+    @staticmethod
+    def load_model(nombre, input_size, extension:str = '.pth'):
+        """
+        Loads a pre-trained model from a file.
+
+        Args:
+            - nombre (str): name of the model.
+            - input_size (int): size of the input data.
+            - extension (str, optional): extension of the file ('.pt' or '.pth'). Defaults to '.pth'.
+            
+        Returns:
+            - Model: the loaded model.
+        """
+        model = Model(input_size, nombre)
+        try:
+            PATH = f'./models/{nombre}/{nombre + extension}'
+            model.load_state_dict(torch.load(PATH))
+        except:
+            PATH = f'../models/{nombre}/{nombre + extension}'
+            model.load_state_dict(torch.load(PATH))
+        model.eval()
+        return model

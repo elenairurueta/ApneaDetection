@@ -8,7 +8,6 @@ from PyQt5.QtGui import QBrush, QColor
 
 def plot_signals(annotations, tiempo, signal1, s1, signal2 = [ ], s2 = ' ', signal3 = [ ], s3 = ' '):
 
-
     colors = [
             [QColor(255, 255, 0, 100),  # Amarillo transparente
             QColor(255, 255, 0, 255)], # Amarillo 
@@ -32,8 +31,10 @@ def plot_signals(annotations, tiempo, signal1, s1, signal2 = [ ], s2 = ' ', sign
     p1.setDownsampling(auto=False, ds=4, mode='mean')
     p1.showGrid(x = True, y = True, alpha = 0.3)     
     p1.plot(tiempo, signal1 + 10, pen=(255,0,0), name = s1)
-    p1.plot(tiempo, signal2 + 5, pen=(0,255,0), name = s2)
-    p1.plot(tiempo, signal3, pen=(0,0,255), name = s3)
+    if(len(signal2) > 0):
+        p1.plot(tiempo, signal2 + 5, pen=(0,255,0), name = s2)
+    if(len(signal3) > 0):
+        p1.plot(tiempo, signal3, pen=(0,0,255), name = s3)
     p1.setMouseEnabled(x=True, y=False)
     p1.enableAutoRange(x=False, y=True)
     lr = pg.LinearRegionItem([0, max(tiempo)/3])
@@ -55,32 +56,33 @@ def plot_signals(annotations, tiempo, signal1, s1, signal2 = [ ], s2 = ' ', sign
     p2.enableAutoRange(x=False, y=True)
     updatePlot()
 
-
     win.nextRow()
 
-    p3 = win.addPlot(title=s2)
-    p3.plot(tiempo, signal2, pen=(0,255,0))
-    p3.setDownsampling(auto=False, ds=4, mode='mean')
-    p3.showGrid(x = True, y = True, alpha = 0.3)     
-    p3.setXLink(p2)
-    p3.setMouseEnabled(x=True, y=False)
-    p3.enableAutoRange(x=False, y=True)
-    lr.sigRegionChanged.connect(updatePlot)
-    p3.sigXRangeChanged.connect(updateRegion)
-    updatePlot()
+    if(len(signal2) > 0):
+        p3 = win.addPlot(title=s2)
+        p3.plot(tiempo, signal2, pen=(0,255,0))
+        p3.setDownsampling(auto=False, ds=4, mode='mean')
+        p3.showGrid(x = True, y = True, alpha = 0.3)     
+        p3.setXLink(p2)
+        p3.setMouseEnabled(x=True, y=False)
+        p3.enableAutoRange(x=False, y=True)
+        lr.sigRegionChanged.connect(updatePlot)
+        p3.sigXRangeChanged.connect(updateRegion)
+        updatePlot()
 
-    win.nextRow()
+        win.nextRow()
+        if(len(signal3) > 0):
+            p4 = win.addPlot(title= s3)
+            p4.plot(tiempo, signal3, pen=(0,0,255))
+            p4.setDownsampling(auto=False, ds=4, mode='mean')
+            p4.showGrid(x = True, y = True, alpha = 0.3)     
+            p4.setXLink(p2)
+            p4.setMouseEnabled(x=True, y=False)
+            p4.enableAutoRange(x=False, y=True)
+            lr.sigRegionChanged.connect(updatePlot)
+            p4.sigXRangeChanged.connect(updateRegion)
+            updatePlot()
 
-    p4 = win.addPlot(title= s3)
-    p4.plot(tiempo, signal3, pen=(0,0,255))
-    p4.setDownsampling(auto=False, ds=4, mode='mean')
-    p4.showGrid(x = True, y = True, alpha = 0.3)     
-    p4.setXLink(p2)
-    p4.setMouseEnabled(x=True, y=False)
-    p4.enableAutoRange(x=False, y=True)
-    lr.sigRegionChanged.connect(updatePlot)
-    p4.sigXRangeChanged.connect(updateRegion)
-    updatePlot()
     for idx, evento in enumerate(annotations):
         for anotacion in annotations[evento]:
             region1 = pg.LinearRegionItem([anotacion[0],(anotacion[0] + anotacion[1])], movable=False, pen = colors[idx][1], brush = colors[idx][0])
@@ -89,10 +91,13 @@ def plot_signals(annotations, tiempo, signal1, s1, signal2 = [ ], s2 = ' ', sign
             region2 = pg.LinearRegionItem([anotacion[0],(anotacion[0] + anotacion[1])], movable=False, pen = colors[idx][1], brush = colors[idx][0])
             region2.setZValue(-10)
             p2.addItem(region2)
-            region3 = pg.LinearRegionItem([anotacion[0],(anotacion[0] + anotacion[1])], movable=False, pen = colors[idx][1], brush = colors[idx][0])
-            region3.setZValue(-10)
-            p3.addItem(region3)
-            region4 = pg.LinearRegionItem([anotacion[0],(anotacion[0] + anotacion[1])], movable=False, pen = colors[idx][1], brush = colors[idx][0])
-            region4.setZValue(-10)
-            p4.addItem(region4)
+            if(len(signal2) > 0):
+                region3 = pg.LinearRegionItem([anotacion[0],(anotacion[0] + anotacion[1])], movable=False, pen = colors[idx][1], brush = colors[idx][0])
+                region3.setZValue(-10)
+                p3.addItem(region3)
+            if(len(signal3) > 0):
+                region4 = pg.LinearRegionItem([anotacion[0],(anotacion[0] + anotacion[1])], movable=False, pen = colors[idx][1], brush = colors[idx][0])
+                region4.setZValue(-10)
+                p4.addItem(region4)
     pg.exec()
+

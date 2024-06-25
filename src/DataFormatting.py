@@ -6,7 +6,7 @@ except:
 class ApneaDataset(Dataset):
     """Dataset custom class"""
 
-    def __init__(self, X, y):
+    def __init__(self, X, y, archivos):
         """
         Initializes the Apnea Dataset.
 
@@ -20,6 +20,7 @@ class ApneaDataset(Dataset):
         self.trainset = []
         self.valset = []
         self.testset = []
+        self.archivos = archivos
 
     def __len__(self):
         return len(self.__y)
@@ -76,6 +77,35 @@ class ApneaDataset(Dataset):
         text += '\nTest data count: ' + str(cant_datos) + '\n\t' + 'With apnea: ' + str(con_apnea) + '\n\t' + 'Without apnea: ' + str(cant_datos-con_apnea) + '\n'
         
         return text
+    
+
+    def undersample_majority_class(self, majority_class):
+        
+        class_counts = Counter([int(self.trainset[i][1].item()) for i in range(len(self.trainset))])
+
+        # Calcular la cantidad mínima de ejemplos por clase
+        min_count = min(class_counts.values())
+        
+        # Crear una lista para almacenar los índices de los datos submuestreados
+        indices = []
+
+        # Inicializar un contador por clase
+        class_counter = {cls: 0 for cls in class_counts}
+
+        for idx in range(len(self.trainset)):
+            label = int(self.trainset[idx][1].item())
+            if label == majority_class:
+                if class_counter[label] < min_count:
+                    indices.append(idx)
+                    class_counter[label] += 1
+            else:
+                indices.append(idx)
+        
+        # Crear un subset del dataset original con los nuevos índices
+        self.trainset = Subset(self.trainset, indices)
+        
+
+
     
     @staticmethod
     def from_csv(csv_path_con:str, csv_path_sin:str):

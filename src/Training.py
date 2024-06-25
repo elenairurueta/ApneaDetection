@@ -1,15 +1,15 @@
 try:
     from Imports import *
-    from Modelo import Model
+    from Modelo import Model1, Model2
 except:
     from src.Imports import *
-    from src.Modelo import Model
+    from src.Modelo import Model1, Model2
 
 
 class Trainer:
     """Class to train the model with trainset and validate training with valset"""
 
-    def __init__(self, model:Model, trainset:Subset, valset:Subset, n_epochs:int = 100, batch_size:int = 32, loss_fn:str = 'BCE', optimizer:str = 'SGD', lr:float = 0.01, momentum:float = 0, text:str = ''):
+    def __init__(self, model:Model1, trainset:Subset, valset:Subset, n_epochs:int = 100, batch_size:int = 32, loss_fn:str = 'BCE', optimizer:str = 'SGD', lr:float = 0.01, momentum:float = 0, text:str = ''):
         """
         Initializes the Trainer object.
 

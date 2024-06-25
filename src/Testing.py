@@ -1,14 +1,14 @@
 try:
     from Imports import *
-    from Modelo import Model
+    from Modelo import Model1, Model2
 except:
     from src.Imports import *
-    from src.Modelo import Model
+    from src.Modelo import Model1, Model2
 
 
 class Tester:
     """Class to test the model with testset"""
-    def __init__(self, model:Model, testset:Subset, batch_size:int=32):
+    def __init__(self, model:Model1, testset:Subset, batch_size:int=32):
         """
         Initializes the Tester object.
 
