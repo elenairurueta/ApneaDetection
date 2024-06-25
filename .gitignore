@@ -1,6 +1,7 @@
 SenalesCONapnea.csv
 SenalesSINapnea.csv
 /models
+/__pycache__
 *.edf
 homepap-lab-full-1600001-profusion.xml
 M1.csv
