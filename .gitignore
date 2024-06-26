@@ -1,7 +1,10 @@
-/models
+SenalesCONapnea.csv
+SenalesSINapnea.csv
+/models/modelo_prueba
+/__pycache__
 *.edf
-*.csv
 *.xml
-src/Prueba.py
+
+src/__pycache__/Imports.cpython-312.pyc
+/models
 /src/__pycache__
-*.xlsx
