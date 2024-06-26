@@ -108,3 +108,9 @@ Lines 20 to 28 will upload and test an existing model.
   - ```batch_size``` (int): number of data used in one iteration
   - ```plot``` (bool): if plot = False the figures will not be displayed but will be saved in the ```models\nombre\nombre_''.png``` files
 
+To try existing model 'modelo_prueba' download folder modelo_prueba from: https://1drv.ms/f/s!Akd0CZdYW6D5gtQi05hqlCUe6msI4Q?e=13DVB8
+
+Password: ApneaDetection
+
+Move folder to models directory.
+The path should look like: ```'models\modelo_prueba\modelo_prueba.pth'```.
