@@ -77,36 +77,48 @@ class ApneaDataset(Dataset):
         text += '\nTest data count: ' + str(cant_datos) + '\n\t' + 'With apnea: ' + str(con_apnea) + '\n\t' + 'Without apnea: ' + str(cant_datos-con_apnea) + '\n'
         
         return text
-    
 
-    def undersample_majority_class(self, majority_class):
+    def undersample_majority_class(self, majority_class, val = True):
         
-        class_counts = Counter([int(self.trainset[i][1].item()) for i in range(len(self.trainset))])
+        class_counts_train = Counter([int(self.trainset[i][1].item()) for i in range(len(self.trainset))])
 
-        # Calcular la cantidad mínima de ejemplos por clase
-        min_count = min(class_counts.values())
+        min_count_train = min(class_counts_train.values())
         
-        # Crear una lista para almacenar los índices de los datos submuestreados
-        indices = []
+        indices_train = []
 
-        # Inicializar un contador por clase
-        class_counter = {cls: 0 for cls in class_counts}
+        class_counter_train = {cls: 0 for cls in class_counts_train}
 
         for idx in range(len(self.trainset)):
             label = int(self.trainset[idx][1].item())
             if label == majority_class:
-                if class_counter[label] < min_count:
-                    indices.append(idx)
-                    class_counter[label] += 1
+                if class_counter_train[label] < min_count_train:
+                    indices_train.append(idx)
+                    class_counter_train[label] += 1
             else:
-                indices.append(idx)
+                indices_train.append(idx)
         
-        # Crear un subset del dataset original con los nuevos índices
-        self.trainset = Subset(self.trainset, indices)
+        self.trainset = Subset(self.trainset, indices_train)
         
+        if(val):
+            class_counts_val = Counter([int(self.valset[i][1].item()) for i in range(len(self.valset))])
 
+            min_count_val = min(class_counts_val.values())
+            
+            indices_val = []
 
-    
+            class_counter_val = {cls: 0 for cls in class_counts_val}
+
+            for idx in range(len(self.valset)):
+                label = int(self.valset[idx][1].item())
+                if label == majority_class:
+                    if class_counter_val[label] < min_count_val:
+                        indices_val.append(idx)
+                        class_counter_val[label] += 1
+                else:
+                    indices_val.append(idx)
+            
+            self.valset = Subset(self.valset, indices_val)
+            
     @staticmethod
     def from_csv(csv_path_con:str, csv_path_sin:str):
         """
@@ -146,8 +158,7 @@ class ApneaDataset(Dataset):
         X = []
         y = []
 
-        # Recorremos cada segmento y añadimos los valores a las listas X y y
-        for segment in segments[:-1]:
+        for segment in segments:
             X.append(segment['Signal'])
             y.append(segment['Label'])
 
@@ -159,6 +170,3 @@ class ApneaDataset(Dataset):
         y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1)
 
         return X,y
-
-
-        

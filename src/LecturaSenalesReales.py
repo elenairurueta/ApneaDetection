@@ -1,5 +1,6 @@
 from Imports import *
 from pyedflib import EdfReader
+import random
 
 def read_signals_EDF(path:str):
     EDF = EdfReader(path)
@@ -163,3 +164,54 @@ def plot_all_segments(segments):
         label = segment['Label']
         plt.title(f'Senal: {start} a {end}seg - Label: {label}')
         plt.show()
+
+def get_signal_segments_strict(signal, tiempo, sampling_rate, annotations):
+    all_annotations = []
+    segments_conapnea = []
+    segments_sinapnea = []
+
+    for event in annotations:
+        all_annotations = all_annotations + annotations[event]
+    all_annotations.sort(key=lambda x: x[0]) #ordeno por inicio de la anotación
+    for idx, annotation in enumerate(all_annotations):
+            inicio_apnea, duracion_apnea = annotation
+            fin_apnea = inicio_apnea + duracion_apnea
+            if(idx < len(all_annotations) - 1):
+                inicio_prox = all_annotations[idx + 1][0]
+                if (fin_apnea + 15) <= inicio_prox:
+                    #tomo 15 seg antes y 15 seg después
+                    start_time = fin_apnea - 15
+                    start_index = int(start_time * sampling_rate)
+                    end_time = fin_apnea + 15
+                    end_index = int(end_time * sampling_rate)
+                    segments_conapnea.append({'Signal': signal[start_index:end_index], 'Label': 1, 'Start': start_time, 'End': end_time, 'SamplingRate': sampling_rate})
+    if(len(segments_conapnea[-1]['Signal']) < len(segments_conapnea[0]['Signal'])):
+        segments_conapnea.pop()
+
+    t = tiempo[0]
+    while(t<tiempo[-1]):
+        tieneapnea = False
+        for annotation in all_annotations: #TODO optimizar: con las anotaciones ordenadas?
+            inicio_apnea, duracion_apnea = annotation
+            fin_apnea = inicio_apnea + duracion_apnea
+            if(((inicio_apnea >= t) and (inicio_apnea <= t + 45)) or
+               ((fin_apnea >= t) and (fin_apnea <= t + 45)) or
+               ((inicio_apnea < t) and (fin_apnea > t + 45))):
+                tieneapnea = True
+                t = fin_apnea + 1
+                break
+        if(tieneapnea == False):
+            start_index = int((t+15) * sampling_rate)
+            end_index = int((t+45) * sampling_rate)
+            segments_sinapnea.append({'Signal': signal[start_index:end_index], 'Label': 0, 'Start': t+15, 'End': t+45, 'SamplingRate': sampling_rate})
+            t = t + 30
+    if(len(segments_sinapnea[-1]['Signal']) < len(segments_sinapnea[0]['Signal'])):
+        segments_sinapnea.pop()
+
+    segments = segments_conapnea + segments_sinapnea
+    segments.sort(key=lambda x: x['Start'])
+    # for segment in segments:
+    #     print('Label: ', segment['Label'], '\t\t\tStart: ', segment['Start'], '\t\t\tEnd: ', segment['End']) 
+    random.shuffle(segments)
+
+    return segments
