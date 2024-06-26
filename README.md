@@ -110,11 +110,11 @@ Lines 20 to 28 will upload and test an existing model.
 
 > To try existing model 'modelo_prueba':
 
-Download folder modelo_prueba from: https://1drv.ms/f/s!Akd0CZdYW6D5gtQi05hqlCUe6msI4Q?e=13DVB8
+Download file ```modelo_prueba.pth``` from: https://1drv.ms/u/s!Akd0CZdYW6D5gtQlmxq9IKF6iQtEbA?e=UthOMS
 
 Password: ApneaDetection
 
-Move folder to models directory.
+Move file to models\modelo_prueba directory.
 The path should look like: ```'models\modelo_prueba\modelo_prueba.pth'```.
 
 Set variable ```nombre``` to ```nombre = 'modelo_prueba'``` and run ```ExistingModel.py```.
