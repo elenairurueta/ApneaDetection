@@ -6,3 +6,4 @@ SenalesSINapnea.csv
 *.xml
 
 /src/__pycache__
+/models
