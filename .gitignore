@@ -5,3 +5,4 @@ SenalesSINapnea.csv
 *.edf
 *.xml
 
+/src/__pycache__
