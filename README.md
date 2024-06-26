@@ -9,13 +9,9 @@ Clone the repository:
 ```bash
 git clone https://github.com/elenairurueta/ApneaDetection.git
 ```
-Create environment:
+Create environment and install the required packages:
 ```bash
-conda create -n ApneaDetection python==3.11.9
-```
-Install the required packages:
-```bash
-pip install -r requirements.txt
+conda create --name ApneaDetection --file requirements.txt
 ```
 
 Download folder ApneaDetection_SimulatedSignals from: https://1drv.ms/f/s!Akd0CZdYW6D5gtNBfn6auvC5otEYLQ?e=KxyBGX
