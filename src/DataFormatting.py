@@ -2,6 +2,8 @@ try:
     from Imports import *
 except:
     from src.Imports import *
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 
 class ApneaDataset(Dataset):
     """Dataset custom class"""
@@ -49,12 +51,25 @@ class ApneaDataset(Dataset):
             test_perc = 1.0 - (train_perc + val_perc)
         if((train_perc + val_perc + test_perc) > 1.0):
             raise Exception("La suma de los porcentajes no puede superar 1.0")
-        
-        train_size = round(train_perc * self.__len__()) 
-        val_size = round(val_perc * self.__len__())
-        test_size = self.__len__() - train_size - val_size
 
-        self.trainset, self.valset, self.testset = random_split(self, [train_size, val_size, test_size])
+
+        labels = np.array([self[i][1].item() for i in range(len(self))])
+        
+        train_val_indices, test_indices = train_test_split(
+            np.arange(len(labels)),
+            test_size=test_perc,
+            stratify=labels
+        )
+        
+        train_indices, val_indices = train_test_split(
+            train_val_indices,
+            test_size=val_perc / (train_perc + val_perc),
+            stratify=labels[train_val_indices]
+        )
+        
+        self.trainset = Subset(self, train_indices)
+        self.valset = Subset(self, val_indices)
+        self.testset = Subset(self, test_indices)
     
     def analisis_datos(self):
         """
@@ -118,7 +133,13 @@ class ApneaDataset(Dataset):
                     indices_val.append(idx)
             
             self.valset = Subset(self.valset, indices_val)
-            
+    
+    @staticmethod
+    def standarize_data(X):
+        scaler = StandardScaler()
+        scaler.fit(X)
+        return scaler.transform(X)
+
     @staticmethod
     def from_csv(csv_path_con:str, csv_path_sin:str):
         """
@@ -154,7 +175,7 @@ class ApneaDataset(Dataset):
         return X,y
 
     @staticmethod
-    def from_segments(segments):
+    def from_segments(segments, stand = False):
         X = []
         y = []
 
@@ -166,6 +187,9 @@ class ApneaDataset(Dataset):
         X = np.vstack(X)
         y = np.array(y)
         
+        if(stand):
+            X = ApneaDataset.standarize_data(X)
+
         X = torch.tensor(X, dtype=torch.float32).unsqueeze(1)
         y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1)
 
