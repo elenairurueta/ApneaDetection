@@ -1,0 +1,160 @@
+homepap-lab-full-1600063
+
+Training data count: 106
+	With apnea: 53
+	Without apnea: 53
+Validation data count: 38
+	With apnea: 19
+	Without apnea: 19
+Test data count: 124
+	With apnea: 9
+	Without apnea: 115
+
+
+Model1(
+  (conv_layers): Sequential(
+    (0): Conv1d(1, 32, kernel_size=(3,), stride=(1,), padding=(1,))
+    (1): ReLU()
+    (2): Conv1d(32, 64, kernel_size=(3,), stride=(1,), padding=(1,))
+    (3): ReLU()
+    (4): MaxPool1d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (5): Conv1d(64, 128, kernel_size=(3,), stride=(1,), padding=(1,))
+    (6): ReLU()
+    (7): Conv1d(128, 128, kernel_size=(3,), stride=(1,), padding=(1,))
+    (8): ReLU()
+    (9): MaxPool1d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (10): Conv1d(128, 256, kernel_size=(3,), stride=(1,), padding=(1,))
+    (11): ReLU()
+    (12): Conv1d(256, 256, kernel_size=(3,), stride=(1,), padding=(1,))
+    (13): ReLU()
+    (14): MaxPool1d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+  )
+  (fc_layers): Sequential(
+    (0): Linear(in_features=192000, out_features=1024, bias=True)
+    (1): ReLU()
+    (2): Linear(in_features=1024, out_features=512, bias=True)
+    (3): ReLU()
+    (4): Linear(in_features=512, out_features=1, bias=True)
+    (5): Sigmoid()
+  )
+)
+
+Batch size: 16
+
+Loss function: BCELoss()
+
+Optimizer: SGD (
+Parameter Group 0
+    dampening: 0
+    differentiable: False
+    foreach: None
+    fused: None
+    lr: 0.01
+    maximize: False
+    momentum: 0.5
+    nesterov: False
+    weight_decay: 0
+)
+
+Start of training
+	End of epoch 1 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.38% - Val Loss = 68.91% - 19.15 seconds
+	End of epoch 2 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.36% - Val Loss = 68.96% - 18.14 seconds
+	End of epoch 3 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.35% - Val Loss = 69.01% - 18.34 seconds
+	End of epoch 4 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.40% - Val Loss = 69.04% - 18.46 seconds
+	End of epoch 5 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.34% - Val Loss = 69.13% - 17.48 seconds
+	End of epoch 6 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.31% - Val Loss = 69.11% - 18.00 seconds
+	End of epoch 7 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.33% - Val Loss = 69.13% - 17.33 seconds
+	End of epoch 8 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.32% - Val Loss = 69.16% - 17.12 seconds
+	End of epoch 9 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.30% - Val Loss = 69.11% - 17.99 seconds
+	End of epoch 10 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.30% - Val Loss = 69.11% - 17.74 seconds
+	End of epoch 11 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.29% - Val Loss = 69.09% - 19.48 seconds
+	End of epoch 12 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.31% - Val Loss = 69.08% - 21.17 seconds
+	End of epoch 13 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.31% - Val Loss = 69.11% - 21.83 seconds
+	End of epoch 14 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.29% - Val Loss = 69.15% - 25.08 seconds
+	End of epoch 15 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.28% - Val Loss = 69.14% - 24.16 seconds
+	End of epoch 16 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.30% - Val Loss = 69.14% - 19.54 seconds
+	End of epoch 17 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.29% - Val Loss = 69.13% - 19.27 seconds
+	End of epoch 18 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.29% - Val Loss = 69.14% - 18.95 seconds
+	End of epoch 19 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.27% - Val Loss = 69.16% - 19.52 seconds
+	End of epoch 20 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.29% - Val Loss = 69.17% - 13.69 seconds
+	End of epoch 21 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.28% - Val Loss = 69.11% - 13.40 seconds
+	End of epoch 22 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.30% - Val Loss = 69.13% - 13.36 seconds
+	End of epoch 23 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.33% - Val Loss = 69.16% - 13.43 seconds
+	End of epoch 24 - Accuracy = 55.26% - F1 = 69.09% - Train Loss = 69.29% - Val Loss = 69.25% - 13.36 seconds
+	End of epoch 25 - Accuracy = 60.53% - F1 = 48.28% - Train Loss = 69.27% - Val Loss = 69.27% - 13.42 seconds
+	End of epoch 26 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.26% - Val Loss = 69.23% - 15.22 seconds
+	End of epoch 27 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.29% - Val Loss = 69.23% - 14.35 seconds
+	End of epoch 28 - Accuracy = 57.89% - F1 = 27.27% - Train Loss = 69.30% - Val Loss = 69.30% - 14.35 seconds
+	End of epoch 29 - Accuracy = 57.89% - F1 = 27.27% - Train Loss = 69.25% - Val Loss = 69.30% - 13.63 seconds
+	End of epoch 30 - Accuracy = 55.26% - F1 = 19.05% - Train Loss = 69.26% - Val Loss = 69.33% - 13.45 seconds
+	End of epoch 31 - Accuracy = 57.89% - F1 = 27.27% - Train Loss = 69.26% - Val Loss = 69.29% - 13.79 seconds
+	End of epoch 32 - Accuracy = 60.53% - F1 = 71.70% - Train Loss = 69.22% - Val Loss = 69.23% - 13.18 seconds
+	End of epoch 33 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.24% - Val Loss = 69.20% - 13.38 seconds
+	End of epoch 34 - Accuracy = 65.79% - F1 = 64.86% - Train Loss = 69.27% - Val Loss = 69.24% - 13.37 seconds
+	End of epoch 35 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.25% - Val Loss = 69.15% - 13.57 seconds
+	End of epoch 36 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.27% - Val Loss = 69.12% - 13.15 seconds
+	End of epoch 37 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.21% - Val Loss = 69.18% - 13.28 seconds
+	End of epoch 38 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.20% - Val Loss = 69.15% - 13.42 seconds
+	End of epoch 39 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.19% - Val Loss = 69.15% - 13.23 seconds
+	End of epoch 40 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.22% - Val Loss = 69.11% - 13.81 seconds
+	End of epoch 41 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.22% - Val Loss = 69.18% - 13.23 seconds
+	End of epoch 42 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.24% - Val Loss = 69.13% - 13.38 seconds
+	End of epoch 43 - Accuracy = 60.53% - F1 = 40.00% - Train Loss = 69.18% - Val Loss = 69.23% - 13.48 seconds
+	End of epoch 44 - Accuracy = 65.79% - F1 = 60.61% - Train Loss = 69.20% - Val Loss = 69.21% - 13.22 seconds
+	End of epoch 45 - Accuracy = 57.89% - F1 = 27.27% - Train Loss = 69.16% - Val Loss = 69.27% - 13.46 seconds
+	End of epoch 46 - Accuracy = 57.89% - F1 = 38.46% - Train Loss = 69.16% - Val Loss = 69.22% - 13.86 seconds
+	End of epoch 47 - Accuracy = 63.16% - F1 = 41.67% - Train Loss = 69.14% - Val Loss = 69.23% - 13.26 seconds
+	End of epoch 48 - Accuracy = 63.16% - F1 = 41.67% - Train Loss = 69.15% - Val Loss = 69.22% - 13.20 seconds
+	End of epoch 49 - Accuracy = 63.16% - F1 = 41.67% - Train Loss = 69.18% - Val Loss = 69.22% - 13.33 seconds
+	End of epoch 50 - Accuracy = 60.53% - F1 = 71.70% - Train Loss = 69.16% - Val Loss = 69.14% - 13.71 seconds
+	End of epoch 51 - Accuracy = 60.53% - F1 = 34.78% - Train Loss = 69.13% - Val Loss = 69.23% - 13.35 seconds
+	End of epoch 52 - Accuracy = 63.16% - F1 = 41.67% - Train Loss = 69.09% - Val Loss = 69.20% - 13.16 seconds
+	End of epoch 53 - Accuracy = 63.16% - F1 = 41.67% - Train Loss = 69.08% - Val Loss = 69.20% - 13.52 seconds
+	End of epoch 54 - Accuracy = 63.16% - F1 = 41.67% - Train Loss = 69.11% - Val Loss = 69.20% - 13.66 seconds
+	End of epoch 55 - Accuracy = 60.53% - F1 = 61.54% - Train Loss = 69.08% - Val Loss = 69.13% - 13.12 seconds
+	End of epoch 56 - Accuracy = 63.16% - F1 = 65.00% - Train Loss = 69.08% - Val Loss = 69.12% - 13.23 seconds
+	End of epoch 57 - Accuracy = 60.53% - F1 = 71.70% - Train Loss = 69.08% - Val Loss = 69.06% - 13.22 seconds
+	End of epoch 58 - Accuracy = 63.16% - F1 = 58.82% - Train Loss = 69.28% - Val Loss = 69.12% - 13.50 seconds
+	End of epoch 59 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.11% - Val Loss = 68.96% - 13.47 seconds
+	End of epoch 60 - Accuracy = 63.16% - F1 = 72.00% - Train Loss = 69.06% - Val Loss = 69.05% - 13.39 seconds
+	End of epoch 61 - Accuracy = 60.53% - F1 = 68.09% - Train Loss = 69.02% - Val Loss = 69.05% - 13.56 seconds
+	End of epoch 62 - Accuracy = 50.00% - F1 = 66.67% - Train Loss = 69.16% - Val Loss = 68.93% - 13.41 seconds
+	End of epoch 63 - Accuracy = 57.89% - F1 = 38.46% - Train Loss = 68.96% - Val Loss = 69.10% - 13.55 seconds
+	End of epoch 64 - Accuracy = 63.16% - F1 = 41.67% - Train Loss = 68.99% - Val Loss = 69.13% - 13.41 seconds
+	End of epoch 65 - Accuracy = 63.16% - F1 = 41.67% - Train Loss = 69.04% - Val Loss = 69.14% - 13.38 seconds
+	End of epoch 66 - Accuracy = 65.79% - F1 = 68.29% - Train Loss = 68.96% - Val Loss = 68.99% - 13.27 seconds
+	End of epoch 67 - Accuracy = 60.53% - F1 = 71.70% - Train Loss = 68.91% - Val Loss = 68.89% - 13.77 seconds
+	End of epoch 68 - Accuracy = 63.16% - F1 = 56.25% - Train Loss = 68.82% - Val Loss = 69.01% - 15.39 seconds
+	End of epoch 69 - Accuracy = 60.53% - F1 = 51.61% - Train Loss = 68.82% - Val Loss = 69.00% - 13.59 seconds
+	End of epoch 70 - Accuracy = 63.16% - F1 = 41.67% - Train Loss = 68.74% - Val Loss = 69.03% - 13.44 seconds
+	End of epoch 71 - Accuracy = 63.16% - F1 = 41.67% - Train Loss = 68.78% - Val Loss = 69.03% - 13.43 seconds
+	End of epoch 72 - Accuracy = 63.16% - F1 = 41.67% - Train Loss = 68.72% - Val Loss = 69.06% - 13.33 seconds
+	End of epoch 73 - Accuracy = 60.53% - F1 = 34.78% - Train Loss = 68.67% - Val Loss = 69.09% - 13.25 seconds
+	End of epoch 74 - Accuracy = 63.16% - F1 = 41.67% - Train Loss = 68.73% - Val Loss = 68.99% - 13.48 seconds
+	End of epoch 75 - Accuracy = 60.53% - F1 = 48.28% - Train Loss = 68.60% - Val Loss = 68.87% - 13.40 seconds
+	End of epoch 76 - Accuracy = 65.79% - F1 = 60.61% - Train Loss = 68.50% - Val Loss = 68.78% - 13.67 seconds
+	End of epoch 77 - Accuracy = 60.53% - F1 = 40.00% - Train Loss = 68.54% - Val Loss = 68.82% - 13.40 seconds
+	End of epoch 78 - Accuracy = 63.16% - F1 = 41.67% - Train Loss = 68.40% - Val Loss = 68.85% - 13.21 seconds
+	End of epoch 79 - Accuracy = 63.16% - F1 = 41.67% - Train Loss = 68.35% - Val Loss = 68.78% - 13.32 seconds
+	End of epoch 80 - Accuracy = 63.16% - F1 = 41.67% - Train Loss = 68.33% - Val Loss = 68.74% - 13.41 seconds
+	End of epoch 81 - Accuracy = 63.16% - F1 = 56.25% - Train Loss = 68.14% - Val Loss = 68.52% - 13.66 seconds
+	End of epoch 82 - Accuracy = 63.16% - F1 = 58.82% - Train Loss = 68.14% - Val Loss = 68.43% - 13.20 seconds
+	End of epoch 83 - Accuracy = 60.53% - F1 = 57.14% - Train Loss = 68.01% - Val Loss = 68.31% - 13.47 seconds
+	End of epoch 84 - Accuracy = 63.16% - F1 = 53.33% - Train Loss = 67.83% - Val Loss = 68.33% - 13.29 seconds
+	End of epoch 85 - Accuracy = 60.53% - F1 = 57.14% - Train Loss = 67.81% - Val Loss = 68.09% - 13.19 seconds
+	End of epoch 86 - Accuracy = 60.53% - F1 = 54.55% - Train Loss = 67.44% - Val Loss = 68.02% - 13.39 seconds
+	End of epoch 87 - Accuracy = 60.53% - F1 = 54.55% - Train Loss = 67.02% - Val Loss = 67.84% - 13.25 seconds
+	End of epoch 88 - Accuracy = 65.79% - F1 = 58.06% - Train Loss = 66.95% - Val Loss = 67.76% - 13.17 seconds
+	End of epoch 89 - Accuracy = 60.53% - F1 = 59.46% - Train Loss = 66.52% - Val Loss = 67.18% - 13.26 seconds
+	End of epoch 90 - Accuracy = 63.16% - F1 = 56.25% - Train Loss = 66.24% - Val Loss = 67.16% - 13.32 seconds
+	End of epoch 91 - Accuracy = 65.79% - F1 = 68.29% - Train Loss = 65.42% - Val Loss = 66.33% - 13.28 seconds
+	End of epoch 92 - Accuracy = 63.16% - F1 = 58.82% - Train Loss = 64.75% - Val Loss = 66.23% - 13.29 seconds
+	End of epoch 93 - Accuracy = 57.89% - F1 = 55.56% - Train Loss = 64.09% - Val Loss = 65.31% - 13.13 seconds
+	End of epoch 94 - Accuracy = 60.53% - F1 = 59.46% - Train Loss = 62.99% - Val Loss = 64.49% - 13.32 seconds
+	End of epoch 95 - Accuracy = 57.89% - F1 = 63.64% - Train Loss = 62.78% - Val Loss = 63.19% - 13.93 seconds
+	End of epoch 96 - Accuracy = 63.16% - F1 = 66.67% - Train Loss = 60.35% - Val Loss = 62.27% - 13.53 seconds
+	End of epoch 97 - Accuracy = 52.63% - F1 = 62.50% - Train Loss = 59.25% - Val Loss = 61.35% - 13.37 seconds
+	End of epoch 98 - Accuracy = 60.53% - F1 = 70.59% - Train Loss = 57.77% - Val Loss = 61.03% - 13.33 seconds
+	End of epoch 99 - Accuracy = 60.53% - F1 = 34.78% - Train Loss = 52.02% - Val Loss = 73.44% - 13.43 seconds
+	End of epoch 100 - Accuracy = 73.68% - F1 = 64.29% - Train Loss = 51.99% - Val Loss = 66.05% - 13.30 seconds
+End of training - 100 epochs - 1460.13 seconds
