@@ -6,3 +6,4 @@
 *.edf
 *.xml
 /.vscode
+/models/modelo_senalesreales
