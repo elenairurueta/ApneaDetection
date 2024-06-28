@@ -71,11 +71,23 @@ class ApneaDataset(Dataset):
         if((train_perc + val_perc + test_perc) > 1.0):
             raise Exception("La suma de los porcentajes no puede superar 1.0")
         
-        train_size = int(train_perc * self.__len__())  # 60% para entrenamiento
-        val_size = int(val_perc * self.__len__())    # 20% para validación
-        test_size = int(test_perc * self.__len__())  # 20% para prueba
-
-        self.trainset, self.valset, self.testset = random_split(self, [train_size, val_size, test_size])
+        labels = np.array([self[i][1].item() for i in range(len(self))])
+        
+        train_val_indices, test_indices = train_test_split(
+            np.arange(len(labels)),
+            test_size=test_perc,
+            stratify=labels
+        )
+        
+        train_indices, val_indices = train_test_split(
+            train_val_indices,
+            test_size=val_perc / (train_perc + val_perc),
+            stratify=labels[train_val_indices]
+        )
+        
+        self.trainset = Subset(self, train_indices)
+        self.valset = Subset(self, val_indices)
+        self.testset = Subset(self, test_indices)
     
     def analisis_datos(self):
         """
