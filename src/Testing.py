@@ -226,6 +226,8 @@ class Tester:
         self.__plot_metrics_confusion_matrix__(plot)
         self.__plot_wrong_predictions__(plot)
 
+        return self.__metrics__
+
 class Plotter:
     """Class to plot instances where the model's predictions were incorrect"""
     def __init__(self, model_name:str, wrong_predictions:list):
