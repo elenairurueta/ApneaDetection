@@ -26,15 +26,13 @@ dataset.split_dataset(train_perc = 0.8,
                       val_perc = 0.1, 
                       test_perc = 0.1)
 
-analisis_datos = dataset.analisis_datos()
-print(analisis_datos)
 dataset.undersample_majority_class(0.0)
 analisis_datos = dataset.analisis_datos()
-print(analisis_datos)
+
 
 
 param_grid = {
-    'n_epochs': [50, 100, 150],
+    'n_epochs': [50, 100], #150
     'lr': [0.01, 0.001],
     'momentum': [0, 0.5, 0.9],
     'batch_size': [4, 8, 16, 32, 64]

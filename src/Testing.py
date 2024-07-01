@@ -259,7 +259,7 @@ class Plotter:
         
         Returns: none.
         """
-         
+        
         self.plot = plot
         self.fig, self.ax = plt.subplots(figsize=(13, 6))
         plt.subplots_adjust(left=0.1, bottom=0.2, right=0.9, top=0.9, wspace=0.1, hspace=0.5)
@@ -275,7 +275,8 @@ class Plotter:
         self.bprev.on_clicked(self.__prev_page__)
 
         self.__update_plot__()
-        plt.show()
+        if (plot):
+            plt.show()
 
     def __update_plot__(self):
         """
