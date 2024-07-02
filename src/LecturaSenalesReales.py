@@ -185,8 +185,8 @@ def get_signal_segments_strict(signal, tiempo, sampling_rate, annotations):
                     end_time = fin_apnea + 15
                     end_index = int(end_time * sampling_rate)
                     segments_conapnea.append({'Signal': signal[start_index:end_index], 'Label': 1, 'Start': start_time, 'End': end_time, 'SamplingRate': sampling_rate})
-    if(len(segments_conapnea[-1]['Signal']) < len(segments_conapnea[0]['Signal'])):
-        segments_conapnea.pop()
+                    if(len(segments_conapnea[-1]['Signal']) < len(segments_conapnea[0]['Signal'])):
+                        segments_conapnea.pop()
 
     t = tiempo[0]
     while(t<tiempo[-1]):
@@ -204,9 +204,10 @@ def get_signal_segments_strict(signal, tiempo, sampling_rate, annotations):
             start_index = int((t+15) * sampling_rate)
             end_index = int((t+45) * sampling_rate)
             segments_sinapnea.append({'Signal': signal[start_index:end_index], 'Label': 0, 'Start': t+15, 'End': t+45, 'SamplingRate': sampling_rate})
+            if(len(segments_sinapnea[-1]['Signal']) < len(segments_sinapnea[0]['Signal'])):
+                segments_sinapnea.pop()
             t = t + 30
-    if(len(segments_sinapnea[-1]['Signal']) < len(segments_sinapnea[0]['Signal'])):
-        segments_sinapnea.pop()
+    
 
     segments = segments_conapnea + segments_sinapnea
     segments.sort(key=lambda x: x['Start'])

@@ -124,7 +124,7 @@ class Trainer:
         f1 = f1_score(y_true, y_pred)
         return avg_val_loss, val_acc, f1
 
-    def train(self, verbose:bool = True, plot:bool = True):
+    def train(self, verbose:bool = True, plot:bool = True, save_best_model = True):
         """
         Trains the model for a specified number of epochs, optionally printing progress.
 
@@ -139,7 +139,7 @@ class Trainer:
         start_time_training = datetime.now()
         self.text += f'\n\nBatch size: {self.batch_size}\n\nLoss function: {self.loss_fn}\n\nOptimizer: {self.optimizer}'
         self.text += '\n\nStart of training'
-
+        min_loss = 1000000
         # For each epoch:
         for epoch in range(self.n_epochs):
             start_time_epoch = datetime.now()
@@ -161,6 +161,10 @@ class Trainer:
             if(verbose):
                 print(end_of_epoch)
             self.text += '\n\t' + end_of_epoch
+            if(avg_train_loss < min_loss):
+                min_loss = avg_train_loss
+                self.__model__.save_model(extension='_best.pth')
+
         #Track the end time of the entire training process:
         end_of_training = (f"End of training - {self.n_epochs} epochs - "
                            f"{(datetime.now()-start_time_training).total_seconds():.2f} seconds")
@@ -171,6 +175,7 @@ class Trainer:
         self.plot_accuracies_losses(plot)
         #Write the training logs to a text file:
         self.write_txt()
+        self.__model__.save_model()
         return self.__model__
 
     def plot_accuracies_losses(self, plot:bool):

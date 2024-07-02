@@ -44,7 +44,7 @@ results = []
 
 for n_epochs, lr, momentum, batch_size in param_combinations:
     nombre = f'modelo_GS_e{n_epochs}_lr{int(lr*10000)}_m{int(momentum*10)}_bs{batch_size}'
-    model = Model2(input_size, nombre) #TODO: hacer para Model1
+    model = Model2(input_size, nombre)
     model_arch = model.get_architecture()
     
     trainer = Trainer(
@@ -70,6 +70,7 @@ for n_epochs, lr, momentum, batch_size in param_combinations:
         'n_epochs': n_epochs,
         'lr': lr,
         'momentum': momentum,
+        'batch_size': batch_size,
         'Accuracy': metrics["Accuracy"],
         'Precision': metrics["Precision"],
         'Sensitivity': metrics["Sensitivity"],
@@ -81,4 +82,4 @@ df_results = pd.DataFrame(results)
 
 df_results.to_excel('hyperparameter_search_results.xlsx', index=False)
 
-print(f'Mejor combinación de hiperparámetros: {df_results.loc[df_results["Precision"].idxmax()]}')
+print(f'Mejor combinación de hiperparámetros: \n\t Mejor accuracy: {df_results.loc[df_results["Accuracy"].idxmax()]} \n\t Mejor precision: {df_results.loc[df_results["Precision"].idxmax()]} \n\t Mejor F1: {df_results.loc[df_results["F1"].idxmax()]}')
