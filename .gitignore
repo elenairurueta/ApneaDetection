@@ -9,3 +9,4 @@
 /models/modelo_senalesreales
 
 /src/__pycache__
+*.png
