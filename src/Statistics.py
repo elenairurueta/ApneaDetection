@@ -100,7 +100,7 @@ def statistics_senales():
         for column in columns:
             try:
                 signal = all_signals[column]
-                statistic.append(1)
+                statistic.append(all_signals[column]['SamplingRate'])
             except:
                 statistic.append(0)
         reshaped_statistic = np.transpose(statistic).reshape(1, 32)

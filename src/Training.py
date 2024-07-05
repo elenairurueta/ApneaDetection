@@ -140,6 +140,7 @@ class Trainer:
         self.text += f'\n\nBatch size: {self.batch_size}\n\nLoss function: {self.loss_fn}\n\nOptimizer: {self.optimizer}'
         self.text += '\n\nStart of training'
         min_loss = 1000000
+        epoch_min_loss = 0
         # For each epoch:
         for epoch in range(self.n_epochs):
             start_time_epoch = datetime.now()
@@ -161,13 +162,15 @@ class Trainer:
             if(verbose):
                 print(end_of_epoch)
             self.text += '\n\t' + end_of_epoch
-            if(avg_train_loss < min_loss):
-                min_loss = avg_train_loss
+            if(avg_val_loss < min_loss):
+                min_loss = avg_val_loss
+                epoch_min_loss = epoch + 1
                 self.__model__.save_model(extension='_best.pth')
 
         #Track the end time of the entire training process:
         end_of_training = (f"End of training - {self.n_epochs} epochs - "
-                           f"{(datetime.now()-start_time_training).total_seconds():.2f} seconds")
+                           f"{(datetime.now()-start_time_training).total_seconds():.2f} seconds"
+                           f"\nBest model - Epoch {epoch_min_loss} - Val Loss = {min_loss*100:.2f}%")
         if(verbose):
             print(end_of_training)
         self.text += '\n' + end_of_training

@@ -277,6 +277,7 @@ class Plotter:
         self.__update_plot__()
         if (plot):
             plt.show()
+        plt.close()
 
     def __update_plot__(self):
         """

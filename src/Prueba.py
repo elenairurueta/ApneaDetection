@@ -1,4 +1,4 @@
-from DataFormatting import ApneaDataset, create_datasets
+from DataFormatting import ApneaDataset, ApneaDataset2
 from Modelo import *
 from Training import Trainer
 from Testing import Tester
@@ -6,37 +6,28 @@ from LecturaSenalesReales import *
 from LecturaAnotaciones import *
 from PlotSignals import *
 
-archivos = [4, 43, 63, 72, 84, 95]
-#create_datasets(archivos)
+archivos = [4, 43, 63, 72, 84, 95] #
+datasets = []
 
-txt_archivo = ""
+#ApneaDataset2.create_datasets(archivos)
+
+traintestval = []
+
 for archivo in archivos:
-    txt_archivo += f"homepap-lab-full-1600{str(archivo).zfill(3)}\n"
+    ds = ApneaDataset2.load_dataset(f"data\ApneaDetection_HomePAPSignals\datasets\dataset2_archivo_1600{archivo:03d}.pth")
 
-dataset = ApneaDataset.load_dataset(f"data\\ApneaDetection_HomePAPSignals\\datasets\\dataset_archivo_1600{archivos[1]:03d}.pth")
-analisis_datos = dataset.analisis_datos()
-print(analisis_datos)
+    if(ds._ApneaDataset2__sr != 200):
+        ds.resample_segments(200)
 
-nombre = f'modelo_'
-input_size = dataset.signal_len()
-model = Model2(input_size, nombre)
-model_arch = model.get_architecture()
-trainer = Trainer(
-    model = model, 
-    trainset = dataset.trainset, 
-    valset = dataset.valset, 
-    n_epochs = 3, 
-    batch_size = 32, 
-    loss_fn = 'BCE', #NOTE: in this first version, only 'BCE' loss function is available
-    optimizer = 'SGD', #NOTE: in this first version, only 'SGD' optimizer is available
-    lr = 0.01, 
-    momentum = 0, 
-    text = txt_archivo + analisis_datos + model_arch)
-trainer.train(verbose = False, plot = False, save_best_model = True)
+    train_subsets = [0, 1, 2, 3, 4, 5, 6, 7]
+    val_subsets = [8]
+    test_subsets = [9]
 
-tester = Tester(model = model, 
-                testset = dataset.testset, 
-                batch_size = 32)
-tester.evaluate(plot = False)
+    datasets.append(ds)
+    traintestval += [[[0, 1, 2, 3, 4, 5, 6, 7], [8], [9]]]
 
-    
+
+dataset, train_subsets, val_subsets, test_subsets = ApneaDataset2.join_datasets(datasets, traintestval)
+print(dataset.analisis_datos())
+
+

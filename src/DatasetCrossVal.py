@@ -1,55 +1,105 @@
-from DataFormatting import ApneaDataset, ApneaDataset2, create_datasets
+from DataFormatting import ApneaDataset, ApneaDataset2
 from Modelo import *
 from Training import Trainer
 from Testing import Tester
 from LecturaSenalesReales import *
 from LecturaAnotaciones import *
 from PlotSignals import *
-archivos = [4] #, 43, 63, 72, 84, 95
+
+archivos = []
+# ApneaDataset2.create_datasets(archivos)
+
 txt_archivo = ""
 for archivo in archivos:
-    txt_archivo += f"homepap-lab-full-1600{str(archivo).zfill(3)}\n"
+    txt_archivo = f"homepap-lab-full-1600{str(archivo).zfill(3)}\n"
+    dataset = ApneaDataset2.load_dataset(f"data\ApneaDetection_HomePAPSignals\datasets\dataset2_archivo_1600{archivo:03d}.pth")
 
+    analisis_datos = dataset.analisis_datos()
+
+    train_subsets = [0, 1, 2, 3, 4, 5, 6, 7]
+    val_subsets = [8]
+    test_subsets = [9]
+    analisis_datos += f"\nTrain: subsets {train_subsets}\nVal: subset {val_subsets}\nTest: subset {test_subsets}\n"
+    dataset.undersample_majority_class(0.0, train_subsets + val_subsets, prop = 1)
+    analisis_datos += "\nUNDERSAMPLING\n" + dataset.analisis_datos()
+    #print(analisis_datos)
+
+    trainset = dataset.get_subsets(train_subsets)
+    valset = dataset.get_subsets(val_subsets)
+    testset = dataset.get_subsets(test_subsets)
+
+    nombre = f'modelo_archivo_1600{archivo:03d}_1hp1us' #CAMBIAR!! 2hp1us
+    input_size = dataset.signal_len()
+    model = Model2(input_size, nombre)
+    model_arch = model.get_architecture()
+    trainer = Trainer(
+        model = model, 
+        trainset = trainset, 
+        valset = valset, 
+        n_epochs = 2, 
+        batch_size = 32, 
+        loss_fn = 'BCE',
+        optimizer = 'SGD',
+        lr = 0.01, 
+        momentum = 0, 
+        text = txt_archivo + analisis_datos + model_arch)
+    trainer.train(verbose = True, plot = False, save_best_model = True)
+
+    tester = Tester(model = model, 
+                    testset = testset, 
+                    batch_size = 32)
+    tester.evaluate(plot = False)
+
+
+#---------------- Con los archivos juntos -------------------------
+
+txt_archivo = ""
+archivos = [4, 43, 63, 72, 84, 95] #
+datasets = []
+traintestval = []
 for archivo in archivos:
-        path_edf = f"C:\\Users\\elena\\OneDrive\\Documentos\\Tesis\\Dataset\\HomePAP\\polysomnography\\edfs\\lab\\full\\homepap-lab-full-1600{archivo:03d}.edf"
-        path_annot = f"C:\\Users\\elena\\OneDrive\\Documentos\\Tesis\\Dataset\\HomePAP\\polysomnography\\annotations-events-profusion\\lab\\full\\homepap-lab-full-1600{archivo:03d}-profusion.xml"
-        all_signals = read_signals_EDF(path_edf)
-        annotations = Anotaciones(path_annot)
+    txt_archivo += f"homepap-lab-full-1600{str(archivo).zfill(3)}\n"
+    ds = ApneaDataset2.load_dataset(f"data\ApneaDetection_HomePAPSignals\datasets\dataset2_archivo_1600{archivo:03d}.pth")
+    if(ds._ApneaDataset2__sr != 200):
+        ds.resample_segments(200)
+    train_subsets = [0, 1, 2, 3, 4, 5, 6, 7]
+    val_subsets = [8]
+    test_subsets = [9]
+    datasets.append(ds)
+    traintestval += [[[0, 1, 2, 3, 4, 5, 6, 7], [8], [9]]]
 
-        bipolar_signal, tiempo, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])
 
-        segments = get_signal_segments_strict(bipolar_signal, tiempo, sampling, annotations)
+joined_dataset, train_subsets, val_subsets, test_subsets = ApneaDataset2.join_datasets(datasets, traintestval)
+analisis_datos = joined_dataset.analisis_datos()
+analisis_datos += f"\nTrain: subsets {train_subsets}\nVal: subset {val_subsets}\nTest: subset {test_subsets}\n"
+joined_dataset.undersample_majority_class(0.0, train_subsets + val_subsets, prop = 1)
+analisis_datos += "\nUNDERSAMPLING\n" + joined_dataset.analisis_datos()
+#print(analisis_datos)
 
-        X,y = ApneaDataset2.from_segments(segments, stand = True)
-        dataset = ApneaDataset2(X,y, archivo)
+joined_trainset = joined_dataset.get_subsets(train_subsets)
+joined_valset = joined_dataset.get_subsets(val_subsets)
+joined_testset = joined_dataset.get_subsets(test_subsets)
+analisis_datos += f"\nTrain count: {len(joined_trainset)}\n\tWith apnea: {int(sum(sum((joined_trainset[:][1]).tolist(), [])))}\n\tWithout apnea: {len(joined_trainset) - int(sum(sum((joined_trainset[:][1]).tolist(), [])))}\nVal count: {len(joined_valset)}\n\tWith apnea: {int(sum(sum((joined_valset[:][1]).tolist(), [])))}\n\tWithout apnea: {len(joined_valset) - int(sum(sum((joined_valset[:][1]).tolist(), [])))}\nTest count: {len(joined_testset)}\n\tWith apnea: {int(sum(sum((joined_testset[:][1]).tolist(), [])))}\n\tWithout apnea: {len(joined_testset) - int(sum(sum((joined_testset[:][1]).tolist(), [])))}"
+print(analisis_datos)
 
-        dataset.split_dataset()
-        analisis_datos = dataset.analisis_datos()
-        print(analisis_datos)
-        dataset.save_dataset(f"data\ApneaDetection_HomePAPSignals\datasets\dataset2_archivo_1600{archivo:03d}.pth")
-
-trainset = dataset.get_subsets([0, 1, 2, 3, 4, 5, 6, 7])
-valset = dataset.subsets[8]
-testset = dataset.subsets[9]
-
-nombre = f'modelo_'
-input_size = dataset.signal_len()
+nombre = f'modelo_archivos_16000_4_43_63_72_84_95_1hp1us' #CAMBIAR!! 2hp1us
+input_size = joined_dataset.signal_len()
 model = Model2(input_size, nombre)
 model_arch = model.get_architecture()
 trainer = Trainer(
     model = model, 
-    trainset = trainset, 
-    valset = valset, 
-    n_epochs = 3, 
+    trainset = joined_trainset, 
+    valset = joined_valset, 
+    n_epochs = 2, 
     batch_size = 32, 
-    loss_fn = 'BCE', #NOTE: in this first version, only 'BCE' loss function is available
-    optimizer = 'SGD', #NOTE: in this first version, only 'SGD' optimizer is available
+    loss_fn = 'BCE',
+    optimizer = 'SGD',
     lr = 0.01, 
     momentum = 0, 
     text = txt_archivo + analisis_datos + model_arch)
-trainer.train(verbose = True, plot = True, save_best_model = True)
+trainer.train(verbose = True, plot = False, save_best_model = True)
 
 tester = Tester(model = model, 
-                testset = testset, 
+                testset = joined_testset, 
                 batch_size = 32)
-tester.evaluate(plot = True)
+tester.evaluate(plot = False)

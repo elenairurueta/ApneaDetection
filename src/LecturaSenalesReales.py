@@ -107,6 +107,8 @@ def plot_bipolar_signal(signal1, signal2, t = 'min', annotations = None):
         print('Not compatible signals')
     
 def get_bipolar_signal(signal1, signal2):
+    if(signal1['SamplingRate'] != signal2['SamplingRate']):
+        raise TypeError("Signals not compatible: different sampling rate")
     signal = signal1['Signal'] - signal2['Signal']
     tiempo = signal1['Time']
     sampling = signal1['SamplingRate']
