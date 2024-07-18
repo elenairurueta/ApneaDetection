@@ -399,6 +399,8 @@ class ApneaDataset2(Dataset):
             new_X.append(new_segment)
         self.__X = torch.tensor(new_X)
         self.__sr = sampling_rate
+        for idx, subset in enumerate(self.subsets):
+            self.subsets[idx].dataset = self
 
     # @staticmethod
     # def join_datasets(datasets, traintestval = None):

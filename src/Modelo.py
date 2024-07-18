@@ -87,14 +87,14 @@ class Model1(nn.Module):
 
         Returns: none
         """
-        if os.path.exists(f'./models'):
+        if os.path.exists(f'D:/models'):
+            if not os.path.exists(f'D:/models/{self.nombre}'):
+                os.makedirs(f'D:/models/{self.nombre}')
+            PATH = f'D:/models/{self.nombre}/{self.nombre + extension}'
+        elif os.path.exists(f'./models'):
             if not os.path.exists(f'./models/{self.nombre}'):
                 os.makedirs(f'./models/{self.nombre}')
             PATH = f'./models/{self.nombre}/{self.nombre + extension}'
-        elif os.path.exists(f'../models'):
-            if not os.path.exists(f'../models/{self.nombre}'):
-                os.makedirs(f'../models/{self.nombre}')
-            PATH = f'../models/{self.nombre}/{self.nombre + extension}'
         torch.save(self.state_dict(), PATH)
 
     @staticmethod
@@ -112,10 +112,10 @@ class Model1(nn.Module):
         """
         model = Model1(input_size, nombre)
         try:
-            PATH = f'./models/{nombre}/{nombre + extension}'
+            PATH = f'D:/models/{nombre}/{nombre + extension}'
             model.load_state_dict(torch.load(PATH))
         except:
-            PATH = f'../models/{nombre}/{nombre + extension}'
+            PATH = f'./models/{nombre}/{nombre + extension}'
             model.load_state_dict(torch.load(PATH))
         model.eval()
         return model
@@ -213,14 +213,14 @@ class Model2(nn.Module):
 
         Returns: none
         """
-        if os.path.exists(f'./models'):
+        if os.path.exists(f'D:/models'):
+            if not os.path.exists(f'D:/models/{self.nombre}'):
+                os.makedirs(f'D:/models/{self.nombre}')
+            PATH = f'D:/models/{self.nombre}/{self.nombre + extension}'
+        elif os.path.exists(f'./models'):
             if not os.path.exists(f'./models/{self.nombre}'):
                 os.makedirs(f'./models/{self.nombre}')
             PATH = f'./models/{self.nombre}/{self.nombre + extension}'
-        elif os.path.exists(f'../models'):
-            if not os.path.exists(f'../models/{self.nombre}'):
-                os.makedirs(f'../models/{self.nombre}')
-            PATH = f'../models/{self.nombre}/{self.nombre + extension}'
         torch.save(self.state_dict(), PATH)
 
     @staticmethod
@@ -238,10 +238,10 @@ class Model2(nn.Module):
         """
         model = Model2(input_size, nombre)
         try:
-            PATH = f'./models/{nombre}/{nombre + extension}'
+            PATH = f'D:/models/{nombre}/{nombre + extension}' ##CAMBIAR
             model.load_state_dict(torch.load(PATH))
         except:
-            PATH = f'../models/{nombre}/{nombre + extension}'
+            PATH = f'./models/{nombre}/{nombre + extension}'
             model.load_state_dict(torch.load(PATH))
         model.eval()
         return model
@@ -327,14 +327,14 @@ class Model3(nn.Module):
 
         Returns: none
         """
-        if os.path.exists(f'./models'):
+        if os.path.exists(f'D:/models'):
+            if not os.path.exists(f'D:/models/{self.nombre}'):
+                os.makedirs(f'D:/models/{self.nombre}')
+            PATH = f'D:/models/{self.nombre}/{self.nombre + extension}'
+        elif os.path.exists(f'./models'):
             if not os.path.exists(f'./models/{self.nombre}'):
                 os.makedirs(f'./models/{self.nombre}')
             PATH = f'./models/{self.nombre}/{self.nombre + extension}'
-        elif os.path.exists(f'../models'):
-            if not os.path.exists(f'../models/{self.nombre}'):
-                os.makedirs(f'../models/{self.nombre}')
-            PATH = f'../models/{self.nombre}/{self.nombre + extension}'
         torch.save(self.state_dict(), PATH)
 
     @staticmethod
@@ -352,10 +352,10 @@ class Model3(nn.Module):
         """
         model = Model(input_size, nombre)
         try:
-            PATH = f'./models/{nombre}/{nombre + extension}'
+            PATH = f'D:/models/{nombre}/{nombre + extension}'
             model.load_state_dict(torch.load(PATH))
         except:
-            PATH = f'../models/{nombre}/{nombre + extension}'
+            PATH = f'./models/{nombre}/{nombre + extension}'
             model.load_state_dict(torch.load(PATH))
         model.eval()
         return model

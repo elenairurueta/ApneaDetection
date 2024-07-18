@@ -162,15 +162,16 @@ class Trainer:
             if(verbose):
                 print(end_of_epoch)
             self.text += '\n\t' + end_of_epoch
-            if(avg_val_loss < min_loss):
+            if(avg_val_loss < min_loss and save_best_model):
                 min_loss = avg_val_loss
                 epoch_min_loss = epoch + 1
                 self.__model__.save_model(extension='_best.pth')
 
         #Track the end time of the entire training process:
         end_of_training = (f"End of training - {self.n_epochs} epochs - "
-                           f"{(datetime.now()-start_time_training).total_seconds():.2f} seconds"
-                           f"\nBest model - Epoch {epoch_min_loss} - Val Loss = {min_loss*100:.2f}%")
+                           f"{(datetime.now()-start_time_training).total_seconds():.2f} seconds")
+        if(save_best_model):
+            end_of_training += f"\nBest model - Epoch {epoch_min_loss} - Val Loss = {min_loss*100:.2f}%"
         if(verbose):
             print(end_of_training)
         self.text += '\n' + end_of_training
@@ -219,9 +220,14 @@ class Trainer:
         plt.tight_layout()
         
         #Save figure in path 'models\nombre\nombre_acc_loss.png'
-        if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
-            os.makedirs(f'./models/{self.__model__.get_nombre()}')
-        PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
+        if os.path.exists(f'D:/models'):
+            if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
+                os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
+            PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
+        elif os.path.exists(f'./models'):
+            if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
+                os.makedirs(f'./models/{self.__model__.get_nombre()}')
+            PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
         plt.savefig(PATH)
         
         if(plot):
@@ -243,14 +249,14 @@ class Trainer:
         
         Returns: none.
         """
-        if os.path.exists(f'./models'):
+        if os.path.exists(f'D:/models'):
+            if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
+                os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
+            PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
+        elif os.path.exists(f'./models'):
             if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
                 os.makedirs(f'./models/{self.__model__.get_nombre()}')
             PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
-        elif os.path.exists(f'../models'):
-            if not os.path.exists(f'../models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'../models/{self.__model__.get_nombre()}')
-            PATH = f'../models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
         f = open(PATH, "w")
         f.write(self.text)
         f.close()

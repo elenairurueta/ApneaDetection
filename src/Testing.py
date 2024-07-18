@@ -92,14 +92,14 @@ class Tester:
         cm_display = ConfusionMatrixDisplay(confusion_matrix=self.__cm__, display_labels=['without apnea', 'with apnea'])
         cm_display.plot(cmap='Blues')
         plt.title("Confusion Matrix")
-        if os.path.exists(f'./models'):
+        if os.path.exists(f'D:/models'):
+            if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
+                os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
+            PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        elif os.path.exists(f'./models'):
             if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
                 os.makedirs(f'./models/{self.__model__.get_nombre()}')
             PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        elif os.path.exists(f'../models'):
-            if not os.path.exists(f'../models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'../models/{self.__model__.get_nombre()}')
-            PATH = f'../models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
         plt.savefig(PATH)
 
         if(plot):
@@ -133,14 +133,14 @@ class Tester:
         plt.title('Receiver Operating Characteristic')
         plt.legend(loc="lower right")
 
-        if os.path.exists(f'./models'):
+        if os.path.exists(f'D:/models'):
+            if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
+                os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
+            PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        elif os.path.exists(f'./models'):
             if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
                 os.makedirs(f'./models/{self.__model__.get_nombre()}')
             PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        elif os.path.exists(f'../models'):
-            if not os.path.exists(f'../models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'../models/{self.__model__.get_nombre()}')
-            PATH = f'../models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
         plt.savefig(PATH)
 
         if(plot):
@@ -168,21 +168,21 @@ class Tester:
             text.set_visible(False)
         for i in range(cm_normalized.shape[0]):
             for j in range(cm_normalized.shape[1]):
-                text = ax.text(j, i, f'{cm_normalized[i, j]:.2f}%', ha='center', va='center', color='black')
+                text = ax.text(j, i, f'{cm_normalized[i, j]:.2f}%\n{self.__cm__[i, j]:.2f}', ha='center', va='center', color='black')
         ax.set_title("Confusion Matrix")
 
         #Generate additional metric text to display below the confusion matrix plot:
         metric_text = (f"Test data count: {len(self.__test_loader__.dataset)}\n" +
                        "\n".join([f"{k}: {v}%" for k, v in self.__metrics__.items()]))
         plt.gcf().text(0.1, 0.1, metric_text, ha='center', fontsize=10, bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray'))
-        if os.path.exists(f'./models'):
+        if os.path.exists(f'D:/models'):
+            if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
+                os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
+            PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        elif os.path.exists(f'./models'):
             if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'./models/{self.__model__.get_nombre()}')
-            PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        elif os.path.exists(f'../models'):
-            if not os.path.exists(f'../models/{self.__model__.get_nombre()}'):
                 os.makedirs(f'../models/{self.__model__.get_nombre()}')
-            PATH = f'../models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+            PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
         plt.savefig(PATH)
 
         if(plot):
@@ -204,7 +204,8 @@ class Tester:
             "Precision": precision_score(self.__all_labels__, self.__all_preds__) * 100,
             "Sensitivity": recall_score(self.__all_labels__, self.__all_preds__) * 100,
             "Specificity": recall_score(self.__all_labels__, self.__all_preds__, pos_label=0) * 100,
-            "F1": f1_score(self.__all_labels__, self.__all_preds__) * 100
+            "F1": f1_score(self.__all_labels__, self.__all_preds__) * 100,
+            "MCC": matthews_corrcoef(self.__all_labels__, self.__all_preds__) * 100
         }
 
         self.__metrics__ = {k: f"{v:.2f}" for k, v in metrics.items()}
@@ -322,14 +323,14 @@ class Plotter:
         self.bprev = Button(axprev, 'Previous')
         self.bprev.on_clicked(self.__prev_page__)
 
-        if os.path.exists(f'./models'):
+        if os.path.exists(f'D:/models'):
+            if not os.path.exists(f'D:/models/{self.__model_name}'):
+                os.makedirs(f'D:/models/{self.__model_name}')
+            PATH = f'D:/models/{self.__model_name}/{self.__model_name}__wrongpreds_page{self.current_page + 1}.png'
+        elif os.path.exists(f'./models'):
             if not os.path.exists(f'./models/{self.__model_name}'):
                 os.makedirs(f'./models/{self.__model_name}')
-            PATH = f'./models/{self.__model_name}/{self.__model_name}__wrongpreds_page{self.current_page + 1}.png'
-        elif os.path.exists(f'../models'):
-            if not os.path.exists(f'../models/{self.__model_name}'):
-                os.makedirs(f'../models/{self.__model_name}')
-            PATH = f'../models/{self.__model_name}/{self.__model_name}_wrongpreds_page{self.current_page + 1}.png'
+            PATH = f'./models/{self.__model_name}/{self.__model_name}_wrongpreds_page{self.current_page + 1}.png'
         plt.savefig(PATH)
 
 
