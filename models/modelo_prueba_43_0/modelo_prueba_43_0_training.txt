@@ -1,71 +1,71 @@
-homepap-lab-full-1600004
+homepap-lab-full-1600043
 
-Subset 0 data count: 76
-	With apnea: 8
-	Without apnea: 68
-Subset 1 data count: 75
-	With apnea: 8
-	Without apnea: 67
-Subset 2 data count: 72
-	With apnea: 7
-	Without apnea: 65
-Subset 3 data count: 74
-	With apnea: 7
-	Without apnea: 67
-Subset 4 data count: 78
-	With apnea: 8
-	Without apnea: 70
-Subset 5 data count: 76
-	With apnea: 8
-	Without apnea: 68
-Subset 6 data count: 75
-	With apnea: 7
-	Without apnea: 68
-Subset 7 data count: 75
-	With apnea: 8
-	Without apnea: 67
-Subset 8 data count: 75
-	With apnea: 8
-	Without apnea: 67
-Subset 9 data count: 75
-	With apnea: 7
-	Without apnea: 68
+Subset 0 data count: 95
+	With apnea: 4
+	Without apnea: 91
+Subset 1 data count: 94
+	With apnea: 4
+	Without apnea: 90
+Subset 2 data count: 91
+	With apnea: 3
+	Without apnea: 88
+Subset 3 data count: 94
+	With apnea: 4
+	Without apnea: 90
+Subset 4 data count: 98
+	With apnea: 4
+	Without apnea: 94
+Subset 5 data count: 95
+	With apnea: 3
+	Without apnea: 92
+Subset 6 data count: 95
+	With apnea: 4
+	Without apnea: 91
+Subset 7 data count: 95
+	With apnea: 3
+	Without apnea: 92
+Subset 8 data count: 95
+	With apnea: 4
+	Without apnea: 91
+Subset 9 data count: 95
+	With apnea: 3
+	Without apnea: 92
 Train: subsets [0, 1, 2, 3, 4, 5, 6, 7]
 Val: subset [8]
 Test: subset [9]
 
 UNDERSAMPLING
 
-Subset 0 data count: 16
-	With apnea: 8
-	Without apnea: 8
-Subset 1 data count: 16
-	With apnea: 8
-	Without apnea: 8
-Subset 2 data count: 14
-	With apnea: 7
-	Without apnea: 7
-Subset 3 data count: 14
-	With apnea: 7
-	Without apnea: 7
-Subset 4 data count: 16
-	With apnea: 8
-	Without apnea: 8
-Subset 5 data count: 16
-	With apnea: 8
-	Without apnea: 8
-Subset 6 data count: 14
-	With apnea: 7
-	Without apnea: 7
-Subset 7 data count: 16
-	With apnea: 8
-	Without apnea: 8
-Subset 8 data count: 16
-	With apnea: 8
-	Without apnea: 8
-Subset 9 data count: 75
-	With apnea: 7
-	Without apnea: 68
+Subset 0 data count: 8
+	With apnea: 4
+	Without apnea: 4
+Subset 1 data count: 8
+	With apnea: 4
+	Without apnea: 4
+Subset 2 data count: 6
+	With apnea: 3
+	Without apnea: 3
+Subset 3 data count: 8
+	With apnea: 4
+	Without apnea: 4
+Subset 4 data count: 8
+	With apnea: 4
+	Without apnea: 4
+Subset 5 data count: 6
+	With apnea: 3
+	Without apnea: 3
+Subset 6 data count: 8
+	With apnea: 4
+	Without apnea: 4
+Subset 7 data count: 6
+	With apnea: 3
+	Without apnea: 3
+Subset 8 data count: 8
+	With apnea: 4
+	Without apnea: 4
+Subset 9 data count: 95
+	With apnea: 3
+	Without apnea: 92
 
 Model2(
   (conv_layers): Sequential(
@@ -119,6 +119,7 @@ Parameter Group 0
 )
 
 Start of training
-	End of epoch 1 - Accuracy = 50.00% - F1 = 0.00% - Train Loss = 62.30% - Val Loss = 69.25% - 20.04 seconds
-	End of epoch 2 - Accuracy = 50.00% - F1 = 0.00% - Train Loss = 48.55% - Val Loss = 69.25% - 19.29 seconds
-End of training - 2 epochs - 39.33 seconds
+	End of epoch 1 - Accuracy = 62.50% - F1 = 40.00% - Train Loss = 62.13% - Val Loss = 69.13% - 10.59 seconds
+	End of epoch 2 - Accuracy = 62.50% - F1 = 40.00% - Train Loss = 48.93% - Val Loss = 69.14% - 10.65 seconds
+End of training - 2 epochs - 27.90 seconds
+Best model - Epoch 1 - Val Loss = 69.13%

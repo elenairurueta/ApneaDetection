@@ -1,14 +1,16 @@
-try:
-    from Imports import *
-    from Modelo import Model1, Model2
-except:
-    from src.Imports import *
-    from src.Modelo import Model1, Model2
+# try:
+#     from Imports import *
+#     from Modelo import Model2
+# except:
+#     from src.Imports import *
+#     from src.Modelo import Model2
 
+from Imports import *
+from Modelo import Model2
 
 class Tester:
     """Class to test the model with testset"""
-    def __init__(self, model:Model1, testset:Subset, batch_size:int=32):
+    def __init__(self, model:Model2, testset:Subset, batch_size:int=32, device = "cpu"):
         """
         Initializes the Tester object.
 
@@ -19,14 +21,15 @@ class Tester:
 
         Returns: none.
         """
-
-        self.__model__ = model
+        self.device = device
+        self.__model__ = model.to(self.device)
         self.__test_loader__ = DataLoader(testset, shuffle=False, batch_size=batch_size)
         self.__cm__ = []
         self.__metrics__ = ""
         self.__all_labels__ = []
         self.__all_preds__ = []
         self.__wrong_predictions__ = []
+        # print("Tester initialized")
 
     def test(self):
         """
@@ -39,13 +42,14 @@ class Tester:
 
         #Iterate over each batch in the test_loader:
         for X_test, y_test in self.__test_loader__:
+            X_test, y_test = X_test.to(self.device), y_test.to(self.device)
             #Get the model's predictions for the batch:
             y_test_pred = self.__model__(X_test)
             y_test_pred = y_test_pred.round()
-            self.__all_preds__.extend(y_test_pred.cpu().detach().numpy().tolist())
-            self.__all_labels__.extend(y_test.cpu().numpy().tolist())
-            #Save instances where the predictions were incorrect:
-            self.__save_wrong_predictions__(X_test, y_test, y_test_pred)
+            self.__all_preds__.extend(y_test_pred.detach().cpu().numpy().tolist())
+            self.__all_labels__.extend(y_test.detach().cpu().numpy().tolist())
+            # Save instances where the predictions were incorrect:
+            self.__save_wrong_predictions__(X_test.cpu(), y_test.cpu(), y_test_pred.cpu())
 
     def __save_wrong_predictions__(self, X_test:Tensor, y_test:Tensor, y_test_pred:Tensor):
         """
@@ -92,15 +96,27 @@ class Tester:
         cm_display = ConfusionMatrixDisplay(confusion_matrix=self.__cm__, display_labels=['without apnea', 'with apnea'])
         cm_display.plot(cmap='Blues')
         plt.title("Confusion Matrix")
-        if os.path.exists(f'D:/models'):
-            if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
-            PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        elif os.path.exists(f'./models'):
-            if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'./models/{self.__model__.get_nombre()}')
-            PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        plt.savefig(PATH)
+        # if os.path.exists(f'D:/models'):
+        #     if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
+        #         os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
+        #     PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        # elif os.path.exists(f'./models'):
+        #     if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
+        #         os.makedirs(f'./models/{self.__model__.get_nombre()}')
+        #     PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        # plt.savefig(PATH)
+
+        # if os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models'):
+        #     if not os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}'): 
+        #         os.makedirs(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}') 
+        #     PATH = f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        #     plt.savefig(PATH)
+
+        if os.path.exists(f'/home/elena/Desktop/models'):
+            if not os.path.exists(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}'): 
+                os.makedirs(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}') 
+            PATH = f'/home/elena/Desktop/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+            plt.savefig(PATH)
 
         if(plot):
             plt.show()
@@ -133,15 +149,29 @@ class Tester:
         plt.title('Receiver Operating Characteristic')
         plt.legend(loc="lower right")
 
-        if os.path.exists(f'D:/models'):
-            if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
-            PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        elif os.path.exists(f'./models'):
-            if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'./models/{self.__model__.get_nombre()}')
-            PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        plt.savefig(PATH)
+        # if os.path.exists(f'D:/models'):
+        #     if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
+        #         os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
+        #     PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        # elif os.path.exists(f'./models'):
+        #     if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
+        #         os.makedirs(f'./models/{self.__model__.get_nombre()}')
+        #     PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        # plt.savefig(PATH)
+
+        # print("Trying to save roc curve")
+        # if os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models'):
+        #     if not os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}'):  ##CAMBIAR
+        #         os.makedirs(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}') ##CAMBIAR
+        #     PATH = f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png' ##CAMBIAR
+        #     plt.savefig(PATH)
+        #     # print("Saved roc curve")
+        
+        if os.path.exists(f'/home/elena/Desktop/models'):
+            if not os.path.exists(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}'):  ##CAMBIAR
+                os.makedirs(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}') ##CAMBIAR
+            PATH = f'/home/elena/Desktop/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png' ##CAMBIAR
+            plt.savefig(PATH)
 
         if(plot):
             plt.show()
@@ -172,18 +202,33 @@ class Tester:
         ax.set_title("Confusion Matrix")
 
         #Generate additional metric text to display below the confusion matrix plot:
-        metric_text = (f"Test data count: {len(self.__test_loader__.dataset)}\n" +
-                       "\n".join([f"{k}: {v}%" for k, v in self.__metrics__.items()]))
+        metric_text = (f"Test data count: {len(self.__test_loader__.dataset)}\n") + ("\n".join([f"{k}: {v}" for k, v in list(self.__metrics__.items())[:-2]]))
         plt.gcf().text(0.1, 0.1, metric_text, ha='center', fontsize=10, bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray'))
-        if os.path.exists(f'D:/models'):
-            if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
-            PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        elif os.path.exists(f'./models'):
-            if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'../models/{self.__model__.get_nombre()}')
-            PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        plt.savefig(PATH)
+        
+        # if os.path.exists(f'D:/models'):
+        #     if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
+        #         os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
+        #     PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        # elif os.path.exists(f'./models'):
+        #     if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
+        #         os.makedirs(f'../models/{self.__model__.get_nombre()}')
+        #     PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        # plt.savefig(PATH)
+
+        # print("Trying to save cm metrics")
+        # if os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models'):
+        #     if not os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}'): 
+        #         os.makedirs(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}') 
+        #     PATH = f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        #     plt.savefig(PATH)
+            # print("Saved cm metrics")
+        
+        if os.path.exists(f'/home/elena/Desktop/models'):
+            if not os.path.exists(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}'): 
+                os.makedirs(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}') 
+            PATH = f'/home/elena/Desktop/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+            plt.savefig(PATH)
+
 
         if(plot):
             plt.show()
@@ -200,12 +245,12 @@ class Tester:
         """
 
         metrics = {
-            "Accuracy": accuracy_score(self.__all_labels__, self.__all_preds__) * 100,
-            "Precision": precision_score(self.__all_labels__, self.__all_preds__) * 100,
-            "Sensitivity": recall_score(self.__all_labels__, self.__all_preds__) * 100,
-            "Specificity": recall_score(self.__all_labels__, self.__all_preds__, pos_label=0) * 100,
-            "F1": f1_score(self.__all_labels__, self.__all_preds__) * 100,
-            "MCC": matthews_corrcoef(self.__all_labels__, self.__all_preds__) * 100
+            "Accuracy": accuracy_score(self.__all_labels__, self.__all_preds__),
+            "Precision": precision_score(self.__all_labels__, self.__all_preds__),
+            "Sensitivity": recall_score(self.__all_labels__, self.__all_preds__),
+            "Specificity": recall_score(self.__all_labels__, self.__all_preds__, pos_label=0),
+            "F1": f1_score(self.__all_labels__, self.__all_preds__),
+            "MCC": matthews_corrcoef(self.__all_labels__, self.__all_preds__)
         }
 
         self.__metrics__ = {k: f"{v:.2f}" for k, v in metrics.items()}
@@ -219,15 +264,15 @@ class Tester:
         
         Returns: none.
         '''
-
+        # print("Evaluating model")
         self.test()
         self.__cm__ = confusion_matrix(self.__all_labels__, self.__all_preds__)
         self.__calculate_metrics__()
         self.__plot_roc_curve__(plot)
         self.__plot_metrics_confusion_matrix__(plot)
-        self.__plot_wrong_predictions__(plot)
+        # self.__plot_wrong_predictions__(plot)
 
-        return self.__metrics__
+        return self.__cm__, self.__metrics__
 
 class Plotter:
     """Class to plot instances where the model's predictions were incorrect"""
@@ -323,15 +368,15 @@ class Plotter:
         self.bprev = Button(axprev, 'Previous')
         self.bprev.on_clicked(self.__prev_page__)
 
-        if os.path.exists(f'D:/models'):
-            if not os.path.exists(f'D:/models/{self.__model_name}'):
-                os.makedirs(f'D:/models/{self.__model_name}')
-            PATH = f'D:/models/{self.__model_name}/{self.__model_name}__wrongpreds_page{self.current_page + 1}.png'
-        elif os.path.exists(f'./models'):
-            if not os.path.exists(f'./models/{self.__model_name}'):
-                os.makedirs(f'./models/{self.__model_name}')
-            PATH = f'./models/{self.__model_name}/{self.__model_name}_wrongpreds_page{self.current_page + 1}.png'
-        plt.savefig(PATH)
+        # if os.path.exists(f'D:/models'):
+        #     if not os.path.exists(f'D:/models/{self.__model_name}'):
+        #         os.makedirs(f'D:/models/{self.__model_name}')
+        #     PATH = f'D:/models/{self.__model_name}/{self.__model_name}__wrongpreds_page{self.current_page + 1}.png'
+        # elif os.path.exists(f'./models'):
+        #     if not os.path.exists(f'./models/{self.__model_name}'):
+        #         os.makedirs(f'./models/{self.__model_name}')
+        #     PATH = f'./models/{self.__model_name}/{self.__model_name}_wrongpreds_page{self.current_page + 1}.png'
+        # plt.savefig(PATH)
 
 
         if self.plot:

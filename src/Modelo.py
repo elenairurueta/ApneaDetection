@@ -213,18 +213,26 @@ class Model2(nn.Module):
 
         Returns: none
         """
-        if os.path.exists(f'D:/models'):
-            if not os.path.exists(f'D:/models/{self.nombre}'):
-                os.makedirs(f'D:/models/{self.nombre}')
-            PATH = f'D:/models/{self.nombre}/{self.nombre + extension}'
-        elif os.path.exists(f'./models'):
-            if not os.path.exists(f'./models/{self.nombre}'):
-                os.makedirs(f'./models/{self.nombre}')
-            PATH = f'./models/{self.nombre}/{self.nombre + extension}'
+        # if os.path.exists(f'D:/models'):
+        #     if not os.path.exists(f'D:/models/{self.nombre}'):
+        #         os.makedirs(f'D:/models/{self.nombre}')
+        #     PATH = f'D:/models/{self.nombre}/{self.nombre + extension}'
+        # elif os.path.exists(f'./models'):
+        #     if not os.path.exists(f'./models/{self.nombre}'):
+        #         os.makedirs(f'./models/{self.nombre}')
+        #     PATH = f'./models/{self.nombre}/{self.nombre + extension}'
+        # if os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models'):
+        #     if not os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models/{self.nombre}'):  ##CAMBIAR
+        #         os.makedirs(f'/home/elena/media/disk/_cygdrive_D_models/{self.nombre}') ##CAMBIAR
+        #     PATH = f'/home/elena/media/disk/_cygdrive_D_models/{self.nombre}/{self.nombre + extension}'   
+        if os.path.exists(f'/home/elena/Desktop/models'):
+            if not os.path.exists(f'/home/elena/Desktop/models/{self.nombre}'):
+                os.makedirs(f'/home/elena/Desktop/models/{self.nombre}')
+            PATH = f'/home/elena/Desktop/models/{self.nombre}/{self.nombre + extension}'             
         torch.save(self.state_dict(), PATH)
 
     @staticmethod
-    def load_model(nombre, input_size, extension:str = '.pth'):
+    def load_model(nombre, input_size, extension:str = '.pth', best = False):
         """
         Loads a pre-trained model from a file.
 
@@ -237,12 +245,21 @@ class Model2(nn.Module):
             - Model: the loaded model.
         """
         model = Model2(input_size, nombre)
-        try:
-            PATH = f'D:/models/{nombre}/{nombre + extension}' ##CAMBIAR
+        if(best):
+            # PATH = f'/home/elena/media/disk/_cygdrive_D_models/{nombre}/{nombre}_best{extension}' 
+            PATH = f'/home/elena/Desktop/models/{nombre}/{nombre}_best{extension}' 
             model.load_state_dict(torch.load(PATH))
-        except:
-            PATH = f'./models/{nombre}/{nombre + extension}'
+            # except:
+            #     PATH = f'./models/{nombre}/{nombre}_best{extension}'
+            #     model.load_state_dict(torch.load(PATH))
+        else:
+            #try:
+            # PATH = f'/home/elena/media/disk/_cygdrive_D_models/{nombre}/{nombre + extension}' 
+            PATH = f'/home/elena/Desktop/models/{nombre}/{nombre + extension}'
             model.load_state_dict(torch.load(PATH))
+            # except:
+            #     PATH = f'./models/{nombre}/{nombre + extension}'
+            #     model.load_state_dict(torch.load(PATH))
         model.eval()
         return model
     

@@ -19,17 +19,17 @@ Subset 5 data count: 76
 	With apnea: 8
 	Without apnea: 68
 Subset 6 data count: 75
-	With apnea: 7
-	Without apnea: 68
+	With apnea: 8
+	Without apnea: 67
 Subset 7 data count: 75
-	With apnea: 8
-	Without apnea: 67
-Subset 8 data count: 75
-	With apnea: 8
-	Without apnea: 67
-Subset 9 data count: 75
 	With apnea: 7
 	Without apnea: 68
+Subset 8 data count: 75
+	With apnea: 7
+	Without apnea: 68
+Subset 9 data count: 75
+	With apnea: 8
+	Without apnea: 67
 Train: subsets [0, 1, 2, 3, 4, 5, 6, 7]
 Val: subset [8]
 Test: subset [9]
@@ -54,18 +54,18 @@ Subset 4 data count: 16
 Subset 5 data count: 16
 	With apnea: 8
 	Without apnea: 8
-Subset 6 data count: 14
+Subset 6 data count: 16
+	With apnea: 8
+	Without apnea: 8
+Subset 7 data count: 14
 	With apnea: 7
 	Without apnea: 7
-Subset 7 data count: 16
-	With apnea: 8
-	Without apnea: 8
-Subset 8 data count: 16
-	With apnea: 8
-	Without apnea: 8
-Subset 9 data count: 75
+Subset 8 data count: 14
 	With apnea: 7
-	Without apnea: 68
+	Without apnea: 7
+Subset 9 data count: 75
+	With apnea: 8
+	Without apnea: 67
 
 Model2(
   (conv_layers): Sequential(
@@ -119,6 +119,7 @@ Parameter Group 0
 )
 
 Start of training
-	End of epoch 1 - Accuracy = 50.00% - F1 = 0.00% - Train Loss = 62.30% - Val Loss = 69.25% - 20.23 seconds
-	End of epoch 2 - Accuracy = 50.00% - F1 = 0.00% - Train Loss = 48.55% - Val Loss = 69.25% - 19.98 seconds
-End of training - 2 epochs - 40.21 seconds
+	End of epoch 1 - Accuracy = 50.00% - F1 = 0.00% - Train Loss = 66.42% - Val Loss = 69.28% - 21.72 seconds
+	End of epoch 2 - Accuracy = 50.00% - F1 = 0.00% - Train Loss = 52.13% - Val Loss = 69.40% - 20.16 seconds
+End of training - 2 epochs - 46.52 seconds
+Best model - Epoch 1 - Val Loss = 69.28%

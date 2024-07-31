@@ -1,15 +1,18 @@
-try:
-    from Imports import *
-    from LecturaSenalesReales import *
-    from LecturaAnotaciones import *
-except:
-    from src.Imports import *
-    from src.LecturaSenalesReales import *
-    from src.LecturaAnotaciones import *
+# try:
+#     from Imports import *
+#     from LecturaSenalesReales import *
+#     from LecturaAnotaciones import *
+# except:
+#     from src.Imports import *
+#     from src.LecturaSenalesReales import *
+#     from src.LecturaAnotaciones import *
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from scipy.signal import resample
 import copy
+from Imports import *
+from LecturaSenalesReales import *
+from LecturaAnotaciones import *
 
 class ApneaDataset(Dataset):
     """Dataset custom class"""
@@ -281,8 +284,8 @@ class ApneaDataset2(Dataset):
 
         Returns: none.
         """
-        self.__X = torch.tensor(X)
-        self.__y = torch.tensor(y)
+        self.__X = X.clone().detach()
+        self.__y = y.clone().detach()
         self.subsets = []
         self.archivos = archivos
         self.__sr = sr
@@ -451,7 +454,7 @@ class ApneaDataset2(Dataset):
 
             if idx > 0:  # Skip the first dataset since it's already copied
                 appended_dataset.__X = torch.cat((appended_dataset.__X, dataset.__X), dim=0)
-                appended_dataset.__y = torch.cat((torch.tensor(appended_dataset.__y), torch.tensor(dataset.__y)), dim=0)
+                appended_dataset.__y = torch.cat((appended_dataset.__y, dataset.__y.clone().detach()), dim=0)
                 try:
                     appended_dataset.archivos.append(dataset.archivos)
                 except AttributeError:

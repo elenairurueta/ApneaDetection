@@ -1,15 +1,28 @@
-try:
-    from Imports import *
-    from Modelo import Model1, Model2
-except:
-    from src.Imports import *
-    from src.Modelo import Model1, Model2
+# try:
+#     from Imports import *
+#     from Modelo import Model2
+# except:
+#     from src.Imports import *
+#     from src.Modelo import Model2
 
+from Imports import *
+from Modelo import Model2
 
 class Trainer:
     """Class to train the model with trainset and validate training with valset"""
 
-    def __init__(self, model:Model1, trainset:Subset, valset:Subset, n_epochs:int = 100, batch_size:int = 32, loss_fn:str = 'BCE', optimizer:str = 'SGD', lr:float = 0.01, momentum:float = 0, text:str = ''):
+    def __init__(self, 
+                 model:Model2, 
+                 trainset:Subset, 
+                 valset:Subset, 
+                 n_epochs:int = 100, 
+                 batch_size:int = 32, 
+                 loss_fn:str = 'BCE', 
+                 optimizer:str = 'SGD', 
+                 lr:float = 0.01, 
+                 momentum:float = 0, 
+                 text:str = '', 
+                 device = "cpu"):
         """
         Initializes the Trainer object.
 
@@ -28,9 +41,13 @@ class Trainer:
         Returns: none.
         """
 
-        self.__model__ = model
+        self.device = device
+
+        self.__model__ = model.to(self.device)
+
         self.train_loader = DataLoader(trainset, shuffle=True, batch_size=batch_size)
         self.val_loader = DataLoader(valset, shuffle=False, batch_size=batch_size)
+
         if loss_fn == 'BCE':
             self.loss_fn = nn.BCELoss()  # Binary Cross Entropy
         else:
@@ -39,6 +56,7 @@ class Trainer:
             self.optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)  # Stochastic Gradient Descent
         else:
             raise Exception("In this first version, only 'SGD' optimizer is available")
+        
         self.batch_size = batch_size
         self.lr = lr
         self.n_epochs = n_epochs
@@ -49,6 +67,8 @@ class Trainer:
         self.f1score = []
         self.momentum = momentum
         self.text = text
+
+        
 
     def train_one_epoch(self):
         """
@@ -69,9 +89,15 @@ class Trainer:
 
         #Iterate over each batch in the train_loader:
         for X_batch, y_batch in self.train_loader:
+            
+            X_batch, y_batch = X_batch.to(self.device), y_batch.to(self.device)
+            print("Xy_batch device in train_one_epoch: ", X_batch.device)
             #Get the model's predictions for the batch and calculate the loss:
             y_pred = self.__model__(X_batch)
+            print("y_pred_batch device in train_one_epoch: ", y_pred.device)
             loss = self.loss_fn(y_pred, y_batch)
+            print("loss device in train_one_epoch: ", loss.device)
+
             #Reset and calculate gradients via backpropagation and update the model's parameters:
             self.optimizer.zero_grad()
             loss.backward()
@@ -82,8 +108,10 @@ class Trainer:
             all_y_pred.append(y_pred)
         #Calculate the average loss and accuracy for the epoch:
         avg_loss = running_loss / len(self.train_loader)
-        y_true = torch.cat(all_y_true).detach().numpy().tolist()
-        y_pred = torch.cat(all_y_pred).round().detach().numpy().tolist()
+        # y_true = torch.cat(all_y_true).detach().numpy().tolist()
+        # y_pred = torch.cat(all_y_pred).round().detach().numpy().tolist()
+        y_true = torch.cat(all_y_true).detach().cpu().numpy().tolist()
+        y_pred = torch.cat(all_y_pred).round().detach().cpu().numpy().tolist()
         train_acc = accuracy_score(y_true, y_pred)
         return avg_loss, train_acc
 
@@ -109,6 +137,7 @@ class Trainer:
         with torch.no_grad():
             #Iterate over each batch in the val_loader:
             for X_val, y_val in self.val_loader:
+                X_val, y_val = X_val.to(self.device), y_val.to(self.device)
                 #Get the model's predictions for the batch and calculate the loss:
                 y_pred = self.__model__(X_val)
                 val_loss = self.loss_fn(y_pred, y_val)
@@ -120,8 +149,11 @@ class Trainer:
         avg_val_loss = val_running_loss / len(self.val_loader)
         y_true = torch.cat(all_y_true)
         y_pred = torch.cat(all_y_pred).round()
-        val_acc = accuracy_score(y_true, y_pred)
-        f1 = f1_score(y_true, y_pred)
+        # val_acc = accuracy_score(y_true, y_pred)
+        # f1 = f1_score(y_true, y_pred)
+        val_acc = accuracy_score(y_true.cpu(), y_pred.cpu())
+        f1 = f1_score(y_true.cpu(), y_pred.cpu())
+
         return avg_val_loss, val_acc, f1
 
     def train(self, verbose:bool = True, plot:bool = True, save_best_model = True):
@@ -143,6 +175,7 @@ class Trainer:
         epoch_min_loss = 0
         # For each epoch:
         for epoch in range(self.n_epochs):
+            # print(f"\nStart of epoch {epoch + 1}\n")
             start_time_epoch = datetime.now()
 
             # Training: train the model for one epoch, recording the average training loss and accuracy.
@@ -220,16 +253,28 @@ class Trainer:
         plt.tight_layout()
         
         #Save figure in path 'models\nombre\nombre_acc_loss.png'
-        if os.path.exists(f'D:/models'):
-            if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
-            PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
-        elif os.path.exists(f'./models'):
-            if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'./models/{self.__model__.get_nombre()}')
-            PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
-        plt.savefig(PATH)
+        # if os.path.exists(f'D:/models'):
+        #     if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
+        #         os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
+        #     PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
+        # elif os.path.exists(f'./models'):
+        #     if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
+        #         os.makedirs(f'./models/{self.__model__.get_nombre()}')
+        #     PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
+        # plt.savefig(PATH)
         
+        # if os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models'):
+        #     if not os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}'): 
+        #         os.makedirs(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}') 
+        #     PATH = f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
+        #     plt.savefig(PATH)
+
+        if os.path.exists(f'/home/elena/Desktop/models'):
+            if not os.path.exists(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}'): 
+                os.makedirs(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}') 
+            PATH = f'/home/elena/Desktop/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
+            plt.savefig(PATH)
+
         if(plot):
             plt.show()  
         else:
@@ -249,15 +294,26 @@ class Trainer:
         
         Returns: none.
         """
-        if os.path.exists(f'D:/models'):
-            if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
-            PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
-        elif os.path.exists(f'./models'):
-            if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'./models/{self.__model__.get_nombre()}')
-            PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
-        f = open(PATH, "w")
-        f.write(self.text)
-        f.close()
+        # if os.path.exists(f'D:/models'):
+        #     if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
+        #         os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
+        #     PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
+        # elif os.path.exists(f'./models'):
+        #     if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
+        #         os.makedirs(f'./models/{self.__model__.get_nombre()}')
+        #     PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
+
+        # print("Trying to write txt")
+        # if os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models'):
+        #     if not os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}'): 
+        #         os.makedirs(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}') 
+        #     PATH = f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'            
+        if os.path.exists(f'/home/elena/Desktop/models'):
+            if not os.path.exists(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}'): 
+                os.makedirs(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}') 
+            PATH = f'/home/elena/Desktop/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
+            f = open(PATH, "w")
+            f.write(self.text)
+            f.close()
+            # print("Written txt")
 
