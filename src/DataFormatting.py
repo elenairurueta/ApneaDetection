@@ -400,8 +400,8 @@ class ApneaDataset2(Dataset):
         for segment in self.__X:
             new_segment = [resample(segment[0].numpy(), num_puntos)]
             new_X.append(new_segment)
-        self.__X = torch.tensor(new_X)
-        self.__sr = sampling_rate
+        new_X_np = np.array(new_X)
+        self.__X = torch.tensor(new_X_np)
         for idx, subset in enumerate(self.subsets):
             self.subsets[idx].dataset = self
 

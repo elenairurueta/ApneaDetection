@@ -91,12 +91,12 @@ class Trainer:
         for X_batch, y_batch in self.train_loader:
             
             X_batch, y_batch = X_batch.to(self.device), y_batch.to(self.device)
-            print("Xy_batch device in train_one_epoch: ", X_batch.device)
+            #print("Xy_batch device in train_one_epoch: ", X_batch.device)
             #Get the model's predictions for the batch and calculate the loss:
             y_pred = self.__model__(X_batch)
-            print("y_pred_batch device in train_one_epoch: ", y_pred.device)
+            #print("y_pred_batch device in train_one_epoch: ", y_pred.device)
             loss = self.loss_fn(y_pred, y_batch)
-            print("loss device in train_one_epoch: ", loss.device)
+            #print("loss device in train_one_epoch: ", loss.device)
 
             #Reset and calculate gradients via backpropagation and update the model's parameters:
             self.optimizer.zero_grad()
@@ -156,7 +156,7 @@ class Trainer:
 
         return avg_val_loss, val_acc, f1
 
-    def train(self, verbose:bool = True, plot:bool = True, save_best_model = True):
+    def train(self, models_path, verbose:bool = True, plot:bool = True, save_best_model = True):
         """
         Trains the model for a specified number of epochs, optionally printing progress.
 
@@ -198,7 +198,7 @@ class Trainer:
             if(avg_val_loss < min_loss and save_best_model):
                 min_loss = avg_val_loss
                 epoch_min_loss = epoch + 1
-                self.__model__.save_model(extension='_best.pth')
+                self.__model__.save_model(models_path, extension='_best.pth')
 
         #Track the end time of the entire training process:
         end_of_training = (f"End of training - {self.n_epochs} epochs - "
@@ -209,13 +209,13 @@ class Trainer:
             print(end_of_training)
         self.text += '\n' + end_of_training
         #Optionally plot the accuracies and losses over epochs:
-        self.plot_accuracies_losses(plot)
+        self.plot_accuracies_losses(models_path, plot)
         #Write the training logs to a text file:
-        self.write_txt()
-        self.__model__.save_model()
+        self.write_txt(models_path)
+        self.__model__.save_model(models_path)
         return self.__model__
 
-    def plot_accuracies_losses(self, plot:bool):
+    def plot_accuracies_losses(self, models_path, plot:bool):
         """
         Plots accuracy, F1 score and loss vs epochs. 
         
@@ -269,10 +269,10 @@ class Trainer:
         #     PATH = f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
         #     plt.savefig(PATH)
 
-        if os.path.exists(f'/home/elena/Desktop/models'):
-            if not os.path.exists(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}'): 
-                os.makedirs(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}') 
-            PATH = f'/home/elena/Desktop/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
+        if os.path.exists(models_path):
+            if not os.path.exists(models_path + f'/{self.__model__.get_nombre()}'): 
+                os.makedirs(models_path + f'/{self.__model__.get_nombre()}') 
+            PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
             plt.savefig(PATH)
 
         if(plot):
@@ -280,7 +280,7 @@ class Trainer:
         else:
             plt.close()
 
-    def write_txt(self):
+    def write_txt(self, models_path):
         """
         Write .txt file with training information:
         - Data distribution
@@ -308,12 +308,11 @@ class Trainer:
         #     if not os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}'): 
         #         os.makedirs(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}') 
         #     PATH = f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'            
-        if os.path.exists(f'/home/elena/Desktop/models'):
-            if not os.path.exists(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}'): 
-                os.makedirs(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}') 
-            PATH = f'/home/elena/Desktop/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
+        if os.path.exists(models_path):
+            if not os.path.exists(models_path + f'/{self.__model__.get_nombre()}'): 
+                os.makedirs(models_path + f'/{self.__model__.get_nombre()}') 
+            PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
             f = open(PATH, "w")
             f.write(self.text)
             f.close()
-            # print("Written txt")
 

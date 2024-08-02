@@ -10,7 +10,7 @@ from Modelo import Model2
 
 class Tester:
     """Class to test the model with testset"""
-    def __init__(self, model:Model2, testset:Subset, batch_size:int=32, device = "cpu"):
+    def __init__(self, model:Model2, testset:Subset, batch_size:int=32, device = "cpu", best_final = ""):
         """
         Initializes the Tester object.
 
@@ -29,8 +29,8 @@ class Tester:
         self.__all_labels__ = []
         self.__all_preds__ = []
         self.__wrong_predictions__ = []
-        # print("Tester initialized")
-
+        self.__best_final__ = best_final
+        
     def test(self):
         """
         Tests the model on the test dataset, storing predictions and labels.
@@ -123,7 +123,7 @@ class Tester:
         else:
             plt.close()
 
-    def __plot_roc_curve__(self, plot:bool):
+    def __plot_roc_curve__(self, models_path, plot:bool):
         """
         Plots Receiver Operating Characteristic curve and saves plot as .png.
 
@@ -148,37 +148,24 @@ class Tester:
         plt.ylabel('True Positive Rate')
         plt.title('Receiver Operating Characteristic')
         plt.legend(loc="lower right")
-
-        # if os.path.exists(f'D:/models'):
-        #     if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
-        #         os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
-        #     PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        # elif os.path.exists(f'./models'):
-        #     if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
-        #         os.makedirs(f'./models/{self.__model__.get_nombre()}')
-        #     PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        # plt.savefig(PATH)
-
-        # print("Trying to save roc curve")
-        # if os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models'):
-        #     if not os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}'):  ##CAMBIAR
-        #         os.makedirs(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}') ##CAMBIAR
-        #     PATH = f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png' ##CAMBIAR
-        #     plt.savefig(PATH)
-        #     # print("Saved roc curve")
         
-        if os.path.exists(f'/home/elena/Desktop/models'):
-            if not os.path.exists(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}'):  ##CAMBIAR
-                os.makedirs(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}') ##CAMBIAR
-            PATH = f'/home/elena/Desktop/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png' ##CAMBIAR
+        if os.path.exists(models_path):
+            if not os.path.exists(models_path + f'/{self.__model__.get_nombre()}'):
+                os.makedirs(models_path + f'/{self.__model__.get_nombre()}')
+            if(self.__best_final__ == ""):
+                PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+            else:
+                PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{self.__best_final__}.png'
             plt.savefig(PATH)
+        else:
+            print('PATH NOT FOUND: ' + models_path)
 
         if(plot):
             plt.show()
         else:
             plt.close()
 
-    def __plot_metrics_confusion_matrix__(self, plot:bool):
+    def __plot_metrics_confusion_matrix__(self, models_path, plot:bool):
         """
         Plots the confusion matrix with normalized values and additional metrics, and saves the plot as a .png file.
         
@@ -202,33 +189,19 @@ class Tester:
         ax.set_title("Confusion Matrix")
 
         #Generate additional metric text to display below the confusion matrix plot:
-        metric_text = (f"Test data count: {len(self.__test_loader__.dataset)}\n") + ("\n".join([f"{k}: {v}" for k, v in list(self.__metrics__.items())[:-2]]))
+        metric_text = (f"Test data count: {len(self.__test_loader__.dataset)}\n") + ("\n".join([f"{k}: {float(v)*100:.2f}%" for k, v in list(self.__metrics__.items())[:-2]])) + "\n" + ("\n".join([f"{k}: {float(v):.4f}" for k, v in list(self.__metrics__.items())[-2:]]))
         plt.gcf().text(0.1, 0.1, metric_text, ha='center', fontsize=10, bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray'))
         
-        # if os.path.exists(f'D:/models'):
-        #     if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
-        #         os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
-        #     PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        # elif os.path.exists(f'./models'):
-        #     if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
-        #         os.makedirs(f'../models/{self.__model__.get_nombre()}')
-        #     PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        # plt.savefig(PATH)
-
-        # print("Trying to save cm metrics")
-        # if os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models'):
-        #     if not os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}'): 
-        #         os.makedirs(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}') 
-        #     PATH = f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        #     plt.savefig(PATH)
-            # print("Saved cm metrics")
-        
-        if os.path.exists(f'/home/elena/Desktop/models'):
-            if not os.path.exists(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}'): 
-                os.makedirs(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}') 
-            PATH = f'/home/elena/Desktop/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        if os.path.exists(models_path):
+            if not os.path.exists(models_path + f'/{self.__model__.get_nombre()}'): 
+                os.makedirs(models_path + f'/{self.__model__.get_nombre()}') 
+            if(self.__best_final__ == ""):
+                PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+            else:
+                PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{self.__best_final__}.png'
             plt.savefig(PATH)
-
+        else:
+            print('PATH NOT FOUND: ' + models_path)
 
         if(plot):
             plt.show()
@@ -255,7 +228,7 @@ class Tester:
 
         self.__metrics__ = {k: f"{v:.2f}" for k, v in metrics.items()}
 
-    def evaluate(self, plot:bool = True):
+    def evaluate(self, models_path, plot:bool = True):
         '''
         Tests the model, computes metrics and plots evaluation results.
 
@@ -264,12 +237,11 @@ class Tester:
         
         Returns: none.
         '''
-        # print("Evaluating model")
         self.test()
         self.__cm__ = confusion_matrix(self.__all_labels__, self.__all_preds__)
         self.__calculate_metrics__()
-        self.__plot_roc_curve__(plot)
-        self.__plot_metrics_confusion_matrix__(plot)
+        self.__plot_roc_curve__(models_path, plot)
+        self.__plot_metrics_confusion_matrix__(models_path, plot)
         # self.__plot_wrong_predictions__(plot)
 
         return self.__cm__, self.__metrics__

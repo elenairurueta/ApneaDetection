@@ -204,7 +204,7 @@ class Model2(nn.Module):
         """
         return '\n\n' + str(self)
 
-    def save_model(self, extension:str = '.pth'):
+    def save_model(self, models_path, extension:str = '.pth'):
         """
         Saves the parameters of the model to a file.
 
@@ -225,14 +225,14 @@ class Model2(nn.Module):
         #     if not os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models/{self.nombre}'):  ##CAMBIAR
         #         os.makedirs(f'/home/elena/media/disk/_cygdrive_D_models/{self.nombre}') ##CAMBIAR
         #     PATH = f'/home/elena/media/disk/_cygdrive_D_models/{self.nombre}/{self.nombre + extension}'   
-        if os.path.exists(f'/home/elena/Desktop/models'):
-            if not os.path.exists(f'/home/elena/Desktop/models/{self.nombre}'):
-                os.makedirs(f'/home/elena/Desktop/models/{self.nombre}')
-            PATH = f'/home/elena/Desktop/models/{self.nombre}/{self.nombre + extension}'             
+        if os.path.exists(models_path):
+            if not os.path.exists(models_path + f'/{self.nombre}'):
+                os.makedirs(models_path + f'/{self.nombre}')
+            PATH = models_path + f'/{self.nombre}/{self.nombre + extension}'             
         torch.save(self.state_dict(), PATH)
 
     @staticmethod
-    def load_model(nombre, input_size, extension:str = '.pth', best = False):
+    def load_model(models_path, nombre, input_size, extension:str = '.pth', best = False):
         """
         Loads a pre-trained model from a file.
 
@@ -247,7 +247,7 @@ class Model2(nn.Module):
         model = Model2(input_size, nombre)
         if(best):
             # PATH = f'/home/elena/media/disk/_cygdrive_D_models/{nombre}/{nombre}_best{extension}' 
-            PATH = f'/home/elena/Desktop/models/{nombre}/{nombre}_best{extension}' 
+            PATH = models_path + f'/{nombre}/{nombre}_best{extension}' 
             model.load_state_dict(torch.load(PATH))
             # except:
             #     PATH = f'./models/{nombre}/{nombre}_best{extension}'
@@ -255,7 +255,7 @@ class Model2(nn.Module):
         else:
             #try:
             # PATH = f'/home/elena/media/disk/_cygdrive_D_models/{nombre}/{nombre + extension}' 
-            PATH = f'/home/elena/Desktop/models/{nombre}/{nombre + extension}'
+            PATH = models_path + f'/{nombre}/{nombre + extension}'
             model.load_state_dict(torch.load(PATH))
             # except:
             #     PATH = f'./models/{nombre}/{nombre + extension}'
