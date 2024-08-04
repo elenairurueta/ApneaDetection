@@ -175,7 +175,6 @@ class Trainer:
         epoch_min_loss = 0
         # For each epoch:
         for epoch in range(self.n_epochs):
-            # print(f"\nStart of epoch {epoch + 1}\n")
             start_time_epoch = datetime.now()
 
             # Training: train the model for one epoch, recording the average training loss and accuracy.
@@ -194,6 +193,7 @@ class Trainer:
                             f"{(datetime.now()-start_time_epoch).total_seconds():.2f} seconds")
             if(verbose):
                 print(end_of_epoch)
+            print(f'{(datetime.now()-start_time_epoch).total_seconds()}') ##### BORRAR
             self.text += '\n\t' + end_of_epoch
             if(avg_val_loss < min_loss and save_best_model):
                 min_loss = avg_val_loss
