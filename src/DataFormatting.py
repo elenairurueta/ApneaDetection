@@ -1,11 +1,3 @@
-# try:
-#     from Imports import *
-#     from LecturaSenalesReales import *
-#     from LecturaAnotaciones import *
-# except:
-#     from src.Imports import *
-#     from src.LecturaSenalesReales import *
-#     from src.LecturaAnotaciones import *
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from scipy.signal import resample
@@ -194,39 +186,39 @@ class ApneaDataset(Dataset):
         scaler.fit(X)
         return scaler.transform(X)
 
-    @staticmethod
-    def from_csv(csv_path_con:str, csv_path_sin:str):
-        """
-        Args:
-            csv_path_con (str): path to the 'SenalesCONapnea.csv' file.
-            csv_path_sin (str): path to the 'SenalesSINapnea.csv' file.
+    # @staticmethod
+    # def from_csv(csv_path_con:str, csv_path_sin:str):
+    #     """
+    #     Args:
+    #         csv_path_con (str): path to the 'SenalesCONapnea.csv' file.
+    #         csv_path_sin (str): path to the 'SenalesSINapnea.csv' file.
 
-        Returns: none.
-        """
+    #     Returns: none.
+    #     """
 
-        #Read .csv files and drop time column
-        try:
-            dfCON = pd.read_csv(csv_path_con)
-        except FileNotFoundError:
-            raise FileNotFoundError("File not found. Path should look like 'data\ApneaDetection_SimulatedSignals\SenalesCONapnea.csv'")
-        dfCON.drop(columns=dfCON.columns[0], inplace=True)
-        dfCON = dfCON.transpose()
-        try:
-            dfSIN = pd.read_csv(csv_path_sin)
-        except FileNotFoundError:
-            raise FileNotFoundError("File not found. Path should look like 'data\ApneaDetection_SimulatedSignals\SenalesSINapnea.csv'")
-        dfSIN.drop(columns=dfSIN.columns[0], inplace=True)
-        dfSIN = dfSIN.transpose()
+    #     #Read .csv files and drop time column
+    #     try:
+    #         dfCON = pd.read_csv(csv_path_con)
+    #     except FileNotFoundError:
+    #         raise FileNotFoundError("File not found. Path should look like 'data\ApneaDetection_SimulatedSignals\SenalesCONapnea.csv'")
+    #     dfCON.drop(columns=dfCON.columns[0], inplace=True)
+    #     dfCON = dfCON.transpose()
+    #     try:
+    #         dfSIN = pd.read_csv(csv_path_sin)
+    #     except FileNotFoundError:
+    #         raise FileNotFoundError("File not found. Path should look like 'data\ApneaDetection_SimulatedSignals\SenalesSINapnea.csv'")
+    #     dfSIN.drop(columns=dfSIN.columns[0], inplace=True)
+    #     dfSIN = dfSIN.transpose()
 
-        #Label and join dataframes 
-        X = np.concatenate((dfCON, dfSIN))
-        targetCON = np.ones(dfCON.shape[0])
-        targetSIN = np.zeros(dfSIN.shape[0])
-        y = np.concatenate((targetCON, targetSIN))
+    #     #Label and join dataframes 
+    #     X = np.concatenate((dfCON, dfSIN))
+    #     targetCON = np.ones(dfCON.shape[0])
+    #     targetSIN = np.zeros(dfSIN.shape[0])
+    #     y = np.concatenate((targetCON, targetSIN))
 
-        X = torch.tensor(X, dtype=torch.float32).unsqueeze(1)
-        y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1)
-        return X,y
+    #     X = torch.tensor(X, dtype=torch.float32).unsqueeze(1)
+    #     y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1)
+    #     return X,y
 
     @staticmethod
     def from_segments(segments, stand = False):
@@ -249,28 +241,28 @@ class ApneaDataset(Dataset):
 
         return X,y
 
-    @staticmethod
-    def create_datasets(archivos):
-        for archivo in archivos:
-            path_edf = f"C:\\Users\\elena\\OneDrive\\Documentos\\Tesis\\Dataset\\HomePAP\\polysomnography\\edfs\\lab\\full\\homepap-lab-full-1600{archivo:03d}.edf"
-            path_annot = f"C:\\Users\\elena\\OneDrive\\Documentos\\Tesis\\Dataset\\HomePAP\\polysomnography\\annotations-events-profusion\\lab\\full\\homepap-lab-full-1600{archivo:03d}-profusion.xml"
-            all_signals = read_signals_EDF(path_edf)
-            annotations = Anotaciones(path_annot)
+    # @staticmethod
+    # def create_datasets(archivos):
+    #     for archivo in archivos:
+    #         path_edf = f"C:\\Users\\elena\\OneDrive\\Documentos\\Tesis\\Dataset\\HomePAP\\polysomnography\\edfs\\lab\\full\\homepap-lab-full-1600{archivo:03d}.edf"
+    #         path_annot = f"C:\\Users\\elena\\OneDrive\\Documentos\\Tesis\\Dataset\\HomePAP\\polysomnography\\annotations-events-profusion\\lab\\full\\homepap-lab-full-1600{archivo:03d}-profusion.xml"
+    #         all_signals = read_signals_EDF(path_edf)
+    #         annotations = Anotaciones(path_annot)
 
-            bipolar_signal, tiempo, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])
+    #         bipolar_signal, tiempo, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])
 
-            segments = get_signal_segments_strict(bipolar_signal, tiempo, sampling, annotations)
+    #         segments = get_signal_segments_strict(bipolar_signal, tiempo, sampling, annotations)
 
-            X,y = ApneaDataset.from_segments(segments, stand = True)
-            dataset = ApneaDataset(X,y, archivo)
+    #         X,y = ApneaDataset.from_segments(segments, stand = True)
+    #         dataset = ApneaDataset(X,y, archivo)
 
-            dataset.split_dataset(train_perc = 0.8, 
-                                val_perc = 0.1, 
-                                test_perc = 0.1)
+    #         dataset.split_dataset(train_perc = 0.8, 
+    #                             val_perc = 0.1, 
+    #                             test_perc = 0.1)
 
-            dataset.undersample_majority_class(0.0)
+    #         dataset.undersample_majority_class(0.0)
 
-            dataset.save_dataset(f"data\ApneaDetection_HomePAPSignals\datasets\dataset_archivo_1600{archivo:03d}.pth")
+    #         dataset.save_dataset(f"data\ApneaDetection_HomePAPSignals\datasets\dataset_archivo_1600{archivo:03d}.pth")
 
 
 class ApneaDataset2(Dataset):
@@ -404,38 +396,20 @@ class ApneaDataset2(Dataset):
         self.__X = torch.tensor(new_X_np)
         for idx, subset in enumerate(self.subsets):
             self.subsets[idx].dataset = self
-
-    # @staticmethod
-    # def join_datasets(datasets, traintestval = None):
-
-    #     if not isinstance(datasets[0], ApneaDataset2):
-    #             raise TypeError("Expected an instance of ApneaDataset2")
-    #     appended_dataset = copy.deepcopy(datasets[0])
-    #     if(traintestval != None):
-    #         train_subsets, val_subsets, test_subsets = traintestval[0]
-    #     if(len(datasets) > 1):
-    #         for idx, dataset in enumerate(datasets[1:]):
-    #             if not isinstance(dataset, ApneaDataset2):
-    #                 raise TypeError("Expected an instance of ApneaDataset2")
-    #             appended_dataset.__X = torch.cat((appended_dataset.__X, dataset.__X), dim=0)
-    #             appended_dataset.__y = torch.cat((torch.tensor(appended_dataset.__y), torch.tensor(dataset.__y)), dim=0)
-
-    #             if(traintestval != None):
-    #                 train_subsets_viejo, val_subsets_viejo, test_subsets_viejo = traintestval[idx + 1]
-    #                 train_subsets += [x+len(appended_dataset.subsets) for x in train_subsets_viejo]
-    #                 val_subsets += [x+len(appended_dataset.subsets) for x in val_subsets_viejo]
-    #                 test_subsets += [x+len(appended_dataset.subsets) for x in test_subsets_viejo]
-                
-    #             appended_dataset.subsets += dataset.subsets
-                
-    #             try:
-    #                 appended_dataset.archivos.append(dataset.archivos)
-    #             except:
-    #                 appended_dataset.archivos = [appended_dataset.archivos] + [dataset.archivos]
-    #                 print(appended_dataset.archivos)
-
-    #     return appended_dataset, train_subsets, val_subsets, test_subsets
     
+    def Zscore_normalization(self):
+        # mean = self.__X.mean(dim=2, keepdim=True)
+        # std = self.__X.std(dim=2, keepdim=True)
+        # self.__X = (self.__X - mean) / std
+        scaler = StandardScaler()
+        original_shape = self.__X.shape
+        flattened_X = self.__X.reshape(-1, original_shape[-1])
+        scaler.fit(flattened_X)
+        scaled_X = scaler.transform(flattened_X)
+        self.__X = torch.tensor(scaled_X, dtype=torch.float32).view(original_shape)
+
+
+
     @staticmethod
     def join_datasets(datasets, traintestval=None):
         if not isinstance(datasets[0], ApneaDataset2):
@@ -494,12 +468,7 @@ class ApneaDataset2(Dataset):
         if len(data['subsets'])>0:
             apnea_dataset.subsets = data['subsets']
         return apnea_dataset
-
-    @staticmethod
-    def standarize_data(X):
-        scaler = StandardScaler()
-        scaler.fit(X)
-        return scaler.transform(X)
+        
 
     @staticmethod
     def from_csv(csv_path_con:str, csv_path_sin:str):
@@ -536,7 +505,7 @@ class ApneaDataset2(Dataset):
         return X,y
 
     @staticmethod
-    def from_segments(segments, stand = False):
+    def from_segments(segments):
         X = []
         y = []
 
@@ -547,9 +516,6 @@ class ApneaDataset2(Dataset):
         # Convertimos las listas en arreglos numpy
         X = np.vstack(X)
         y = np.array(y)
-        
-        if(stand):
-            X = ApneaDataset.standarize_data(X)
 
         X = torch.tensor(X, dtype=torch.float32).unsqueeze(1)
         y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1)
@@ -569,7 +535,7 @@ class ApneaDataset2(Dataset):
 
             segments = get_signal_segments_strict(bipolar_signal, tiempo, sampling, annotations)
 
-            X,y = ApneaDataset2.from_segments(segments, stand = True)
+            X,y = ApneaDataset2.from_segments(segments)
             dataset = ApneaDataset2(X, y, sampling, archivo)
             dataset.split_dataset()
             dataset.save_dataset(f"data\ApneaDetection_HomePAPSignals\datasets\dataset2_archivo_1600{archivo:03d}.pth")

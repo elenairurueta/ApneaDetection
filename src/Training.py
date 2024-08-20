@@ -50,12 +50,16 @@ class Trainer:
 
         if loss_fn == 'BCE':
             self.loss_fn = nn.BCELoss()  # Binary Cross Entropy
+        elif loss_fn == 'CE':
+            self.loss_fn = nn.CrossEntropyLoss()  # Cross Entropy
         else:
-            raise Exception("In this first version, only 'BCE' loss function is available")
+            raise Exception("In this first version, only 'BCE' or 'CE' loss function is available")
         if optimizer == 'SGD':
             self.optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)  # Stochastic Gradient Descent
+        elif optimizer == 'Adam':
+            self.optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999)) # Adam
         else:
-            raise Exception("In this first version, only 'SGD' optimizer is available")
+            raise Exception("In this first version, only 'SGD' or 'Adam' optimizer is available")
         
         self.batch_size = batch_size
         self.lr = lr
@@ -91,12 +95,9 @@ class Trainer:
         for X_batch, y_batch in self.train_loader:
             
             X_batch, y_batch = X_batch.to(self.device), y_batch.to(self.device)
-            #print("Xy_batch device in train_one_epoch: ", X_batch.device)
             #Get the model's predictions for the batch and calculate the loss:
             y_pred = self.__model__(X_batch)
-            #print("y_pred_batch device in train_one_epoch: ", y_pred.device)
             loss = self.loss_fn(y_pred, y_batch)
-            #print("loss device in train_one_epoch: ", loss.device)
 
             #Reset and calculate gradients via backpropagation and update the model's parameters:
             self.optimizer.zero_grad()
@@ -156,7 +157,7 @@ class Trainer:
 
         return avg_val_loss, val_acc, f1
 
-    def train(self, models_path, verbose:bool = True, plot:bool = True, save_best_model = True):
+    def train(self, models_path, verbose:bool = True, plot:bool = True, save_model = True, save_best_model = True):
         """
         Trains the model for a specified number of epochs, optionally printing progress.
 
@@ -193,7 +194,6 @@ class Trainer:
                             f"{(datetime.now()-start_time_epoch).total_seconds():.2f} seconds")
             if(verbose):
                 print(end_of_epoch)
-            print(f'{(datetime.now()-start_time_epoch).total_seconds()}') ##### BORRAR
             self.text += '\n\t' + end_of_epoch
             if(avg_val_loss < min_loss and save_best_model):
                 min_loss = avg_val_loss
@@ -212,7 +212,8 @@ class Trainer:
         self.plot_accuracies_losses(models_path, plot)
         #Write the training logs to a text file:
         self.write_txt(models_path)
-        self.__model__.save_model(models_path)
+        if(save_model):
+            self.__model__.save_model(models_path)
         return self.__model__
 
     def plot_accuracies_losses(self, models_path, plot:bool):

@@ -8,7 +8,7 @@ from Imports import *
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-archivos = [53, 55, 105, 113, 122, 151] #[4, 43, 63, 72, 84, 95]
+archivos = [4, 43, 53, 55, 63, 72, 84, 95, 105, 113, 122, 151]
 models_path = '/media/elena/Externo/models'
 
 txt_archivo = ""
