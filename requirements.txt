@@ -1,0 +1,7 @@
+# This file may be used to create an environment using:
+# $ conda create --name ApneaDetection --file requirements.txt
+# platform: win-64
+pytorch=2.3.0
+scikit-learn=1.4.2
+pandas=2.2.1
+matplotlib=3.8.4

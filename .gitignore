@@ -1,4 +1,9 @@
-SenalesCONapnea.csv
-SenalesSINapnea.csv
-/models
+/data/ApneaDetection_SimulatedSignals
+*.pth
+/__pycache__
+/src/__pycache__
+/.vscode
 *.edf
+*.xml
+/.vscode
+/models/modelo_senalesreales
