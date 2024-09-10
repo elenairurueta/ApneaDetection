@@ -1,7 +1,4 @@
-try:
-    from Imports import *
-except:
-    from src.Imports import *
+from Imports import *
     
 class Model(nn.Module):
     """Neural network model class"""
@@ -49,14 +46,13 @@ class Model(nn.Module):
             nn.Sigmoid() 
             )
         
-            
     def forward(self, x):
         """
         Defines the forward pass of the neural network model.
         """
         x = self.conv_layers(x)
         batch_size = x.size(0)
-        x = x.view(batch_size, -1) #flatten
+        x = x.view(batch_size, -1)
         x = self.fc_layers(x)
         return x
     
@@ -91,11 +87,7 @@ class Model(nn.Module):
             if not os.path.exists(f'./models/{self.nombre}'):
                 os.makedirs(f'./models/{self.nombre}')
             PATH = f'./models/{self.nombre}/{self.nombre + extension}'
-        elif os.path.exists(f'../models'):
-            if not os.path.exists(f'../models/{self.nombre}'):
-                os.makedirs(f'../models/{self.nombre}')
-            PATH = f'../models/{self.nombre}/{self.nombre + extension}'
-        torch.save(self.state_dict(), PATH)
+            torch.save(self.state_dict(), PATH)
 
     @staticmethod
     def load_model(nombre, input_size, extension:str = '.pth'):
@@ -114,9 +106,7 @@ class Model(nn.Module):
         try:
             PATH = f'./models/{nombre}/{nombre + extension}'
             model.load_state_dict(torch.load(PATH))
+            model.eval()
         except:
-            PATH = f'../models/{nombre}/{nombre + extension}'
-            model.load_state_dict(torch.load(PATH))
-        model.eval()
+            print('model not found')
         return model
-    
