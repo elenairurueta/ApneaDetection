@@ -1,18 +1,11 @@
-# try:
-#     from Imports import *
-#     from Modelo import Model2
-# except:
-#     from src.Imports import *
-#     from src.Modelo import Model2
-
 from Imports import *
-from Modelo import Model2
+from Modelo import Model
 
 class Trainer:
     """Class to train the model with trainset and validate training with valset"""
 
     def __init__(self, 
-                 model:Model2, 
+                 model:Model, 
                  trainset:Subset, 
                  valset:Subset, 
                  n_epochs:int = 100, 
@@ -32,10 +25,10 @@ class Trainer:
             - valset (Subset): data to validate.
             - n_epochs (int): number of epochs to train the model.
             - batch_size (int): number of data used in one iteration.
-            - loss_fn (str): string to specify desired loss function. NOTE: in this first version, only 'BCE' loss function is available.
-            - optimizer (str): string to specify desired optimizer. NOTE: in this first version, only 'SGD' optimizer is available.
+            - loss_fn (str): string to specify desired loss function. NOTE: in this version, only 'BCE' and 'CrossEntropyLoss' loss functions are available.
+            - optimizer (str): string to specify desired optimizer. NOTE: in this version, only 'SGD' and 'Adam' optimizers are available.
             - lr (float): learning rate for the optimizer.
-            - momentum (float): for the optimizer.
+            - momentum (float): for the optimizer. NOTE: not used if optimizer is Adam
             - txt (str): previous data statistics to save in the .txt file.
         
         Returns: none.
@@ -53,13 +46,13 @@ class Trainer:
         elif loss_fn == 'CE':
             self.loss_fn = nn.CrossEntropyLoss()  # Cross Entropy
         else:
-            raise Exception("In this first version, only 'BCE' or 'CE' loss function is available")
+            raise Exception("In this version, only 'BCE' or 'CE' loss functions are available")
         if optimizer == 'SGD':
             self.optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)  # Stochastic Gradient Descent
         elif optimizer == 'Adam':
             self.optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999)) # Adam
         else:
-            raise Exception("In this first version, only 'SGD' or 'Adam' optimizer is available")
+            raise Exception("In this version, only 'SGD' or 'Adam' optimizers are available")
         
         self.batch_size = batch_size
         self.lr = lr
@@ -72,7 +65,6 @@ class Trainer:
         self.momentum = momentum
         self.text = text
 
-        
 
     def train_one_epoch(self):
         """
@@ -107,10 +99,9 @@ class Trainer:
             running_loss += loss.item()
             all_y_true.append(y_batch)
             all_y_pred.append(y_pred)
+
         #Calculate the average loss and accuracy for the epoch:
         avg_loss = running_loss / len(self.train_loader)
-        # y_true = torch.cat(all_y_true).detach().numpy().tolist()
-        # y_pred = torch.cat(all_y_pred).round().detach().numpy().tolist()
         y_true = torch.cat(all_y_true).detach().cpu().numpy().tolist()
         y_pred = torch.cat(all_y_pred).round().detach().cpu().numpy().tolist()
         train_acc = accuracy_score(y_true, y_pred)
@@ -150,8 +141,6 @@ class Trainer:
         avg_val_loss = val_running_loss / len(self.val_loader)
         y_true = torch.cat(all_y_true)
         y_pred = torch.cat(all_y_pred).round()
-        # val_acc = accuracy_score(y_true, y_pred)
-        # f1 = f1_score(y_true, y_pred)
         val_acc = accuracy_score(y_true.cpu(), y_pred.cpu())
         f1 = f1_score(y_true.cpu(), y_pred.cpu())
 
@@ -252,23 +241,6 @@ class Trainer:
         plt.title('Epoch vs Loss')
 
         plt.tight_layout()
-        
-        #Save figure in path 'models\nombre\nombre_acc_loss.png'
-        # if os.path.exists(f'D:/models'):
-        #     if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
-        #         os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
-        #     PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
-        # elif os.path.exists(f'./models'):
-        #     if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
-        #         os.makedirs(f'./models/{self.__model__.get_nombre()}')
-        #     PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
-        # plt.savefig(PATH)
-        
-        # if os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models'):
-        #     if not os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}'): 
-        #         os.makedirs(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}') 
-        #     PATH = f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
-        #     plt.savefig(PATH)
 
         if os.path.exists(models_path):
             if not os.path.exists(models_path + f'/{self.__model__.get_nombre()}'): 
@@ -294,21 +266,7 @@ class Trainer:
         Args: none.
         
         Returns: none.
-        """
-        # if os.path.exists(f'D:/models'):
-        #     if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
-        #         os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
-        #     PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
-        # elif os.path.exists(f'./models'):
-        #     if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
-        #         os.makedirs(f'./models/{self.__model__.get_nombre()}')
-        #     PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
-
-        # print("Trying to write txt")
-        # if os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models'):
-        #     if not os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}'): 
-        #         os.makedirs(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}') 
-        #     PATH = f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'            
+        """           
         if os.path.exists(models_path):
             if not os.path.exists(models_path + f'/{self.__model__.get_nombre()}'): 
                 os.makedirs(models_path + f'/{self.__model__.get_nombre()}') 

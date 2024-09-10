@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
 
-def Anotaciones(path:str, eventos = ['Obstructive Apnea', 'Central Apnea', 'Mixed Apnea']):
+def get_annotations(path:str, eventos = ['Obstructive Apnea', 'Central Apnea', 'Mixed Apnea']):
     tree = ET.parse(path)
     root = tree.getroot()
 

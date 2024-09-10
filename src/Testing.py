@@ -1,16 +1,9 @@
-# try:
-#     from Imports import *
-#     from Modelo import Model2
-# except:
-#     from src.Imports import *
-#     from src.Modelo import Model2
-
 from Imports import *
-from Modelo import Model2
+from Modelo import Model
 
 class Tester:
     """Class to test the model with testset"""
-    def __init__(self, model:Model2, testset:Subset, batch_size:int=32, device = "cpu", best_final = ""):
+    def __init__(self, model:Model, testset:Subset, batch_size:int=32, device = "cpu", best_final = ""):
         """
         Initializes the Tester object.
 
@@ -96,21 +89,6 @@ class Tester:
         cm_display = ConfusionMatrixDisplay(confusion_matrix=self.__cm__, display_labels=['without apnea', 'with apnea'])
         cm_display.plot(cmap='Blues')
         plt.title("Confusion Matrix")
-        # if os.path.exists(f'D:/models'):
-        #     if not os.path.exists(f'D:/models/{self.__model__.get_nombre()}'):
-        #         os.makedirs(f'D:/models/{self.__model__.get_nombre()}')
-        #     PATH = f'D:/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        # elif os.path.exists(f'./models'):
-        #     if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
-        #         os.makedirs(f'./models/{self.__model__.get_nombre()}')
-        #     PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        # plt.savefig(PATH)
-
-        # if os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models'):
-        #     if not os.path.exists(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}'): 
-        #         os.makedirs(f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}') 
-        #     PATH = f'/home/elena/media/disk/_cygdrive_D_models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        #     plt.savefig(PATH)
 
         if os.path.exists(f'/home/elena/Desktop/models'):
             if not os.path.exists(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}'): 
@@ -339,16 +317,6 @@ class Plotter:
         axprev = plt.axes([0.7, 0.05, 0.1, 0.075])
         self.bprev = Button(axprev, 'Previous')
         self.bprev.on_clicked(self.__prev_page__)
-
-        # if os.path.exists(f'D:/models'):
-        #     if not os.path.exists(f'D:/models/{self.__model_name}'):
-        #         os.makedirs(f'D:/models/{self.__model_name}')
-        #     PATH = f'D:/models/{self.__model_name}/{self.__model_name}__wrongpreds_page{self.current_page + 1}.png'
-        # elif os.path.exists(f'./models'):
-        #     if not os.path.exists(f'./models/{self.__model_name}'):
-        #         os.makedirs(f'./models/{self.__model_name}')
-        #     PATH = f'./models/{self.__model_name}/{self.__model_name}_wrongpreds_page{self.current_page + 1}.png'
-        # plt.savefig(PATH)
 
 
         if self.plot:
