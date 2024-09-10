@@ -1,14 +1,9 @@
-try:
-    from Imports import *
-    from Modelo import Model
-except:
-    from src.Imports import *
-    from src.Modelo import Model
-
+from Imports import *
+from Modelo import Model
 
 class Tester:
     """Class to test the model with testset"""
-    def __init__(self, model:Model, testset:Subset, batch_size:int=32):
+    def __init__(self, model:Model, testset:Subset, batch_size:int=32, device = "cpu", best_final = ""):
         """
         Initializes the Tester object.
 
@@ -19,15 +14,16 @@ class Tester:
 
         Returns: none.
         """
-
-        self.__model__ = model
+        self.device = device
+        self.__model__ = model.to(self.device)
         self.__test_loader__ = DataLoader(testset, shuffle=False, batch_size=batch_size)
         self.__cm__ = []
         self.__metrics__ = ""
         self.__all_labels__ = []
         self.__all_preds__ = []
         self.__wrong_predictions__ = []
-
+        self.__best_final__ = best_final
+        
     def test(self):
         """
         Tests the model on the test dataset, storing predictions and labels.
@@ -39,13 +35,14 @@ class Tester:
 
         #Iterate over each batch in the test_loader:
         for X_test, y_test in self.__test_loader__:
+            X_test, y_test = X_test.to(self.device), y_test.to(self.device)
             #Get the model's predictions for the batch:
             y_test_pred = self.__model__(X_test)
             y_test_pred = y_test_pred.round()
-            self.__all_preds__.extend(y_test_pred.cpu().detach().numpy().tolist())
-            self.__all_labels__.extend(y_test.cpu().numpy().tolist())
-            #Save instances where the predictions were incorrect:
-            self.__save_wrong_predictions__(X_test, y_test, y_test_pred)
+            self.__all_preds__.extend(y_test_pred.detach().cpu().numpy().tolist())
+            self.__all_labels__.extend(y_test.detach().cpu().numpy().tolist())
+            # Save instances where the predictions were incorrect:
+            self.__save_wrong_predictions__(X_test.cpu(), y_test.cpu(), y_test_pred.cpu())
 
     def __save_wrong_predictions__(self, X_test:Tensor, y_test:Tensor, y_test_pred:Tensor):
         """
@@ -92,22 +89,19 @@ class Tester:
         cm_display = ConfusionMatrixDisplay(confusion_matrix=self.__cm__, display_labels=['without apnea', 'with apnea'])
         cm_display.plot(cmap='Blues')
         plt.title("Confusion Matrix")
-        if os.path.exists(f'./models'):
-            if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'./models/{self.__model__.get_nombre()}')
-            PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        elif os.path.exists(f'../models'):
-            if not os.path.exists(f'../models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'../models/{self.__model__.get_nombre()}')
-            PATH = f'../models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        plt.savefig(PATH)
+
+        if os.path.exists(f'/home/elena/Desktop/models'):
+            if not os.path.exists(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}'): 
+                os.makedirs(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}') 
+            PATH = f'/home/elena/Desktop/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+            plt.savefig(PATH)
 
         if(plot):
             plt.show()
         else:
             plt.close()
 
-    def __plot_roc_curve__(self, plot:bool):
+    def __plot_roc_curve__(self, models_path, plot:bool):
         """
         Plots Receiver Operating Characteristic curve and saves plot as .png.
 
@@ -132,23 +126,24 @@ class Tester:
         plt.ylabel('True Positive Rate')
         plt.title('Receiver Operating Characteristic')
         plt.legend(loc="lower right")
-
-        if os.path.exists(f'./models'):
-            if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'./models/{self.__model__.get_nombre()}')
-            PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        elif os.path.exists(f'../models'):
-            if not os.path.exists(f'../models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'../models/{self.__model__.get_nombre()}')
-            PATH = f'../models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        plt.savefig(PATH)
+        
+        if os.path.exists(models_path):
+            if not os.path.exists(models_path + f'/{self.__model__.get_nombre()}'):
+                os.makedirs(models_path + f'/{self.__model__.get_nombre()}')
+            if(self.__best_final__ == ""):
+                PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+            else:
+                PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{self.__best_final__}.png'
+            plt.savefig(PATH)
+        else:
+            print('PATH NOT FOUND: ' + models_path)
 
         if(plot):
             plt.show()
         else:
             plt.close()
 
-    def __plot_metrics_confusion_matrix__(self, plot:bool):
+    def __plot_metrics_confusion_matrix__(self, models_path, plot:bool):
         """
         Plots the confusion matrix with normalized values and additional metrics, and saves the plot as a .png file.
         
@@ -168,22 +163,23 @@ class Tester:
             text.set_visible(False)
         for i in range(cm_normalized.shape[0]):
             for j in range(cm_normalized.shape[1]):
-                text = ax.text(j, i, f'{cm_normalized[i, j]:.2f}%', ha='center', va='center', color='black')
+                text = ax.text(j, i, f'{cm_normalized[i, j]:.2f}%\n{self.__cm__[i, j]:.2f}', ha='center', va='center', color='black')
         ax.set_title("Confusion Matrix")
 
         #Generate additional metric text to display below the confusion matrix plot:
-        metric_text = (f"Test data count: {len(self.__test_loader__.dataset)}\n" +
-                       "\n".join([f"{k}: {v}%" for k, v in self.__metrics__.items()]))
+        metric_text = (f"Test data count: {len(self.__test_loader__.dataset)}\n") + ("\n".join([f"{k}: {float(v)*100:.2f}%" for k, v in list(self.__metrics__.items())[:-2]])) + "\n" + ("\n".join([f"{k}: {float(v):.4f}" for k, v in list(self.__metrics__.items())[-2:]]))
         plt.gcf().text(0.1, 0.1, metric_text, ha='center', fontsize=10, bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray'))
-        if os.path.exists(f'./models'):
-            if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'./models/{self.__model__.get_nombre()}')
-            PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        elif os.path.exists(f'../models'):
-            if not os.path.exists(f'../models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'../models/{self.__model__.get_nombre()}')
-            PATH = f'../models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
-        plt.savefig(PATH)
+        
+        if os.path.exists(models_path):
+            if not os.path.exists(models_path + f'/{self.__model__.get_nombre()}'): 
+                os.makedirs(models_path + f'/{self.__model__.get_nombre()}') 
+            if(self.__best_final__ == ""):
+                PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+            else:
+                PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{self.__best_final__}.png'
+            plt.savefig(PATH)
+        else:
+            print('PATH NOT FOUND: ' + models_path)
 
         if(plot):
             plt.show()
@@ -200,16 +196,17 @@ class Tester:
         """
 
         metrics = {
-            "Accuracy": accuracy_score(self.__all_labels__, self.__all_preds__) * 100,
-            "Precision": precision_score(self.__all_labels__, self.__all_preds__) * 100,
-            "Sensitivity": recall_score(self.__all_labels__, self.__all_preds__) * 100,
-            "Specificity": recall_score(self.__all_labels__, self.__all_preds__, pos_label=0) * 100,
-            "F1": f1_score(self.__all_labels__, self.__all_preds__) * 100
+            "Accuracy": accuracy_score(self.__all_labels__, self.__all_preds__),
+            "Precision": precision_score(self.__all_labels__, self.__all_preds__),
+            "Sensitivity": recall_score(self.__all_labels__, self.__all_preds__),
+            "Specificity": recall_score(self.__all_labels__, self.__all_preds__, pos_label=0),
+            "F1": f1_score(self.__all_labels__, self.__all_preds__),
+            "MCC": matthews_corrcoef(self.__all_labels__, self.__all_preds__)
         }
 
         self.__metrics__ = {k: f"{v:.2f}" for k, v in metrics.items()}
 
-    def evaluate(self, plot:bool = True):
+    def evaluate(self, models_path, plot:bool = True):
         '''
         Tests the model, computes metrics and plots evaluation results.
 
@@ -218,13 +215,14 @@ class Tester:
         
         Returns: none.
         '''
-
         self.test()
         self.__cm__ = confusion_matrix(self.__all_labels__, self.__all_preds__)
         self.__calculate_metrics__()
-        self.__plot_roc_curve__(plot)
-        self.__plot_metrics_confusion_matrix__(plot)
-        self.__plot_wrong_predictions__(plot)
+        self.__plot_roc_curve__(models_path, plot)
+        self.__plot_metrics_confusion_matrix__(models_path, plot)
+        # self.__plot_wrong_predictions__(plot)
+
+        return self.__cm__, self.__metrics__
 
 class Plotter:
     """Class to plot instances where the model's predictions were incorrect"""
@@ -257,7 +255,7 @@ class Plotter:
         
         Returns: none.
         """
-         
+        
         self.plot = plot
         self.fig, self.ax = plt.subplots(figsize=(13, 6))
         plt.subplots_adjust(left=0.1, bottom=0.2, right=0.9, top=0.9, wspace=0.1, hspace=0.5)
@@ -273,7 +271,9 @@ class Plotter:
         self.bprev.on_clicked(self.__prev_page__)
 
         self.__update_plot__()
-        plt.show()
+        if (plot):
+            plt.show()
+        plt.close()
 
     def __update_plot__(self):
         """
@@ -317,16 +317,6 @@ class Plotter:
         axprev = plt.axes([0.7, 0.05, 0.1, 0.075])
         self.bprev = Button(axprev, 'Previous')
         self.bprev.on_clicked(self.__prev_page__)
-
-        if os.path.exists(f'./models'):
-            if not os.path.exists(f'./models/{self.__model_name}'):
-                os.makedirs(f'./models/{self.__model_name}')
-            PATH = f'./models/{self.__model_name}/{self.__model_name}__wrongpreds_page{self.current_page + 1}.png'
-        elif os.path.exists(f'../models'):
-            if not os.path.exists(f'../models/{self.__model_name}'):
-                os.makedirs(f'../models/{self.__model_name}')
-            PATH = f'../models/{self.__model_name}/{self.__model_name}_wrongpreds_page{self.current_page + 1}.png'
-        plt.savefig(PATH)
 
 
         if self.plot:

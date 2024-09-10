@@ -1,15 +1,21 @@
-try:
-    from Imports import *
-    from Modelo import Model
-except:
-    from src.Imports import *
-    from src.Modelo import Model
-
+from Imports import *
+from Modelo import Model
 
 class Trainer:
     """Class to train the model with trainset and validate training with valset"""
 
-    def __init__(self, model:Model, trainset:Subset, valset:Subset, n_epochs:int = 100, batch_size:int = 32, loss_fn:str = 'BCE', optimizer:str = 'SGD', lr:float = 0.01, momentum:float = 0, text:str = ''):
+    def __init__(self, 
+                 model:Model, 
+                 trainset:Subset, 
+                 valset:Subset, 
+                 n_epochs:int = 100, 
+                 batch_size:int = 32, 
+                 loss_fn:str = 'BCE', 
+                 optimizer:str = 'SGD', 
+                 lr:float = 0.01, 
+                 momentum:float = 0, 
+                 text:str = '', 
+                 device = "cpu"):
         """
         Initializes the Trainer object.
 
@@ -19,26 +25,35 @@ class Trainer:
             - valset (Subset): data to validate.
             - n_epochs (int): number of epochs to train the model.
             - batch_size (int): number of data used in one iteration.
-            - loss_fn (str): string to specify desired loss function. NOTE: in this first version, only 'BCE' loss function is available.
-            - optimizer (str): string to specify desired optimizer. NOTE: in this first version, only 'SGD' optimizer is available.
+            - loss_fn (str): string to specify desired loss function. NOTE: in this version, only 'BCE' and 'CrossEntropyLoss' loss functions are available.
+            - optimizer (str): string to specify desired optimizer. NOTE: in this version, only 'SGD' and 'Adam' optimizers are available.
             - lr (float): learning rate for the optimizer.
-            - momentum (float): for the optimizer.
+            - momentum (float): for the optimizer. NOTE: not used if optimizer is Adam
             - txt (str): previous data statistics to save in the .txt file.
         
         Returns: none.
         """
 
-        self.__model__ = model
+        self.device = device
+
+        self.__model__ = model.to(self.device)
+
         self.train_loader = DataLoader(trainset, shuffle=True, batch_size=batch_size)
         self.val_loader = DataLoader(valset, shuffle=False, batch_size=batch_size)
+
         if loss_fn == 'BCE':
             self.loss_fn = nn.BCELoss()  # Binary Cross Entropy
+        elif loss_fn == 'CE':
+            self.loss_fn = nn.CrossEntropyLoss()  # Cross Entropy
         else:
-            raise Exception("In this first version, only 'BCE' loss function is available")
+            raise Exception("In this version, only 'BCE' or 'CE' loss functions are available")
         if optimizer == 'SGD':
             self.optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)  # Stochastic Gradient Descent
+        elif optimizer == 'Adam':
+            self.optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999)) # Adam
         else:
-            raise Exception("In this first version, only 'SGD' optimizer is available")
+            raise Exception("In this version, only 'SGD' or 'Adam' optimizers are available")
+        
         self.batch_size = batch_size
         self.lr = lr
         self.n_epochs = n_epochs
@@ -49,6 +64,7 @@ class Trainer:
         self.f1score = []
         self.momentum = momentum
         self.text = text
+
 
     def train_one_epoch(self):
         """
@@ -69,9 +85,12 @@ class Trainer:
 
         #Iterate over each batch in the train_loader:
         for X_batch, y_batch in self.train_loader:
+            
+            X_batch, y_batch = X_batch.to(self.device), y_batch.to(self.device)
             #Get the model's predictions for the batch and calculate the loss:
             y_pred = self.__model__(X_batch)
             loss = self.loss_fn(y_pred, y_batch)
+
             #Reset and calculate gradients via backpropagation and update the model's parameters:
             self.optimizer.zero_grad()
             loss.backward()
@@ -80,10 +99,11 @@ class Trainer:
             running_loss += loss.item()
             all_y_true.append(y_batch)
             all_y_pred.append(y_pred)
+
         #Calculate the average loss and accuracy for the epoch:
         avg_loss = running_loss / len(self.train_loader)
-        y_true = torch.cat(all_y_true).detach().numpy().tolist()
-        y_pred = torch.cat(all_y_pred).round().detach().numpy().tolist()
+        y_true = torch.cat(all_y_true).detach().cpu().numpy().tolist()
+        y_pred = torch.cat(all_y_pred).round().detach().cpu().numpy().tolist()
         train_acc = accuracy_score(y_true, y_pred)
         return avg_loss, train_acc
 
@@ -109,6 +129,7 @@ class Trainer:
         with torch.no_grad():
             #Iterate over each batch in the val_loader:
             for X_val, y_val in self.val_loader:
+                X_val, y_val = X_val.to(self.device), y_val.to(self.device)
                 #Get the model's predictions for the batch and calculate the loss:
                 y_pred = self.__model__(X_val)
                 val_loss = self.loss_fn(y_pred, y_val)
@@ -120,11 +141,12 @@ class Trainer:
         avg_val_loss = val_running_loss / len(self.val_loader)
         y_true = torch.cat(all_y_true)
         y_pred = torch.cat(all_y_pred).round()
-        val_acc = accuracy_score(y_true, y_pred)
-        f1 = f1_score(y_true, y_pred)
+        val_acc = accuracy_score(y_true.cpu(), y_pred.cpu())
+        f1 = f1_score(y_true.cpu(), y_pred.cpu())
+
         return avg_val_loss, val_acc, f1
 
-    def train(self, verbose:bool = True, plot:bool = True):
+    def train(self, models_path, verbose:bool = True, plot:bool = True, save_model = True, save_best_model = True):
         """
         Trains the model for a specified number of epochs, optionally printing progress.
 
@@ -139,7 +161,8 @@ class Trainer:
         start_time_training = datetime.now()
         self.text += f'\n\nBatch size: {self.batch_size}\n\nLoss function: {self.loss_fn}\n\nOptimizer: {self.optimizer}'
         self.text += '\n\nStart of training'
-
+        min_loss = 1000000
+        epoch_min_loss = 0
         # For each epoch:
         for epoch in range(self.n_epochs):
             start_time_epoch = datetime.now()
@@ -161,19 +184,28 @@ class Trainer:
             if(verbose):
                 print(end_of_epoch)
             self.text += '\n\t' + end_of_epoch
+            if(avg_val_loss < min_loss and save_best_model):
+                min_loss = avg_val_loss
+                epoch_min_loss = epoch + 1
+                self.__model__.save_model(models_path, extension='_best.pth')
+
         #Track the end time of the entire training process:
         end_of_training = (f"End of training - {self.n_epochs} epochs - "
                            f"{(datetime.now()-start_time_training).total_seconds():.2f} seconds")
+        if(save_best_model):
+            end_of_training += f"\nBest model - Epoch {epoch_min_loss} - Val Loss = {min_loss*100:.2f}%"
         if(verbose):
             print(end_of_training)
         self.text += '\n' + end_of_training
         #Optionally plot the accuracies and losses over epochs:
-        self.plot_accuracies_losses(plot)
+        self.plot_accuracies_losses(models_path, plot)
         #Write the training logs to a text file:
-        self.write_txt()
+        self.write_txt(models_path)
+        if(save_model):
+            self.__model__.save_model(models_path)
         return self.__model__
 
-    def plot_accuracies_losses(self, plot:bool):
+    def plot_accuracies_losses(self, models_path, plot:bool):
         """
         Plots accuracy, F1 score and loss vs epochs. 
         
@@ -209,19 +241,19 @@ class Trainer:
         plt.title('Epoch vs Loss')
 
         plt.tight_layout()
-        
-        #Save figure in path 'models\nombre\nombre_acc_loss.png'
-        if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
-            os.makedirs(f'./models/{self.__model__.get_nombre()}')
-        PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
-        plt.savefig(PATH)
-        
+
+        if os.path.exists(models_path):
+            if not os.path.exists(models_path + f'/{self.__model__.get_nombre()}'): 
+                os.makedirs(models_path + f'/{self.__model__.get_nombre()}') 
+            PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
+            plt.savefig(PATH)
+
         if(plot):
             plt.show()  
         else:
             plt.close()
 
-    def write_txt(self):
+    def write_txt(self, models_path):
         """
         Write .txt file with training information:
         - Data distribution
@@ -234,16 +266,12 @@ class Trainer:
         Args: none.
         
         Returns: none.
-        """
-        if os.path.exists(f'./models'):
-            if not os.path.exists(f'./models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'./models/{self.__model__.get_nombre()}')
-            PATH = f'./models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
-        elif os.path.exists(f'../models'):
-            if not os.path.exists(f'../models/{self.__model__.get_nombre()}'):
-                os.makedirs(f'../models/{self.__model__.get_nombre()}')
-            PATH = f'../models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
-        f = open(PATH, "w")
-        f.write(self.text)
-        f.close()
+        """           
+        if os.path.exists(models_path):
+            if not os.path.exists(models_path + f'/{self.__model__.get_nombre()}'): 
+                os.makedirs(models_path + f'/{self.__model__.get_nombre()}') 
+            PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
+            f = open(PATH, "w")
+            f.write(self.text)
+            f.close()
 
