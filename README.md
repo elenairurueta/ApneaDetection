@@ -12,13 +12,9 @@ Clone the repository:
 ```bash
 git clone https://github.com/elenairurueta/ApneaDetection.git
 ```
-Create environment:
+Create environment and install the required packages:
 ```bash
-conda create -n ApneaDetection python==3.11.9
-```
-Install the required packages:
-```bash
-pip install -r requirements.txt
+conda create --name ApneaDetection --file requirements.txt
 ```
 
 ## Usage
@@ -82,3 +78,13 @@ plot_signals(annotations, tiempo, all_signals['C3']['Signal'], 'C3', all_signals
 
 
 
+> To try existing model 'modelo_prueba':
+
+Download file ```modelo_prueba.pth``` from: https://1drv.ms/u/s!Akd0CZdYW6D5gtQlmxq9IKF6iQtEbA?e=UthOMS
+
+Password: ApneaDetection
+
+Move file to models\modelo_prueba directory.
+The path should look like: ```'models\modelo_prueba\modelo_prueba.pth'```.
+
+Set variable ```nombre``` to ```nombre = 'modelo_prueba'``` and run ```ExistingModel.py```.
