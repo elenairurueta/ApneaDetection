@@ -4,7 +4,7 @@ This project is the final assignment for my Biomedical Engineering degree. It in
 ## Initial Version
 In the initial version of this project, simulated signals with characteristics similar to real EEG signals were used to train and test the model.
 ## Second Version
-In the second version of this project, HomePAP Database EEG signals from polisomnography studies were used to train and test the model. More information about these signals can be found in the Docs folder.
+In the second version of this project, HomePAP Database EEG signals from polysomnography studies were used to train and test the model. More information about these signals can be found in the Docs folder.
 
 ## Installation
 

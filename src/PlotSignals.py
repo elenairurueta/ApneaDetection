@@ -4,8 +4,6 @@ from PyQt5.QtGui import QBrush, QColor
 from RealSignals import read_signals_EDF, get_bipolar_signal
 from Annotations import get_annotations
 
-
-
 def plot_bipolar_signal(signal1, signal2, t = 'min', annotations = None):
     """
     t must be either 'min', 'h' or 'seg'
@@ -211,15 +209,13 @@ def plot_signals(annotations, tiempo, signal1, s1, signal2 = [ ], s2 = ' ', sign
     pg.exec()
 
 
-
-
-archivo = 4 #CHANGE
-path_edf = "" #CHANGE
-path_annot = "" #CHANGE
+file = 4 #CHANGE
+path_annot = "" + f"\\homepap-lab-full-1600{str(file).zfill(3)}-profusion.xml" #CHANGE
+path_edf = "" + f"\\homepap-lab-full-1600{str(file).zfill(3)}.edf" #CHANGE
 
 all_signals = read_signals_EDF(path_edf)
 annotations = get_annotations(path_annot)
 
-bipolar_signal, tiempo, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])
+bipolar_signal, time, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])
 
-plot_signals(annotations, tiempo, all_signals['C3']['Signal'], 'C3', all_signals['O1']['Signal'], 'O1', bipolar_signal, 'C3-O1')
+plot_signals(annotations, time, all_signals['C3']['Signal'], 'C3', all_signals['O1']['Signal'], 'O1', bipolar_signal, 'C3-O1')
