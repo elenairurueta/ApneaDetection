@@ -2,7 +2,10 @@
 ## Overview
 This project is the final assignment for my Biomedical Engineering degree. It involves developing a machine learning model based on Convolutional Neural Networks (CNN) to detect sleep apnea in EEG signals.
 ## Initial Version
-In the initial version of this project, simulated signals with characteristics similar to real EEG signals were used to test the model.
+In the initial version of this project, simulated signals with characteristics similar to real EEG signals were used to train and test the model.
+## Second Version
+In the second version of this project, HomePAP Database EEG signals from polisomnography studies were used to train and test the model. More information about these signals can be found in the Docs folder.
+
 ## Installation
 
 Clone the repository:
@@ -18,97 +21,64 @@ Install the required packages:
 pip install -r requirements.txt
 ```
 
-Download folder ApneaDetection_SimulatedSignals from: https://1drv.ms/f/s!Akd0CZdYW6D5gtNBfn6auvC5otEYLQ?e=KxyBGX
-
-Password: ApneaDetection
-
-Move folder to data directory.
-The path should look like: ```'data\ApneaDetection_SimulatedSignals\SenalesCONapnea.csv'``` and ```'data\ApneaDetection_SimulatedSignals\SenalesSINapnea.csv'```
-
 ## Usage
-To create, train and test a new model, open ```NewModel.py```. To upload and test existing model, open ```ExistingModel.py```.
+To create, train and test a new model, open ```ApneaDetection.py```. 
 
-Lines 1 to 5 will import the required modules. 
+> **In ```ApneaDetection.py```**:
+
+Select the polisomnography study by specifying the file number. For example, if file names are ```homepap-lab-full-1600001.edf``` and ```homepap-lab-full-1600001-profusion.xml``` then ```file = 1```. 
+
+If datasets are not created yet, set ```path_edf``` and ```path_annot``` to the path where the ```.edf``` and ```.xml``` files are located, respectively, and run the following line: 
 ```python
-from LecturaSenalesSimuladas import *
-from Modelo import *
-from Training import *
-from Testing import *
+ApneaDataset.create_datasets([archivo], path_edf, path_annot)
 ```
-Line 8 will create a custom Dataset (ApneaDataset) with the simulated signals from the data directory.
+The dataset will be saved as a ```.pth``` file in ```.\data\ApneaDetection_HomePAPSignals\datasets``` folder. The dataset will be saved split between train (80%), test (10%) and val (10%) subsets and having undersampled the majority class (in this case: not-apnea labelled as 0).
+
+Line 16 will load the dataset:
 ```python
-dataset = ApneaDataset('data\ApneaDetection_SimulatedSignals\SenalesCONapnea.csv', 'data\ApneaDetection_SimulatedSignals\SenalesSINapnea.csv')
+ApneaDataset.create_datasets([archivo], path_edf, path_annot)
 ```
 
-Line 13 will split the Dataset into train, validation and test Subsets. 
+The following lines will create and train the Model:
 ```python
-dataset.split_dataset(train_perc = 0.6, 
-                      val_perc = 0.2, 
-                      test_perc = 0.2)
+model = Model(input_size, name)
+model_arch = model.get_architecture()
+trainer = Trainer(
+    model = model, 
+    trainset = dataset.trainset, 
+    valset = dataset.valset, 
+    n_epochs = 100, 
+    batch_size = 32, 
+    loss_fn = 'BCE',
+    optimizer = 'SGD',
+    lr = 0.01, 
+    momentum = 0, 
+    text = file_txt + data_analysis + model_arch)
+trainer.train(models_path, verbose = False, plot = False, save_model = True, save_best_model = True)
 ```
-You can modify the following hiperparameters:
-- ```train_perc``` (float): percentage of training data (0 < train_perc < 1)
-- ```val_perc``` (float): percentage of validation data (0 < val_perc < 1)
-- ```test_perc``` (float): percentage of test data (0 < test_perc < 1)
 
-```train_perc``` + ```val_perc``` + ```test_perc``` must be = 1, otherwise ```test_perc``` will be automatically calculated to ensure this condition is satisfied.
+And test it:
+```python
+tester = Tester(model = model, 
+                testset = dataset.testset, 
+                batch_size = 32)
+tester.evaluate(models_path, plot = False)
+```
 
-> **In ```NewModel.py```**:
+To plot EEG derivations and a bipolar signal, open ```PlotSignals.py```.
 
-Lines 20 to 36 will create and train the new model.
-  ```pyhton
-  nombre = 'modelo'
-  model = Model(input_size, nombre)
-  trainer = Trainer(
-      model = model, 
-      trainset = dataset.trainset, 
-      valset = dataset.valset, 
-      n_epochs = 100, 
-      batch_size = 32, 
-      loss_fn = 'BCE',
-      optimizer = 'SGD',
-      lr = 0.01, 
-      momentum = 0.5,
-      text = '')
-  trainer.train(verbose = True, plot = True)
-  ```
-  You can modify the following hiperparameters:
-  - ```nombre``` (string): name used to save the model and figures
-  - ```n_epochs``` (int): number of epochs to train the model
-  - ```batch_size``` (int): number of data used in one iteration
-  - ```lr``` (float): learning rate
-  - ```momentum``` (float): (0 <= momentum <= 1)
-  - ```verbose``` (bool): if verbose = False it will not print to console but will be saved in the ```models\nombre\nombre_training.txt``` file
-  - ```plot``` (bool): if plot = False the figures will not be displayed but will be saved in the ```models\nombre\nombre_''.png``` files
-  
-  In this first version, only 'BCE' loss function and 'SGD' optimizer are available.
-  
-  Lines 38 to 41 will test the new model. 
-  ```pyhton
-  tester = Tester(model = model, 
-                  testset = dataset.testset, 
-                  batch_size = 32)
-  tester.evaluate(plot = True)
-  ```
-  You can modify the following hiperparameters:
-  - ```batch_size``` (int): number of data used in one iteration
-  
-  Line 43 will save the new model in ```'models\nombre\nombre.pt/pth'``` directory.
+> **In ```PlotSignals.py```**:
 
-> **In ```ExistingModel.py```**:
+Select the polisomnography study by specifying the file number. For example, if file names are ```homepap-lab-full-1600001.edf``` and ```homepap-lab-full-1600001-profusion.xml``` then ```file = 1```. 
+Set ```path_edf``` and ```path_annot``` to the path where the ```.edf``` and ```.xml``` files are located, respectivly, and run the following lines:
+```python
+all_signals = read_signals_EDF(path_edf)
+annotations = get_annotations(path_annot)
 
-Lines 20 to 28 will upload and test an existing model. 
-  ```pyhton
-  nombre = 'modelo'
-  model = Model.load_model(nombre, input_size, extension)
-  tester = Tester(model = model, 
-                  testset = dataset.testset, 
-                  batch_size = 32)
-  tester.evaluate(plot = True)
-  ```
-  You can modify the following hiperparameters:
-  - ```nombre``` (string): name used to upload the model. The path should look like: ```'models\nombre\nombre.pt/pth'```. 
-  - ```extension``` (string): the file extension should be ```'.pt'``` or ```'.pth'```. 
-  - ```batch_size``` (int): number of data used in one iteration
-  - ```plot``` (bool): if plot = False the figures will not be displayed but will be saved in the ```models\nombre\nombre_''.png``` files
+bipolar_signal, tiempo, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])
+plot_signals(annotations, tiempo, all_signals['C3']['Signal'], 'C3', all_signals['O1']['Signal'], 'O1', bipolar_signal, 'C3-O1')
+```
+![image](https://github.com/user-attachments/assets/2fc652f4-fb7a-4217-ba57-85eab6629e38)
+
+
 
