@@ -1,7 +1,5 @@
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-from scipy.signal import resample
-import copy
 from Imports import *
 from RealSignals import *
 from Annotations import *
@@ -94,44 +92,49 @@ class ApneaDataset(Dataset):
         return text
 
     def undersample_majority_class(self, majority_class, val = True):
-        
-        class_counts_train = Counter([int(self.trainset[i][1].item()) for i in range(len(self.trainset))])
+        """
+        Undersamples the majority class in the training and (optionally) validation datasets to balance class distribution. It modifies `self.trainset` and optionally `self.valset` in place.
 
-        min_count_train = min(class_counts_train.values())
-        
+        Parameters:
+        - majority_class: The label of the majority class that needs to be undersampled.
+        - val (bool): If True, the validation dataset is also undersampled (default is True).
+
+        Returns: none
+        """
+
+        class_counts_train = Counter([int(self.trainset[i][1].item()) for i in range(len(self.trainset))]) #Counts the number of samples for each class in the training set
+        min_count_train = min(class_counts_train.values()) #Finds the minimum number of samples across all classes
         indices_train = []
-
         class_counter_train = {cls: 0 for cls in class_counts_train}
 
         for idx in range(len(self.trainset)):
             label = int(self.trainset[idx][1].item())
             if label == majority_class:
+                #For the majority class, only includes samples until its count matches the minimum class count
                 if class_counter_train[label] < min_count_train:
                     indices_train.append(self.trainset.indices[idx])
                     class_counter_train[label] += 1
             else:
+                #For the other classes, includes all their samples
                 indices_train.append(self.trainset.indices[idx])
-        
         self.trainset = Subset(self.trainset.dataset, indices_train)
         
         if(val):
-            class_counts_val = Counter([int(self.valset[i][1].item()) for i in range(len(self.valset))])
-
-            min_count_val = min(class_counts_val.values())
-            
+            class_counts_val = Counter([int(self.valset[i][1].item()) for i in range(len(self.valset))]) #Counts the number of samples for each class in the validation set
+            min_count_val = min(class_counts_val.values()) #Finds the minimum number of samples across all classes
             indices_val = []
-
             class_counter_val = {cls: 0 for cls in class_counts_val}
 
             for idx in range(len(self.valset)):
                 label = int(self.valset[idx][1].item())
                 if label == majority_class:
+                    #For the majority class, only includes samples until its count matches the minimum class count
                     if class_counter_val[label] < min_count_val:
                         indices_val.append(self.valset.indices[idx])
                         class_counter_val[label] += 1
                 else:
+                    #For the other classes, includes all their samples
                     indices_val.append(self.valset.indices[idx])
-            
             self.valset = Subset(self.valset.dataset, indices_val)
     
     def save_dataset(self, file_path:str):
@@ -242,8 +245,19 @@ class ApneaDataset(Dataset):
         return X,y
 
     @staticmethod
-    def create_datasets(archivos, path_edf, path_annot):
-        for archivo in archivos:
+    def create_datasets(files, path_edf, path_annot):
+        """
+        Static method that processes EDF and annotation files to create balanced datasets. It saves the processed dataset to ".\data\ApneaDetection_HomePAPSignals\datasets" path.
+
+        Parameters:
+        - files: A list of file identifiers to process.
+        - path_edf: The path to the folder containing the EDF files.
+        - path_annot: The path to the folder containing the corresponding annotation files.
+
+        Returns: none
+        """
+
+        for archivo in files:
             all_signals = read_signals_EDF(path_edf)
             annotations = get_annotations(path_annot)
 
