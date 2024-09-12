@@ -1,193 +1,221 @@
-from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
+from scipy.signal import resample
+import copy
 from Imports import *
 from RealSignals import *
-from Annotations import *
+from Annotations import get_annotations
 
 class ApneaDataset(Dataset):
     """Dataset custom class"""
-
-    def __init__(self, X, y, archivos):
+    def __init__(self, X, y, sr, archivos):
         """
         Initializes the Apnea Dataset.
-
         Args:
-
         Returns: none.
         """
-        self.__X = torch.tensor(X)
-        self.__y = torch.tensor(y)
-        self.trainset = []
-        self.valset = []
-        self.testset = []
+        self.__X = X.clone().detach()
+        self.__y = y.clone().detach()
+        self.subsets = []
         self.archivos = archivos
+        self.__sr = sr
 
     def __len__(self):
         return len(self.__y)
 
     def __getitem__(self, idx:int):
         return self.__X[idx], self.__y[idx]
-    
+   
     def signal_len(self):
         return self.__X.shape[2]
 
-    def split_dataset(self, train_perc:float, val_perc:float, test_perc:float = 0.0):
+    def split_dataset(self):
         """
-        Split the ApneaDataset into train, validation and test Subsets and save them as attrbiutes of the ApneaDataset object.
-
-        Note: train_perc + val_perc + test_perc must be = 1, otherwise test_perc will be automatically calculated to ensure this condition is satisfied.
-        
-        Args: 
-        - train_perc (float): percentage of training data (0 < train_perc < 1).
-        - val_perc (float): percentage of validation data (0 < val_perc < 1).
-        - test_perc (float): percentage of test data (0 < test_perc < 1).
-
-        Returns: none.
-        """
-
-        if((train_perc + val_perc + test_perc) != 1.0):
-            test_perc = 1.0 - (train_perc + val_perc)
-        if((train_perc + val_perc + test_perc) > 1.0):
-            raise Exception("La suma de los porcentajes no puede superar 1.0")
-
-
-        labels = np.array([self[i][1].item() for i in range(len(self))])
-        
-        train_val_indices, test_indices = train_test_split(
-            np.arange(len(labels)),
-            test_size=test_perc,
-            stratify=labels
-        )
-        
-        train_indices, val_indices = train_test_split(
-            train_val_indices,
-            test_size=val_perc / (train_perc + val_perc),
-            stratify=labels[train_val_indices]
-        )
-
-        self.trainset = Subset(self, train_indices)
-        self.valset = Subset(self, val_indices)
-        self.testset = Subset(self, test_indices)
-    
-    def data_analysis(self):
-        """
-        Calculates and returns a string containing the analysis of the dataset, including the count of data for training, validation, and testing sets, as well as the count of data with and without apnea in each set.
-        
-        Args: none.
-
-        Returns: 
-        - string containing the analysis of the dataset. 
-        """
-
-        cant_datos = len(self.trainset)
-        con_apnea = int(sum(sum((self.trainset[:][1]).tolist(), [])))
-        text = '\nTraining data count: ' + str(cant_datos) + '\n\t' + 'With apnea: ' + str(con_apnea) + '\n\t' + 'Without apnea: ' + str(cant_datos-con_apnea)
-        cant_datos = len(self.valset)
-        con_apnea = int(sum(sum((self.valset[:][1]).tolist(), [])))
-        text += '\nValidation data count: ' + str(cant_datos) + '\n\t' + 'With apnea: ' + str(con_apnea) + '\n\t' + 'Without apnea: ' + str(cant_datos-con_apnea)
-        cant_datos = len(self.testset)
-        con_apnea = int(sum(sum((self.testset[:][1]).tolist(), [])))
-        text += '\nTest data count: ' + str(cant_datos) + '\n\t' + 'With apnea: ' + str(con_apnea) + '\n\t' + 'Without apnea: ' + str(cant_datos-con_apnea) + '\n'
-        
-        return text
-
-    def undersample_majority_class(self, majority_class, val = True):
-        """
-        Undersamples the majority class in the training and (optionally) validation datasets to balance class distribution. It modifies `self.trainset` and optionally `self.valset` in place.
-
-        Parameters:
-        - majority_class: The label of the majority class that needs to be undersampled.
-        - val (bool): If True, the validation dataset is also undersampled (default is True).
+        Splits the dataset into 10 subsets, ensuring that each subset contains a balanced distribution of classes.
+        It modifies the `self.subsets` attribute by appending 10 subsets.
 
         Returns: none
         """
 
-        class_counts_train = Counter([int(self.trainset[i][1].item()) for i in range(len(self.trainset))]) #Counts the number of samples for each class in the training set
-        min_count_train = min(class_counts_train.values()) #Finds the minimum number of samples across all classes
-        indices_train = []
-        class_counter_train = {cls: 0 for cls in class_counts_train}
+        labels = np.array([self[i][1].item() for i in range(len(self))]) #Extract the labels from the dataset
+       
+        other_indices = np.arange(len(labels)) #Create an array of indices corresponding to the dataset
+        for i in range(0,9): #Get 9 stratified splits, leaving the last 10% for the final subset
+            other_indices, set_indices = train_test_split(
+                other_indices,
+                test_size=round(0.1/(1-0.1*i), 2), #Calculate test size to ensure 10% of the remaining data is split off
+                stratify=labels[other_indices] #Stratified split to maintain class balance
+            )
+            self.subsets.append(Subset(self, set_indices))
+        self.subsets.append(Subset(self, other_indices))
+   
+    def analisis_datos(self):
+        """
+        Calculates and returns a string containing the analysis of the dataset, including the count of data for training, validation, and testing sets, as well as the count of data with and without apnea in each set.
+       
+        Args: none.
 
-        for idx in range(len(self.trainset)):
-            label = int(self.trainset[idx][1].item())
-            if label == majority_class:
-                #For the majority class, only includes samples until its count matches the minimum class count
-                if class_counter_train[label] < min_count_train:
-                    indices_train.append(self.trainset.indices[idx])
-                    class_counter_train[label] += 1
-            else:
-                #For the other classes, includes all their samples
-                indices_train.append(self.trainset.indices[idx])
-        self.trainset = Subset(self.trainset.dataset, indices_train)
-        
-        if(val):
-            class_counts_val = Counter([int(self.valset[i][1].item()) for i in range(len(self.valset))]) #Counts the number of samples for each class in the validation set
-            min_count_val = min(class_counts_val.values()) #Finds the minimum number of samples across all classes
-            indices_val = []
-            class_counter_val = {cls: 0 for cls in class_counts_val}
 
-            for idx in range(len(self.valset)):
-                label = int(self.valset[idx][1].item())
+        Returns:
+        - string containing the analysis of the dataset.
+        """
+        text = ""
+        for idx, subset in enumerate(self.subsets):
+            cant_datos = len(subset)
+            con_apnea = int(sum(sum((subset[:][1]).tolist(), [])))
+            text += f'\nSubset {idx} data count: ' + str(cant_datos) + '\n\t' + 'With apnea: ' + str(con_apnea) + '\n\t' + 'Without apnea: ' + str(cant_datos-con_apnea)
+        return text
+
+    def undersample_majority_class(self, majority_class, subsets, prop:float = 1):
+        """
+        Undersamples the majority class in specified subsets to achieve a balanced class distribution. It modifies `self.subsets` in place.
+
+        Parameters:
+        - majority_class: The label of the majority class that needs to be undersampled.
+        - subsets: A list of indices specifying which subsets to process.
+        - prop (float): Proportion of the minimum class count to which the majority class will be undersampled (default is 1, meaning the majority class is reduced to the size of the smallest class).
+
+        Returns: none
+        """
+        for subset in subsets:
+            class_counts = Counter([int(self.subsets[subset][i][1].item()) for i in range(len(self.subsets[subset]))]) #Count the number of samples for each class in the subset
+            min_count = min(class_counts.values()) #Determine the minimum number of samples in any class
+            indices = []
+            class_counter = {cls: 0 for cls in class_counts}
+
+            for idx in range(len(self.subsets[subset])):
+                label = int(self.subsets[subset][idx][1].item())
                 if label == majority_class:
-                    #For the majority class, only includes samples until its count matches the minimum class count
-                    if class_counter_val[label] < min_count_val:
-                        indices_val.append(self.valset.indices[idx])
-                        class_counter_val[label] += 1
+                    #If the sample is from the majority class and we haven't reached the proportional limit, include it
+                    if class_counter[label] < min_count*prop:
+                        indices.append(self.subsets[subset].indices[idx])
+                        class_counter[label] += 1
                 else:
-                    #For the other classes, includes all their samples
-                    indices_val.append(self.valset.indices[idx])
-            self.valset = Subset(self.valset.dataset, indices_val)
-    
+                    #Include all samples from other classes
+                    indices.append(self.subsets[subset].indices[idx])
+           
+            self.subsets[subset] = Subset(self.subsets[subset].dataset, indices)
+   
     def save_dataset(self, file_path:str):
         """
         Save the ApneaDataset and its subsets to a file.
-        
+       
         Args:
             apnea_dataset (ApneaDataset): the dataset to save.
             file_path (str): the path where the dataset will be saved.
-            
+           
         Returns:
             None
         """
         data = {
             'X': self.__X,
             'y': self.__y,
+            'sr': self.__sr,
             'archivos': self.archivos,
-            'trainset': self.trainset if isinstance(self.trainset, Subset) else [],
-            'valset': self.valset if isinstance(self.valset, Subset) else [],
-            'testset': self.testset if isinstance(self.testset, Subset) else []
+            'subsets': self.subsets if len(self.subsets)>0 else []
         }
-
         torch.save(data, file_path)
 
+    def plot_segments(self, idx = None):
+        plt.figure(1)
+        if(idx == None):
+            for segment in self.__X:
+                tiempo_segmento = np.arange(0, 30, 1/self.__sr)
+                plt.plot(tiempo_segmento, segment[0])
+                plt.show()
+        else:
+            tiempo_segmento = np.arange(0, 30, 1/self.__sr)
+            plt.plot(tiempo_segmento, self.__X[idx][0])
+            plt.show()
+
+    def resample_segments(self, sampling_rate):
+        """
+        Resamples the signal segments to a uniform length based on the specified sampling rate. It modifies `self.__X` and updates the subsets' datasets in place.
+
+        Parameters:
+        - sampling_rate: The desired sampling rate (in Hz) to resample the segments.
+
+        Returns: none
+        """
+        new_X = []
+        segment_length = 30
+        num_puntos = segment_length * sampling_rate
+        for segment in self.__X:
+            new_segment = [resample(segment[0].numpy(), num_puntos)]
+            new_X.append(new_segment)
+        new_X_np = np.array(new_X)
+        self.__X = torch.tensor(new_X_np)
+        for idx, subset in enumerate(self.subsets):
+            self.subsets[idx].dataset = self
+
+    @staticmethod
+    def join_datasets(datasets, traintestval=None):
+        """
+        Merges multiple instances of `ApneaDataset2` into a single dataset, combining their data and subsets.
+
+        Parameters:
+        - datasets: A list of `ApneaDataset2` instances to be joined.
+        - traintestval (tuple of lists, optional): Contains train, validation, and test subsets for each dataset in `datasets`. It should be a list of tuples where each tuple has three lists (train, val, test subsets). Only required if you want to merge the subsets along with the datasets.
+
+        Returns:
+        - A tuple containing:
+        1. The merged `ApneaDataset2` instance.
+        2. Updated train subset indices.
+        3. Updated validation subset indices.
+        4. Updated test subset indices.
+        """
+
+        if not isinstance(datasets[0], ApneaDataset):
+            raise TypeError("Expected an instance of ApneaDataset")
+        appended_dataset = copy.deepcopy(datasets[0]) #Create a deep copy of the first dataset to serve as the base
+        new_subsets = []
+        offset = 0
+        if traintestval is not None:
+            train_subsets, val_subsets, test_subsets = traintestval[0]
+
+        for idx, dataset in enumerate(datasets):
+            if not isinstance(dataset, ApneaDataset):
+                raise TypeError("Expected an instance of ApneaDataset2")
+            if idx > 0:  # Skip the first dataset since it's already copied
+                #concatenate their data
+                appended_dataset.__X = torch.cat((appended_dataset.__X, dataset.__X), dim=0)
+                appended_dataset.__y = torch.cat((appended_dataset.__y, dataset.__y.clone().detach()), dim=0)
+                try:
+                    appended_dataset.archivos.append(dataset.archivos)
+                except AttributeError:
+                    appended_dataset.archivos = [appended_dataset.archivos] + [dataset.archivos]
+
+            if(traintestval != None and idx > 0):
+                train_subsets_old, val_subsets_old, test_subsets_old = traintestval[idx]
+                train_subsets += [x+len(new_subsets) for x in train_subsets_old]
+                val_subsets += [x+len(new_subsets) for x in val_subsets_old]
+                test_subsets += [x+len(new_subsets) for x in test_subsets_old]
+
+            for subset in dataset.subsets:
+                #Adjust indices for the new subsets and add them to the new_subsets list
+                new_indices = [i + offset for i in subset.indices]
+                new_subsets.append(Subset(appended_dataset, new_indices))
+
+            offset += len(dataset.__X)
+
+        appended_dataset.subsets = new_subsets
+        return appended_dataset, train_subsets, val_subsets, test_subsets
+   
     @staticmethod
     def load_dataset(file_path:str):
         """
         Load the ApneaDataset and its subsets from a file.
-        
+       
         Args:
             file_path (str): the path where the dataset is saved.
-            
+           
         Returns:
             ApneaDataset: the loaded dataset.
         """
         data = torch.load(file_path)
-        apnea_dataset = ApneaDataset(data['X'], data['y'], data['archivos'])
-        if len(data['trainset'])>0:
-            apnea_dataset.trainset = data['trainset']
-        if len(data['valset'])>0:
-            apnea_dataset.valset = data['valset']
-        if len(data['testset'])>0:
-            apnea_dataset.testset = data['testset']
-        
-        analisis_datos = apnea_dataset.data_analysis()
-        print(analisis_datos)
+        apnea_dataset = ApneaDataset(data['X'], data['y'], data['sr'], data['archivos'])
+        if len(data['subsets'])>0:
+            apnea_dataset.subsets = data['subsets']
         return apnea_dataset
-
-    @staticmethod
-    def standarize_data(X):
-        scaler = StandardScaler()
-        scaler.fit(X)
-        return scaler.transform(X)
 
     @staticmethod
     def from_csv(csv_path_con:str, csv_path_sin:str):
@@ -213,7 +241,7 @@ class ApneaDataset(Dataset):
         dfSIN.drop(columns=dfSIN.columns[0], inplace=True)
         dfSIN = dfSIN.transpose()
 
-        #Label and join dataframes 
+        #Label and join dataframes
         X = np.concatenate((dfCON, dfSIN))
         targetCON = np.ones(dfCON.shape[0])
         targetSIN = np.zeros(dfSIN.shape[0])
@@ -224,7 +252,7 @@ class ApneaDataset(Dataset):
         return X,y
 
     @staticmethod
-    def from_segments(segments, stand = False):
+    def from_segments(segments):
         X = []
         y = []
 
@@ -235,9 +263,6 @@ class ApneaDataset(Dataset):
         # Convertimos las listas en arreglos numpy
         X = np.vstack(X)
         y = np.array(y)
-        
-        if(stand):
-            X = ApneaDataset.standarize_data(X)
 
         X = torch.tensor(X, dtype=torch.float32).unsqueeze(1)
         y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1)
@@ -247,31 +272,22 @@ class ApneaDataset(Dataset):
     @staticmethod
     def create_datasets(files, path_edf, path_annot):
         """
-        Static method that processes EDF and annotation files to create balanced datasets. It saves the processed dataset to ".\data\ApneaDetection_HomePAPSignals\datasets" path.
+        Creates datasets from EDF files and annotations by processing each file, generating segments, and saving them.
 
         Parameters:
         - files: A list of file identifiers to process.
-        - path_edf: The path to the folder containing the EDF files.
-        - path_annot: The path to the folder containing the corresponding annotation files.
+        - path_edf: The path to the directory containing EDF files.
+        - path_annot: The path to the directory containing annotation files.
 
         Returns: none
         """
-
-        for archivo in files:
+        for file in files:
             all_signals = read_signals_EDF(path_edf)
             annotations = get_annotations(path_annot)
+            bipolar_signal, time, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])
+            segments = get_signal_segments_strict(bipolar_signal, time, sampling, annotations)
 
-            bipolar_signal, tiempo, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])
-
-            segments = get_signal_segments_strict(bipolar_signal, tiempo, sampling, annotations)
-
-            X,y = ApneaDataset.from_segments(segments, stand = True)
-            dataset = ApneaDataset(X,y, archivo)
-
-            dataset.split_dataset(train_perc = 0.8, 
-                                val_perc = 0.1, 
-                                test_perc = 0.1)
-
-            dataset.undersample_majority_class(0.0)
-
-            dataset.save_dataset(f".\data\ApneaDetection_HomePAPSignals\datasets\dataset_archivo_1600{archivo:03d}.pth")
+            X,y = ApneaDataset.from_segments(segments)
+            dataset = ApneaDataset(X, y, sampling, file)
+            dataset.split_dataset()
+            dataset.save_dataset(f".\data\ApneaDetection_HomePAPSignals\datasets\dataset2_archivo_1600{file:03d}.pth")
