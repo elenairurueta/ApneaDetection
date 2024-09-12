@@ -9,7 +9,7 @@ files = [4, 43, 53, 55, 63, 72, 84, 95, 105, 113, 122, 151]
 models_path = './models'
 
 txt_file = ""
-for file in files: #
+for file in files: 
     # Initialization of variables used to create mean confusion matrices and metrics for all folds
     metrics_acum_total = {'Accuracy': [], 'Precision': [], 'Sensitivity': [], 'Specificity': [], 'F1': [], 'MCC': []}
     cm_acum_total = []
