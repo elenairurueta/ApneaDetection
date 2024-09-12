@@ -1,5 +1,5 @@
 from Imports import *
-from Modelo import Model
+from Models import Model
 
 class Tester:
     """Class to test the model with testset"""

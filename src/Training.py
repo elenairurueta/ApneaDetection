@@ -1,5 +1,5 @@
 from Imports import *
-from Modelo import Model
+from Models import Model
 
 class Trainer:
     """Class to train the model with trainset and validate training with valset"""
