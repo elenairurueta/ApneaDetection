@@ -48,12 +48,18 @@ class ApneaDataset(Dataset):
             self.subsets.append(Subset(self, set_indices))
         self.subsets.append(Subset(self, other_indices))
    
+    def get_subsets(self, idxs):
+        indices = []
+        for idx in idxs:
+            subset_indices = list(self.subsets[idx].indices)
+            indices.extend(subset_indices)
+        return Subset(self.subsets[idx].dataset, indices)
+
     def data_analysis(self):
         """
         Calculates and returns a string containing the analysis of the dataset, including the count of data for training, validation, and testing sets, as well as the count of data with and without apnea in each set.
        
         Args: none.
-
 
         Returns:
         - string containing the analysis of the dataset.
@@ -282,8 +288,8 @@ class ApneaDataset(Dataset):
         Returns: none
         """
         for file in files:
-            all_signals = read_signals_EDF(path_edf)
-            annotations = get_annotations(path_annot)
+            all_signals = read_signals_EDF(path_edf + f"\\homepap-lab-full-1600{str(file).zfill(3)}.edf")
+            annotations = get_annotations(path_annot + f"\\homepap-lab-full-1600{str(file).zfill(3)}-profusion.xml")
             bipolar_signal, time, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])
             segments = get_signal_segments_strict(bipolar_signal, time, sampling, annotations)
 

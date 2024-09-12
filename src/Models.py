@@ -74,7 +74,7 @@ class Model(nn.Module):
         """
         return '\n\n' + str(self)
 
-    def save_model(self, extension:str = '.pth'):
+    def save_model(self, models_path, extension:str = '.pth'):
         """
         Saves the parameters of the model to a file.
 
@@ -83,30 +83,31 @@ class Model(nn.Module):
 
         Returns: none
         """
-        if os.path.exists(f'./models'):
-            if not os.path.exists(f'./models/{self.nombre}'):
-                os.makedirs(f'./models/{self.nombre}')
-            PATH = f'./models/{self.nombre}/{self.nombre + extension}'
+        if os.path.exists(models_path):
+            PATH = models_path + f'/{self.nombre + extension}'
             torch.save(self.state_dict(), PATH)
 
     @staticmethod
-    def load_model(nombre, input_size, extension:str = '.pth'):
+    def load_model(models_path, nombre, input_size, extension:str = '.pth', best = False):
         """
         Loads a pre-trained model from a file.
 
         Args:
             - nombre (str): name of the model.
             - input_size (int): size of the input data.
+            - models_path
             - extension (str, optional): extension of the file ('.pt' or '.pth'). Defaults to '.pth'.
+            - best: if it is the best model or not
             
         Returns:
             - Model: the loaded model.
         """
         model = Model(input_size, nombre)
-        try:
-            PATH = f'./models/{nombre}/{nombre + extension}'
+        if(best):
+            PATH = models_path + f'/{nombre}_best{extension}' 
             model.load_state_dict(torch.load(PATH))
-            model.eval()
-        except:
-            print('model not found')
+        else:
+            PATH = models_path + f'/{nombre + extension}'
+            model.load_state_dict(torch.load(PATH))
+        model.eval()
         return model

@@ -75,7 +75,7 @@ class Tester:
         plotter = Plotter(self.__model__.get_nombre(), self.__wrong_predictions__)
         plotter.plot_wrong_predictions(plot)
 
-    def __plot_confusion_matrix__(self, plot:bool):
+    def __plot_confusion_matrix__(self, models_path, plot:bool):
         """
         Plots the confusion matrix and saves plot as .png.
 
@@ -90,10 +90,10 @@ class Tester:
         cm_display.plot(cmap='Blues')
         plt.title("Confusion Matrix")
 
-        if os.path.exists(f'/home/elena/Desktop/models'):
-            if not os.path.exists(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}'): 
-                os.makedirs(f'/home/elena/Desktop/models/{self.__model__.get_nombre()}') 
-            PATH = f'/home/elena/Desktop/models/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+        if os.path.exists(models_path):
+            if not os.path.exists(models_path + f'/{self.__model__.get_nombre()}'): 
+                os.makedirs(models_path + f'/{self.__model__.get_nombre()}') 
+            PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
             plt.savefig(PATH)
 
         if(plot):
@@ -128,12 +128,10 @@ class Tester:
         plt.legend(loc="lower right")
         
         if os.path.exists(models_path):
-            if not os.path.exists(models_path + f'/{self.__model__.get_nombre()}'):
-                os.makedirs(models_path + f'/{self.__model__.get_nombre()}')
             if(self.__best_final__ == ""):
-                PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+                PATH = models_path + f'/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
             else:
-                PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_roc_{self.__best_final__}.png'
+                PATH = models_path + f'/{self.__model__.get_nombre()}_roc_{self.__best_final__}.png'
             plt.savefig(PATH)
         else:
             print('PATH NOT FOUND: ' + models_path)
@@ -171,12 +169,10 @@ class Tester:
         plt.gcf().text(0.1, 0.1, metric_text, ha='center', fontsize=10, bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray'))
         
         if os.path.exists(models_path):
-            if not os.path.exists(models_path + f'/{self.__model__.get_nombre()}'): 
-                os.makedirs(models_path + f'/{self.__model__.get_nombre()}') 
             if(self.__best_final__ == ""):
-                PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+                PATH = models_path + f'/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
             else:
-                PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_metrics_{self.__best_final__}.png'
+                PATH = models_path + f'/{self.__model__.get_nombre()}_cm_metrics_{self.__best_final__}.png'
             plt.savefig(PATH)
         else:
             print('PATH NOT FOUND: ' + models_path)

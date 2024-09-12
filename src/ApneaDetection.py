@@ -8,6 +8,11 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 files = [4, 43, 53, 55, 63, 72, 84, 95, 105, 113, 122, 151]
 models_path = './models'
 
+# path_annot = ""  #CHANGE
+# path_edf = "" #CHANGE
+# ApneaDataset.create_datasets(files, path_edf, path_annot) 
+
+
 txt_file = ""
 for file in files: 
     # Initialization of variables used to create mean confusion matrices and metrics for all folds
@@ -34,7 +39,7 @@ for file in files:
             os.makedirs(models_path + '/' + name0 + '/' + name1)
 
         txt_file = f"homepap-lab-full-1600{str(file).zfill(3)}\n"
-        dataset = ApneaDataset.load_dataset(f".\data\ApneaDetection_HomePAPSignals\datasets\dataset2_archivo_1600{file:03d}.pth")
+        dataset = ApneaDataset.load_dataset(f"./data/ApneaDetection_HomePAPSignals/datasets/dataset2_archivo_1600{file:03d}.pth")
         data_analysis = dataset.data_analysis()
 
         train_subsets = [(fold + i) % 10 for i in range(8)]
@@ -54,6 +59,9 @@ for file in files:
         # 5 runs for each fold:
         for i in range(0,5):
             name2 = name1 + f'_{i}'
+            if not os.path.exists(models_path + '/' + name0 + '/' + name1 + '/' + name2):
+                os.makedirs(models_path + '/' + name0 + '/' + name1 + '/' + name2)
+                
             input_size = dataset.signal_len()
             model = Model(input_size, name2)
             model_arch = model.get_architecture()
@@ -99,7 +107,8 @@ for file in files:
         cm_std = np.std(cm_acum, axis=0)
         metrics_mean = {key: np.mean(metrics_acum[key]) for key in metrics_acum}
         metrics_std = {key: np.std(metrics_acum[key]) for key in metrics_acum}
-
+        
+        plt.figure()
         fig, ax = plt.subplots(figsize=(13, 6))
         cm_norm = cm_mean.astype('float') / cm_mean.sum(axis=1)[:, np.newaxis] * 100
         cm_display = ConfusionMatrixDisplay(confusion_matrix=cm_norm, display_labels=['without apnea', 'with apnea'])
@@ -120,12 +129,11 @@ for file in files:
         plt.gcf().text(0.1, 0.1, metric_text, ha='center', fontsize=10, bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray'))
 
         if os.path.exists(models_path):
-            if not os.path.exists(models_path + '/' + name0 + '/' + name1):
-                os.makedirs(models_path + '/' + name0 + '/' + name1)
             PATH = models_path + '/' + name0  + '/' + name1 + '/' + name1 + '_cm_metrics_mean_final.png'
             plt.savefig(PATH)
         plt.close()
 
+        plt.figure()
         best_cm_acum = np.array(best_cm_acum)
         best_cm_mean = np.mean(best_cm_acum, axis=0)
         best_cm_std = np.std(best_cm_acum, axis=0)
@@ -152,9 +160,8 @@ for file in files:
         plt.gcf().text(0.1, 0.1, best_metric_text, ha='center', fontsize=10, bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray'))
 
         if os.path.exists(models_path):
-            if not os.path.exists(models_path + '/' + name0 + '/' + name1):
-                os.makedirs(models_path + '/' + name0 + '/' + name1)
             PATH = models_path + '/' + name0  + '/' + name1 + '/' + name1 + '_cm_metrics_mean_best.png'
+            plt.savefig(PATH)
         plt.close()
 
         cm_acum_total.append(cm_mean)
