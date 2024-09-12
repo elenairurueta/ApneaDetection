@@ -1,5 +1,5 @@
 from Imports import *
-from Modelo import Model
+from Models import Model
 
 class Trainer:
     """Class to train the model with trainset and validate training with valset"""
@@ -187,7 +187,7 @@ class Trainer:
             if(avg_val_loss < min_loss and save_best_model):
                 min_loss = avg_val_loss
                 epoch_min_loss = epoch + 1
-                self.__model__.save_model(models_path, extension='_best.pth')
+                self.__model__.save_model(models_path, extension = '_best.pth')
 
         #Track the end time of the entire training process:
         end_of_training = (f"End of training - {self.n_epochs} epochs - "
@@ -243,9 +243,7 @@ class Trainer:
         plt.tight_layout()
 
         if os.path.exists(models_path):
-            if not os.path.exists(models_path + f'/{self.__model__.get_nombre()}'): 
-                os.makedirs(models_path + f'/{self.__model__.get_nombre()}') 
-            PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_acc_loss.png'
+            PATH = models_path + f'/{self.__model__.get_nombre()}_acc_loss.png'
             plt.savefig(PATH)
 
         if(plot):
@@ -268,9 +266,7 @@ class Trainer:
         Returns: none.
         """           
         if os.path.exists(models_path):
-            if not os.path.exists(models_path + f'/{self.__model__.get_nombre()}'): 
-                os.makedirs(models_path + f'/{self.__model__.get_nombre()}') 
-            PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_training.txt'
+            PATH = models_path + f'/{self.__model__.get_nombre()}_training.txt'
             f = open(PATH, "w")
             f.write(self.text)
             f.close()
