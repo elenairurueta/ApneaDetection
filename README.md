@@ -24,7 +24,7 @@ conda install -c conda-forge pyedflib
 
 ## Usage
 > **In ```GridSearch.py```**:
-A grid search is implemented to explore different combinations of convolutional kernel sizes and dropout rates. The search is done across multiple folds for cross-validation. Hyperparameter search results are saved in hyperparameter_search_results.xlsx.
+A grid search is implemented to explore different combinations of the number of convolutional filters and maxpool kernel size with the best convolutional kernel sizes and dropout rates from the last Grid Search. The search is done across multiple folds for cross-validation. Hyperparameter search results are saved in hyperparameter_search_results.xlsx.
 
 
 > **In ```ApneaDetection.py```**:
