@@ -9,23 +9,23 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 models_path = './models'
 
 param_grid = {
-    'kernel_size_Conv1': [35, 50],
-    'kernel_size_Conv2': [35, 50],
-    'kernel_size_Conv3': [35, 50],
-    'kernel_size_Conv4': [35, 50],
-    'kernel_size_Conv5': [35, 50],
-    'kernel_size_Conv6': [35, 50],
-    'dropout': [0.1, 0.5]
+    'n_filters_1': [8],
+    'n_filters_2': [8, 16],
+    'n_filters_3': [16, 128],
+    'n_filters_4': [16, 128],
+    'n_filters_5': [16, 128],
+    'n_filters_6': [16, 128],
+    'maxpool': [2, 7]
 }
-param_combinations = list(product(param_grid['kernel_size_Conv1'], param_grid['kernel_size_Conv2'], param_grid['kernel_size_Conv3'], param_grid['kernel_size_Conv4'], param_grid['kernel_size_Conv5'], param_grid['kernel_size_Conv6'], param_grid['dropout']))
+param_combinations = list(product(param_grid['n_filters_1'], param_grid['n_filters_2'], param_grid['n_filters_3'], param_grid['n_filters_4'], param_grid['n_filters_5'], param_grid['n_filters_6'], param_grid['maxpool']))
 
 results = []
 
-for kernel_size_Conv1, kernel_size_Conv2, kernel_size_Conv3, kernel_size_Conv4, kernel_size_Conv5, kernel_size_Conv6, dropout in param_combinations:
+for n_filters_1, n_filters_2, n_filters_3, n_filters_4, n_filters_5, n_filters_6, maxpool in param_combinations:
     
     torch.manual_seed(0)
 
-    name0 = f'modelo_GS_k{kernel_size_Conv1}_k{kernel_size_Conv2}_k{kernel_size_Conv3}_k{kernel_size_Conv4}_k{kernel_size_Conv5}_k{kernel_size_Conv6}_d{str(int(dropout*10))}'
+    name0 = f'modelo_GS_n{n_filters_1}_n{n_filters_2}_n{n_filters_3}_n{n_filters_4}_n{n_filters_5}_n{n_filters_6}_m{maxpool}'
     metrics_acum = {'Accuracy': [], 'Precision': [], 'Sensitivity': [], 'Specificity': [], 'F1': [], 'MCC': []}
     cm_acum = []
     best_metrics_acum = {'Accuracy': [], 'Precision': [], 'Sensitivity': [], 'Specificity': [], 'F1': [], 'MCC': []}
@@ -71,20 +71,20 @@ for kernel_size_Conv1, kernel_size_Conv2, kernel_size_Conv3, kernel_size_Conv4, 
         model = Model(
             input_size = input_size,
             name = name1,
-            n_filters_1 = 32,
-            kernel_size_Conv1 = kernel_size_Conv1,
-            n_filters_2 = 64,
-            kernel_size_Conv2 = kernel_size_Conv2,
-            n_filters_3 = 128,
-            kernel_size_Conv3 = kernel_size_Conv3,
-            n_filters_4 = 128,
-            kernel_size_Conv4 = kernel_size_Conv4,
-            n_filters_5 = 256,
-            kernel_size_Conv5 = kernel_size_Conv5,
-            n_filters_6 = 256,
-            kernel_size_Conv6 = kernel_size_Conv6,
-            dropout = dropout,
-            maxpool = 2,
+            n_filters_1 = n_filters_1,
+            kernel_size_Conv1 = 35,
+            n_filters_2 = n_filters_2,
+            kernel_size_Conv2 = 50,
+            n_filters_3 = n_filters_3,
+            kernel_size_Conv3 = 35,
+            n_filters_4 = n_filters_4,
+            kernel_size_Conv4 = 35,
+            n_filters_5 = n_filters_5,
+            kernel_size_Conv5 = 50,
+            n_filters_6 = n_filters_6,
+            kernel_size_Conv6 = 50,
+            dropout = 0.1,
+            maxpool = maxpool,
         ).to(device)
 
         model_arch = model.get_architecture()
@@ -145,13 +145,13 @@ for kernel_size_Conv1, kernel_size_Conv2, kernel_size_Conv3, kernel_size_Conv4, 
     plt.close()
 
     results.append({
-        'kernel_size_Conv1': kernel_size_Conv1,
-        'kernel_size_Conv2': kernel_size_Conv2,
-        'kernel_size_Conv3': kernel_size_Conv3,
-        'kernel_size_Conv4': kernel_size_Conv4,
-        'kernel_size_Conv5': kernel_size_Conv5,
-        'kernel_size_Conv6': kernel_size_Conv6,
-        'dropout': dropout,
+        'n_filters_1': n_filters_1,
+        'n_filters_2': n_filters_2,
+        'n_filters_3': n_filters_3,
+        'n_filters_4': n_filters_4,
+        'n_filters_5': n_filters_5,
+        'n_filters_6': n_filters_6,
+        'maxpool': maxpool,
         'Accuracy': f'{metrics_mean["Accuracy"]:.3f}±{metrics_std["Accuracy"]:.3f}',
         'Precision': f'{metrics_mean["Precision"]:.3f}±{metrics_std["Precision"]:.3f}',
         'Sensitivity': f'{metrics_mean["Sensitivity"]:.3f}±{metrics_std["Sensitivity"]:.3f}',
