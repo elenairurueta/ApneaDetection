@@ -5,14 +5,12 @@ from Training import Trainer
 from Testing import Tester
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-files = [4, 43, 53]   ############ CAMBIAR , 55, 63, 72, 84, 95, 105, 113, 122, 151
+files = [4, 43, 53, 55, 63, 72, 84, 95, 105, 113, 122, 151]
 models_path = './models'
 
 # path_annot = ""  #CHANGE
 # path_edf = "" #CHANGE
 # ApneaDataset.create_datasets(files, path_edf, path_annot) 
-
-####### entrenamiento con 10 folds con 12 archivos juntos, testeando con 12 archivos por separado
 
 txt_file = ""
 name0 = f'model_file_1600' + "_".join([str(f).zfill(3) for f in files])
@@ -55,7 +53,7 @@ for fold in range(0,9):
         model = model,
         trainset = joined_trainset,
         valset = joined_valset,
-        n_epochs = 2, ########### CAMBIAR
+        n_epochs = 100,
         batch_size = 32,
         loss_fn = 'BCE',
         optimizer = 'SGD',
