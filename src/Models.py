@@ -2,7 +2,7 @@ from Imports import *
     
 class Model(nn.Module):
     """Neural network model class"""
-    def __init__(self, input_size, nombre:str):
+    def __init__(self, input_size, name:str, n_filters_1, kernel_size_Conv1, n_filters_2, kernel_size_Conv2, n_filters_3, kernel_size_Conv3, n_filters_4, kernel_size_Conv4, n_filters_5, kernel_size_Conv5, n_filters_6, kernel_size_Conv6, dropout, maxpool):
         """
         Initializes the neural network model.
 
@@ -12,58 +12,82 @@ class Model(nn.Module):
         """
 
         super().__init__()
-        self.nombre = nombre
+        self.name = name
 
-        #Convolutional layers:
-        self.conv_layers = nn.Sequential(
-            #input (batch_size, 1, input_size)
-            nn.Conv1d(1, 32, kernel_size=3, stride=1, padding=1), #output (batch_size, 32, input_size)
-            nn.ReLU(),
-            nn.Conv1d(32, 64, kernel_size=3, stride=1, padding=1), #output (batch_size, 64, input_size)
-            nn.ReLU(),
-            nn.MaxPool1d(2), #output (batch_size, 64, input_size/2)
-
-            nn.Conv1d(64, 128, kernel_size=3, stride=1, padding=1), #output (batch_size, 128, input_size/2)
-            nn.ReLU(),
-            nn.Conv1d(128, 128, kernel_size=3, stride=1, padding=1), #output (batch_size, 128, input_size/2)
-            nn.ReLU(),
-            nn.MaxPool1d(2), #output (batch_size, 128, input_size/4)
-
-            nn.Conv1d(128, 256, kernel_size=3, stride=1, padding=1), #output (batch_size, 256, input_size/4)
-            nn.ReLU(),
-            nn.Conv1d(256, 256, kernel_size=3, stride=1, padding=1), #output (batch_size, 256, input_size/4)
-            nn.ReLU(),
-            nn.MaxPool1d(2) #output (batch_size, 256, input_size/8)
-        )
-        #Fully connected layers:
-        self.fc_layers = nn.Sequential(
-            #input (batch_size, 256, input_size/8)
-            nn.Linear(256 * int(input_size/8), 1024), #with input_size=1000: (batch_size, 32000) -> (batch_size, 1024)
-            nn.ReLU(),
-            nn.Linear(1024, 512), #(batch_size, 1024) -> (batch_size, 512)
-            nn.ReLU(),
-            nn.Linear(512, 1), #(batch_size, 512) -> (batch_size, 1)
-            nn.Sigmoid() 
-            )
+        # Calculate output size after convolutions and pooling
+        def conv_output_size(input_size, kernel_size, padding, stride, dilation = 1):
+            return int(np.floor((input_size + 2*padding - dilation*(kernel_size - 1) - 1)/stride + 1))
         
+        def maxpool_output_size(input_size, kernel_size, stride, padding = 0, dilation = 1):
+            return int(np.floor((input_size + 2*padding - dilation*(kernel_size - 1) - 1)/stride + 1))
+
+        # Compute the size after each layer
+        size = input_size
+        # size = conv_output_size(size, kernel_size_Conv1, padding=1, stride=1) #not necessary since padding='same'
+        # size = conv_output_size(size, kernel_size_Conv2, padding=1, stride=1) #not necessary since padding='same'
+        size = maxpool_output_size(size, kernel_size=maxpool, stride=maxpool)
+        # size = conv_output_size(size, kernel_size_Conv3, padding=1, stride=1) #not necessary since padding='same'
+        # size = conv_output_size(size, kernel_size_Conv4, padding=1, stride=1) #not necessary since padding='same'
+        size = maxpool_output_size(size, kernel_size=maxpool, stride=maxpool)
+        # size = conv_output_size(size, kernel_size_Conv5, padding=1, stride=1) #not necessary since padding='same'
+        # size = conv_output_size(size, kernel_size_Conv6, padding=1, stride=1) #not necessary since padding='same'
+        size = maxpool_output_size(size, kernel_size=maxpool, stride=maxpool)
+
+        # Convolutional layers
+        self.conv_layers = nn.Sequential(
+            nn.Conv1d(1, n_filters_1, kernel_size=kernel_size_Conv1, stride=1, padding='same'),
+            nn.ReLU(), 
+            nn.Conv1d(n_filters_1, n_filters_2, kernel_size=kernel_size_Conv2, stride=1, padding='same'),
+            nn.ReLU(),
+            nn.BatchNorm1d(n_filters_2),
+            nn.MaxPool1d(kernel_size=maxpool, stride=maxpool),
+            nn.Dropout(dropout),
+
+            nn.Conv1d(n_filters_2, n_filters_3, kernel_size=kernel_size_Conv3, stride=1, padding='same'),
+            nn.ReLU(),
+            nn.Conv1d(n_filters_3, n_filters_4, kernel_size=kernel_size_Conv4, stride=1, padding='same'),
+            nn.ReLU(),
+            nn.BatchNorm1d(n_filters_4),
+            nn.MaxPool1d(kernel_size=maxpool, stride=maxpool),
+            nn.Dropout(dropout),
+
+            nn.Conv1d(n_filters_4, n_filters_5, kernel_size=kernel_size_Conv5, stride=1, padding='same'),
+            nn.ReLU(),
+            nn.Conv1d(n_filters_5, n_filters_6, kernel_size=kernel_size_Conv6, stride=1, padding='same'),
+            nn.ReLU(),
+            nn.BatchNorm1d(n_filters_6),
+            nn.MaxPool1d(kernel_size=maxpool, stride=maxpool),
+            nn.Dropout(dropout)
+        )
+
+        # Fully connected layers
+        self.fc_layers = nn.Sequential(
+            nn.Linear(n_filters_6 * size, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            nn.Linear(512, 1),
+            nn.Sigmoid()
+        )
+
     def forward(self, x):
         """
         Defines the forward pass of the neural network model.
         """
         x = self.conv_layers(x)
         batch_size = x.size(0)
-        x = x.view(batch_size, -1)
+        x = x.view(batch_size, -1) 
         x = self.fc_layers(x)
         return x
     
-    def get_nombre(self):
+    def get_name(self):
         """
         Args: none.
 
         Returns:
             - str: the name of the model.
         """
-        return self.nombre
+        return self.name
 
     def get_architecture(self):
         """
@@ -84,30 +108,30 @@ class Model(nn.Module):
         Returns: none
         """
         if os.path.exists(models_path):
-            PATH = models_path + f'/{self.nombre + extension}'
-            torch.save(self.state_dict(), PATH)
+            if not os.path.exists(models_path + f'/{self.name}'):
+                os.makedirs(models_path + f'/{self.name}')
+            PATH = models_path + f'/{self.name}/{self.name + extension}'             
+        torch.save(self.state_dict(), PATH)
 
     @staticmethod
-    def load_model(models_path, nombre, input_size, extension:str = '.pth', best = False):
+    def load_model(models_path, name, input_size, extension:str = '.pth', best = False):
         """
         Loads a pre-trained model from a file.
 
         Args:
             - nombre (str): name of the model.
             - input_size (int): size of the input data.
-            - models_path
             - extension (str, optional): extension of the file ('.pt' or '.pth'). Defaults to '.pth'.
-            - best: if it is the best model or not
             
         Returns:
             - Model: the loaded model.
         """
-        model = Model(input_size, nombre)
+        model = Model(input_size, name)
         if(best):
-            PATH = models_path + f'/{nombre}_best{extension}' 
+            PATH = models_path + f'/{name}/{name}_best{extension}' 
             model.load_state_dict(torch.load(PATH))
         else:
-            PATH = models_path + f'/{nombre + extension}'
+            PATH = models_path + f'/{name}/{name + extension}'
             model.load_state_dict(torch.load(PATH))
         model.eval()
         return model

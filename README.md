@@ -23,7 +23,9 @@ conda install -c conda-forge pyedflib
 ```
 
 ## Usage
-To create, train and test a new model, open ```ApneaDetection.py```. 
+> **In ```GridSearch.py```**:
+A grid search is implemented to explore different combinations of convolutional kernel sizes and dropout rates. The search is done across multiple folds for cross-validation. Hyperparameter search results are saved in hyperparameter_search_results.xlsx.
+
 
 > **In ```ApneaDetection.py```**:
 
