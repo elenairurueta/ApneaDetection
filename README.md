@@ -36,44 +36,20 @@ ApneaDataset.create_datasets(files, path_edf, path_annot)
 
 Each file will be saved in a different dataset as a ```.pth``` file in ```.\data\ApneaDetection_HomePAPSignals\datasets``` folder. Each dataset will be saved split into 10 subsets.
 
-For each file:
+The training process uses 10-fold cross-validation, where in each fold: 8 subsets per file are used for training, 1 for validation and 1 for testing.
 
-Line 42 will load the dataset
-```python
-dataset = ApneaDataset.load_dataset(f"./data/ApneaDetection_HomePAPSignals/datasets/dataset2_archivo_1600{file:03d}.pth")
-```
+All 12 datasets are combined into a single dataset. The combined dataset is then split into training, validation, and test sets based on the fold indices in each dataset. 
+The training and validation subsets are undersampled to achieve a balanced class distribution.
 
-The following lines will define the training, validation and testing subset indices for each fold:
-```python
-    train_subsets = [(fold + i) % 10 for i in range(8)]
-    val_subsets = [(fold - 2 + i) % 10 for i in range(1)]
-    test_subsets = [(fold - 1 + i) % 10 for i in range(1)]
-```
+The model is trained using the combined dataset.
 
-The dataset will be undersampled to achieve a balanced class distribution.
+After training, the model is evaluated in two ways:
+* On the combined test dataset from all files
+* On each file individually 
+generating confusion matrices and evaluation metrics for each.
 
-Each fold will be run 5 times to get mean and std confusion matrix and metrics.
+Also the best model from each fold is saved and tested on the joined testset and individual files for final evaluation.
 
-Each run will create and train a model, saving the best model (the one with less validation loss):
-```python
-model = Model(input_size, name2)
-            model_arch = model.get_architecture()
-            trainer = Trainer(
-                model = model,
-                trainset = trainset,
-                valset = valset,
-                n_epochs = 100,
-                batch_size = 32,
-                loss_fn = 'BCE',
-                optimizer = 'SGD',
-                lr = 0.01,
-                momentum = 0,
-                text = txt_file + data_analysis + model_arch,
-                device = device)
-            trainer.train(models_path + '/' + name0 + '/' + name1 + '/' + name2, verbose = True, plot = False, save_best_model = True)
-```
-Each run will test the best and final model, saving both confusion matrices and metrics. Then, the mean and std for all 5 runs will be calculated.
-This repeats for 10 folds and the mean and std for all will be calculated.
 
 
 > **In ```PlotSignals.py```**:
