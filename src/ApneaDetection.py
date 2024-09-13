@@ -47,7 +47,24 @@ for fold in range(0,9):
     data_analysis += f"\nTrain count: {len(joined_trainset)}\n\tWith apnea: {int(sum(sum((joined_trainset[:][1]).tolist(), [])))}\n\tWithout apnea: {len(joined_trainset) - int(sum(sum((joined_trainset[:][1]).tolist(), [])))}\nVal count: {len(joined_valset)}\n\tWith apnea: {int(sum(sum((joined_valset[:][1]).tolist(), [])))}\n\tWithout apnea: {len(joined_valset) - int(sum(sum((joined_valset[:][1]).tolist(), [])))}\nTest count: {len(joined_testset)}\n\tWith apnea: {int(sum(sum((joined_testset[:][1]).tolist(), [])))}\n\tWithout apnea: {len(joined_testset) - int(sum(sum((joined_testset[:][1]).tolist(), [])))}"
 
     input_size = joined_dataset.signal_len()
-    model = Model(input_size, name1)
+    model = Model(
+            input_size = input_size,
+            name = name1,
+            n_filters_1 = 32,
+            kernel_size_Conv1 = 3,
+            n_filters_2 = 64,
+            kernel_size_Conv2 = 3,
+            n_filters_3 = 128,
+            kernel_size_Conv3 = 3,
+            n_filters_4 = 128,
+            kernel_size_Conv4 = 3,
+            n_filters_5 = 256,
+            kernel_size_Conv5 = 3,
+            n_filters_6 = 256,
+            kernel_size_Conv6 = 3,
+            dropout = 0,
+            maxpool = 2,
+        ).to(device)
     model_arch = model.get_architecture()
     trainer = Trainer(
         model = model,
