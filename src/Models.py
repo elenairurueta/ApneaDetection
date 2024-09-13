@@ -2,7 +2,7 @@ from Imports import *
     
 class Model(nn.Module):
     """Neural network model class"""
-    def __init__(self, input_size, nombre:str, n_filters_1, kernel_size_Conv1, n_filters_2, kernel_size_Conv2, n_filters_3, kernel_size_Conv3, n_filters_4, kernel_size_Conv4, n_filters_5, kernel_size_Conv5, n_filters_6, kernel_size_Conv6, dropout, maxpool):
+    def __init__(self, input_size, name:str, n_filters_1, kernel_size_Conv1, n_filters_2, kernel_size_Conv2, n_filters_3, kernel_size_Conv3, n_filters_4, kernel_size_Conv4, n_filters_5, kernel_size_Conv5, n_filters_6, kernel_size_Conv6, dropout, maxpool):
         """
         Initializes the neural network model.
 
@@ -12,7 +12,7 @@ class Model(nn.Module):
         """
 
         super().__init__()
-        self.nombre = nombre
+        self.name = name
 
         # Calculate output size after convolutions and pooling
         def conv_output_size(input_size, kernel_size, padding, stride, dilation = 1):
@@ -80,14 +80,14 @@ class Model(nn.Module):
         x = self.fc_layers(x)
         return x
     
-    def get_nombre(self):
+    def get_name(self):
         """
         Args: none.
 
         Returns:
             - str: the name of the model.
         """
-        return self.nombre
+        return self.name
 
     def get_architecture(self):
         """
@@ -108,13 +108,13 @@ class Model(nn.Module):
         Returns: none
         """
         if os.path.exists(models_path):
-            if not os.path.exists(models_path + f'/{self.nombre}'):
-                os.makedirs(models_path + f'/{self.nombre}')
-            PATH = models_path + f'/{self.nombre}/{self.nombre + extension}'             
+            if not os.path.exists(models_path + f'/{self.name}'):
+                os.makedirs(models_path + f'/{self.name}')
+            PATH = models_path + f'/{self.name}/{self.name + extension}'             
         torch.save(self.state_dict(), PATH)
 
     @staticmethod
-    def load_model(models_path, nombre, input_size, extension:str = '.pth', best = False):
+    def load_model(models_path, name, input_size, extension:str = '.pth', best = False):
         """
         Loads a pre-trained model from a file.
 
@@ -126,12 +126,12 @@ class Model(nn.Module):
         Returns:
             - Model: the loaded model.
         """
-        model = Model(input_size, nombre)
+        model = Model(input_size, name)
         if(best):
-            PATH = models_path + f'/{nombre}/{nombre}_best{extension}' 
+            PATH = models_path + f'/{name}/{name}_best{extension}' 
             model.load_state_dict(torch.load(PATH))
         else:
-            PATH = models_path + f'/{nombre}/{nombre + extension}'
+            PATH = models_path + f'/{name}/{name + extension}'
             model.load_state_dict(torch.load(PATH))
         model.eval()
         return model

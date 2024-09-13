@@ -25,7 +25,7 @@ for kernel_size_Conv1, kernel_size_Conv2, kernel_size_Conv3, kernel_size_Conv4, 
     
     torch.manual_seed(0)
 
-    nombre0 = f'modelo_GS_k{kernel_size_Conv1}_k{kernel_size_Conv2}_k{kernel_size_Conv3}_k{kernel_size_Conv4}_k{kernel_size_Conv5}_k{kernel_size_Conv6}_d{str(int(dropout*10))}'
+    name0 = f'modelo_GS_k{kernel_size_Conv1}_k{kernel_size_Conv2}_k{kernel_size_Conv3}_k{kernel_size_Conv4}_k{kernel_size_Conv5}_k{kernel_size_Conv6}_d{str(int(dropout*10))}'
     metrics_acum = {'Accuracy': [], 'Precision': [], 'Sensitivity': [], 'Specificity': [], 'F1': [], 'MCC': []}
     cm_acum = []
     best_metrics_acum = {'Accuracy': [], 'Precision': [], 'Sensitivity': [], 'Specificity': [], 'F1': [], 'MCC': []}
@@ -34,7 +34,7 @@ for kernel_size_Conv1, kernel_size_Conv2, kernel_size_Conv3, kernel_size_Conv4, 
     files = [4, 43, 53, 55, 63, 72, 84, 95, 105, 113, 122, 151] 
 
     for fold in range(0,10):
-        nombre = f'{nombre0}_fold{fold}'
+        name1 = f'{name0}_fold{fold}'
         txt_archivo = ""
         
         datasets = []
@@ -52,8 +52,8 @@ for kernel_size_Conv1, kernel_size_Conv2, kernel_size_Conv3, kernel_size_Conv4, 
             test_idx = [(fold - 1 + i) % 10 for i in range(1)]
             traintestval.append([train_idx, val_idx, test_idx])
 
-        if not os.path.exists(models_path + '/' + nombre0): 
-            os.makedirs(models_path + '/' + nombre0) 
+        if not os.path.exists(models_path + '/' + name0): 
+            os.makedirs(models_path + '/' + name0) 
 
         joined_dataset, train_subsets, val_subsets, test_subsets = ApneaDataset.join_datasets(datasets, traintestval)
 
@@ -70,7 +70,7 @@ for kernel_size_Conv1, kernel_size_Conv2, kernel_size_Conv3, kernel_size_Conv4, 
         input_size = joined_dataset.signal_len()
         model = Model(
             input_size = input_size,
-            nombre = nombre,
+            name = name1,
             n_filters_1 = 32,
             kernel_size_Conv1 = kernel_size_Conv1,
             n_filters_2 = 64,
@@ -100,14 +100,14 @@ for kernel_size_Conv1, kernel_size_Conv2, kernel_size_Conv3, kernel_size_Conv4, 
             momentum = 0,
             text = txt_archivo + analisis_datos + model_arch, 
             device = device)
-        model = trainer.train(models_path + '/' + nombre0, verbose = False, plot = False, save_model = False, save_best_model = False)
+        model = trainer.train(models_path + '/' + name0, verbose = False, plot = False, save_model = False, save_best_model = False)
         
         tester = Tester(model = model,
                         testset = joined_testset,
                         batch_size = 32,
                         device = device, 
                         best_final = 'final')
-        cm, metrics = tester.evaluate(models_path + '/' + nombre0, plot = False)
+        cm, metrics = tester.evaluate(models_path + '/' + name0, plot = False)
         cm_acum.append(cm)
         for key in metrics_acum:
             metrics_acum[key].append(float(metrics[key]))
@@ -138,9 +138,9 @@ for kernel_size_Conv1, kernel_size_Conv2, kernel_size_Conv3, kernel_size_Conv4, 
     plt.gcf().text(0.1, 0.1, metric_text, ha='center', fontsize=10, bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray'))
 
     if os.path.exists(models_path):
-        if not os.path.exists(models_path + '/' + nombre0): 
-            os.makedirs(models_path + '/' + nombre0) 
-        PATH = models_path + '/' + nombre0 + '/' + nombre0 + '_cm_metrics_mean_final.png'
+        if not os.path.exists(models_path + '/' + name0): 
+            os.makedirs(models_path + '/' + name0) 
+        PATH = models_path + '/' + name0 + '/' + name0 + '_cm_metrics_mean_final.png'
         plt.savefig(PATH)
     plt.close()
 
