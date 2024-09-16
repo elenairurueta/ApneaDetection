@@ -135,3 +135,13 @@ class Model(nn.Module):
             model.load_state_dict(torch.load(PATH))
         model.eval()
         return model
+    
+
+def init_weights(m):
+    """
+    Initializes the weights of the model's layers using a truncated normal distribution for the weights and zero for biases.
+    """
+    if isinstance(m, nn.Conv1d) or isinstance(m, nn.Linear):
+        nn.init.trunc_normal_(m.weight, std=0.02)
+        if m.bias is not None:
+            nn.init.constant_(m.bias, 0)

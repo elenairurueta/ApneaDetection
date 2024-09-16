@@ -1,8 +1,9 @@
 from Imports import *
 from DataFormatting import ApneaDataset
-from Models import Model
+from Models import Model, init_weights
 from Training import Trainer
 from Testing import Tester
+from Data
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 files = [4, 43, 53, 55, 63, 72, 84, 95, 105, 113, 122, 151]
@@ -37,7 +38,7 @@ for fold in range(0,9):
 
     joined_dataset, train_subsets, val_subsets, test_subsets = ApneaDataset.join_datasets(datasets, traintestval)
     joined_dataset.Zscore_normalization()
-    
+
     data_analysis = joined_dataset.data_analysis()
     data_analysis += f"\nTrain: subsets {train_subsets}\nVal: subset {val_subsets}\nTest: subset {test_subsets}\n"
     joined_dataset.undersample_majority_class(0.0, train_subsets + val_subsets, prop = 1)
@@ -67,6 +68,9 @@ for fold in range(0,9):
             dropout = 0,
             maxpool = 2,
         ).to(device)
+    model.apply(init_weights)
+    data_analysis += f"\nWeights initialized with nn.init.trunc_normal_(m.weight, std=0.02)\n"
+
     model_arch = model.get_architecture()
     trainer = Trainer(
         model = model,

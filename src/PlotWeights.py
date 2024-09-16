@@ -1,6 +1,6 @@
 from DataFormatting import ApneaDataset
 from Training import Trainer
-from Models import Model
+from Models import Model, init_weights
 from Imports import *
 
 def plot_weights(title, norm = False, save = True):
@@ -45,14 +45,6 @@ def plot_weights(title, norm = False, save = True):
     #plt.show()
     plt.close()
     
-def init_weights(m):
-    """
-    Initializes the weights of the model's layers using a truncated normal distribution for the weights and zero for biases.
-    """
-    if isinstance(m, nn.Conv1d) or isinstance(m, nn.Linear):
-        nn.init.trunc_normal_(m.weight, std=0.02)
-        if m.bias is not None:
-            nn.init.constant_(m.bias, 0)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 models_path = './models'
