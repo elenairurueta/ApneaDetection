@@ -56,7 +56,8 @@ for n_filters_1, n_filters_2, n_filters_3, n_filters_4, n_filters_5, n_filters_6
             os.makedirs(models_path + '/' + name0) 
 
         joined_dataset, train_subsets, val_subsets, test_subsets = ApneaDataset.join_datasets(datasets, traintestval)
-
+        joined_dataset.Zscore_normalization()
+        
         analisis_datos = joined_dataset.data_analysis()
         analisis_datos += f"\nTrain: subsets {train_subsets}\nVal: subset {val_subsets}\nTest: subset {test_subsets}\n"
         joined_dataset.undersample_majority_class(0.0, train_subsets + val_subsets, prop = 1)
