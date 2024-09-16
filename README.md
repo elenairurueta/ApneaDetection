@@ -23,7 +23,13 @@ conda install -c conda-forge pyedflib
 ```
 
 ## Usage
+
+> **In ```PlotWeights.py```**:
+
+The weights are plotted before initializing, after initializing and after training. It initializes the weights of the model's layers using a truncated normal distribution for the weights and zero for biases.
+
 > **In ```GridSearch.py```**:
+
 A grid search is implemented to explore different combinations of the number of convolutional filters and maxpool kernel size with the best convolutional kernel sizes and dropout rates from the last Grid Search. The search is done across multiple folds for cross-validation. Hyperparameter search results are saved in hyperparameter_search_results.xlsx.
 
 
