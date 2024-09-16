@@ -3,7 +3,6 @@ from DataFormatting import ApneaDataset
 from Models import Model, init_weights
 from Training import Trainer
 from Testing import Tester
-from Data
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 files = [4, 43, 53, 55, 63, 72, 84, 95, 105, 113, 122, 151]
