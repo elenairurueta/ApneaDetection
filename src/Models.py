@@ -110,7 +110,7 @@ class Model(nn.Module):
         if os.path.exists(models_path):
             if not os.path.exists(models_path + f'/{self.name}'):
                 os.makedirs(models_path + f'/{self.name}')
-            PATH = models_path + f'/{self.name}/{self.name + extension}'             
+            PATH = models_path + f'/{self.name + extension}'             
         torch.save(self.state_dict(), PATH)
 
     @staticmethod

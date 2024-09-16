@@ -1,4 +1,5 @@
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 from scipy.signal import resample
 import copy
 from Imports import *
@@ -297,3 +298,16 @@ class ApneaDataset(Dataset):
             dataset = ApneaDataset(X, y, sampling, file)
             dataset.split_dataset()
             dataset.save_dataset(f".\data\ApneaDetection_HomePAPSignals\datasets\dataset2_archivo_1600{file:03d}.pth")
+
+
+    def Zscore_normalization(self):
+        """
+        Applies Z-score normalization to the input data (self.__X). 
+        The normalization scales the features of the data such that they have a mean of 0 and a standard deviation of 1.
+        """
+        scaler = StandardScaler()
+        original_shape = self.__X.shape
+        flattened_X = self.__X.reshape(-1, original_shape[-1])
+        scaler.fit(flattened_X)
+        scaled_X = scaler.transform(flattened_X)
+        self.__X = torch.tensor(scaled_X, dtype=torch.float32).view(original_shape)
