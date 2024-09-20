@@ -4,8 +4,7 @@ from Models import Model, init_weights
 from Training import Trainer
 from Testing import Tester
 
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-device = "cpu"
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 files = [4, 43, 53, 55, 63, 72, 84, 95, 105, 113, 122, 151]
 models_path = './models'
 
@@ -93,8 +92,6 @@ for fold in range(0,10):
                 dropout = 0.1,
                 maxpool = 7
             ).to(device)
-        model.apply(init_weights)
-        data_analysis += f"\nWeights initialized with nn.init.trunc_normal_(m.weight, std=0.02)\n"
 
         model_arch = model.get_architecture()
         trainer = Trainer(
