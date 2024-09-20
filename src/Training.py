@@ -243,7 +243,7 @@ class Trainer:
         plt.tight_layout()
 
         if os.path.exists(models_path):
-            PATH = models_path + f'/{self.__model__.get_nombre()}_acc_loss.png'
+            PATH = models_path + f'/{self.__model__.get_name()}_acc_loss.png'
             plt.savefig(PATH)
 
         if(plot):
@@ -266,7 +266,7 @@ class Trainer:
         Returns: none.
         """           
         if os.path.exists(models_path):
-            PATH = models_path + f'/{self.__model__.get_nombre()}_training.txt'
+            PATH = models_path + f'/{self.__model__.get_name()}_training.txt'
             f = open(PATH, "w")
             f.write(self.text)
             f.close()

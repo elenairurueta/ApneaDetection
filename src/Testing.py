@@ -91,9 +91,9 @@ class Tester:
         plt.title("Confusion Matrix")
 
         if os.path.exists(models_path):
-            if not os.path.exists(models_path + f'/{self.__model__.get_nombre()}'): 
-                os.makedirs(models_path + f'/{self.__model__.get_nombre()}') 
-            PATH = models_path + f'/{self.__model__.get_nombre()}/{self.__model__.get_nombre()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+            if not os.path.exists(models_path + f'/{self.__model__.get_name()}'): 
+                os.makedirs(models_path + f'/{self.__model__.get_name()}') 
+            PATH = models_path + f'/{self.__model__.get_name()}/{self.__model__.get_name()}_cm_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
             plt.savefig(PATH)
 
         if(plot):
@@ -129,9 +129,9 @@ class Tester:
         
         if os.path.exists(models_path):
             if(self.__best_final__ == ""):
-                PATH = models_path + f'/{self.__model__.get_nombre()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+                PATH = models_path + f'/{self.__model__.get_name()}_roc_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
             else:
-                PATH = models_path + f'/{self.__model__.get_nombre()}_roc_{self.__best_final__}.png'
+                PATH = models_path + f'/{self.__model__.get_name()}_roc_{self.__best_final__}.png'
             plt.savefig(PATH)
         else:
             print('PATH NOT FOUND: ' + models_path)
@@ -170,9 +170,9 @@ class Tester:
         
         if os.path.exists(models_path):
             if(self.__best_final__ == ""):
-                PATH = models_path + f'/{self.__model__.get_nombre()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
+                PATH = models_path + f'/{self.__model__.get_name()}_cm_metrics_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.png'
             else:
-                PATH = models_path + f'/{self.__model__.get_nombre()}_cm_metrics_{self.__best_final__}.png'
+                PATH = models_path + f'/{self.__model__.get_name()}_cm_metrics_{self.__best_final__}.png'
             plt.savefig(PATH)
         else:
             print('PATH NOT FOUND: ' + models_path)
