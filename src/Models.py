@@ -108,13 +108,11 @@ class Model(nn.Module):
         Returns: none
         """
         if os.path.exists(models_path):
-            if not os.path.exists(models_path + f'/{self.name}'):
-                os.makedirs(models_path + f'/{self.name}')
             PATH = models_path + f'/{self.name + extension}'             
         torch.save(self.state_dict(), PATH)
 
     @staticmethod
-    def load_model(models_path, name, input_size, extension:str = '.pth', best = False):
+    def load_model(models_path, name, input_size, n_filters_1, kernel_size_Conv1, n_filters_2, kernel_size_Conv2, n_filters_3, kernel_size_Conv3, n_filters_4, kernel_size_Conv4, n_filters_5, kernel_size_Conv5, n_filters_6, kernel_size_Conv6, dropout, maxpool, extension:str = '.pth', best = False):
         """
         Loads a pre-trained model from a file.
 
@@ -126,12 +124,12 @@ class Model(nn.Module):
         Returns:
             - Model: the loaded model.
         """
-        model = Model(input_size, name)
+        model = Model(input_size, name, n_filters_1, kernel_size_Conv1, n_filters_2, kernel_size_Conv2, n_filters_3, kernel_size_Conv3, n_filters_4, kernel_size_Conv4, n_filters_5, kernel_size_Conv5, n_filters_6, kernel_size_Conv6, dropout, maxpool)
         if(best):
-            PATH = models_path + f'/{name}/{name}_best{extension}' 
+            PATH = models_path + f'/{name}_best{extension}' 
             model.load_state_dict(torch.load(PATH))
         else:
-            PATH = models_path + f'/{name}/{name + extension}'
+            PATH = models_path + f'/{name + extension}'
             model.load_state_dict(torch.load(PATH))
         model.eval()
         return model

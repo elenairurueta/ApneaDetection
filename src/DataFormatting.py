@@ -277,7 +277,7 @@ class ApneaDataset(Dataset):
         return X,y
 
     @staticmethod
-    def create_datasets(files, path_edf, path_annot):
+    def create_datasets(files, path_edf, path_annot, overlap, perc_apnea):
         """
         Creates datasets from EDF files and annotations by processing each file, generating segments, and saving them.
 
@@ -292,12 +292,12 @@ class ApneaDataset(Dataset):
             all_signals = read_signals_EDF(path_edf + f"\\homepap-lab-full-1600{str(file).zfill(3)}.edf")
             annotations = get_annotations(path_annot + f"\\homepap-lab-full-1600{str(file).zfill(3)}-profusion.xml")
             bipolar_signal, time, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])
-            segments = get_signal_segments_strict(bipolar_signal, time, sampling, annotations)
+            segments = get_signal_segments(bipolar_signal, time, sampling, annotations, period_length=30, overlap=overlap, perc_apnea=perc_apnea)
 
             X,y = ApneaDataset.from_segments(segments)
             dataset = ApneaDataset(X, y, sampling, file)
             dataset.split_dataset()
-            dataset.save_dataset(f".\data\ApneaDetection_HomePAPSignals\datasets\dataset2_archivo_1600{file:03d}.pth")
+            dataset.save_dataset(f".\data\ApneaDetection_HomePAPSignals\datasets\dataset_file_1600{file:03d}_overlap{overlap}_pa{int(perc_apnea*100)}.pth")
 
 
     def Zscore_normalization(self):

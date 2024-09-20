@@ -9,29 +9,29 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 models_path = './models'
 
 param_grid = {
-    'n_filters_1': [8],
-    'n_filters_2': [8, 16],
-    'n_filters_3': [16, 128],
-    'n_filters_4': [16, 128],
-    'n_filters_5': [16, 128],
-    'n_filters_6': [16, 128],
-    'maxpool': [2, 7]
+    'overlap': [0, 10],
+    'perc_apnea': [0.1, 0.3, 0.5, 0.7, 0.9]
 }
-param_combinations = list(product(param_grid['n_filters_1'], param_grid['n_filters_2'], param_grid['n_filters_3'], param_grid['n_filters_4'], param_grid['n_filters_5'], param_grid['n_filters_6'], param_grid['maxpool']))
+
+param_combinations = list(product(param_grid['overlap'], param_grid['perc_apnea']))
 
 results = []
 
-for n_filters_1, n_filters_2, n_filters_3, n_filters_4, n_filters_5, n_filters_6, maxpool in param_combinations:
+for overlap, perc_apnea in param_combinations:
     
     torch.manual_seed(0)
+    
+    files = [4, 43, 53, 55, 63, 72, 84, 95, 105, 113, 122, 151] 
 
-    name0 = f'modelo_GS_n{n_filters_1}_n{n_filters_2}_n{n_filters_3}_n{n_filters_4}_n{n_filters_5}_n{n_filters_6}_m{maxpool}'
+    path_annot = ""  #CHANGE
+    path_edf = "" #CHANGE
+    ApneaDataset.create_datasets(files, path_edf, path_annot, overlap, perc_apnea) 
+
+    name0 = f'modelo_GS_overlap{overlap}_pa{int(perc_apnea)*100}'
     metrics_acum = {'Accuracy': [], 'Precision': [], 'Sensitivity': [], 'Specificity': [], 'F1': [], 'MCC': []}
     cm_acum = []
     best_metrics_acum = {'Accuracy': [], 'Precision': [], 'Sensitivity': [], 'Specificity': [], 'F1': [], 'MCC': []}
     best_cm_acum = []
-
-    files = [4, 43, 53, 55, 63, 72, 84, 95, 105, 113, 122, 151] 
 
     for fold in range(0,10):
         name1 = f'{name0}_fold{fold}'
@@ -41,7 +41,7 @@ for n_filters_1, n_filters_2, n_filters_3, n_filters_4, n_filters_5, n_filters_6
         traintestval = []
         for file in files:
             txt_archivo += f"homepap-lab-full-1600{str(file).zfill(3)}\n"
-            dataset = ApneaDataset.load_dataset(f"./data/ApneaDetection_HomePAPSignals/datasets/dataset2_archivo_1600{file:03d}.pth")
+            dataset = ApneaDataset.load_dataset(f".\data\ApneaDetection_HomePAPSignals\datasets\dataset_file_1600{file:03d}_overlap{overlap}_pa{int(perc_apnea*100)}.pth")
 
             if(dataset._ApneaDataset__sr != 200):
                 dataset.resample_segments(200)
@@ -57,7 +57,7 @@ for n_filters_1, n_filters_2, n_filters_3, n_filters_4, n_filters_5, n_filters_6
 
         joined_dataset, train_subsets, val_subsets, test_subsets = ApneaDataset.join_datasets(datasets, traintestval)
         joined_dataset.Zscore_normalization()
-        
+
         analisis_datos = joined_dataset.data_analysis()
         analisis_datos += f"\nTrain: subsets {train_subsets}\nVal: subset {val_subsets}\nTest: subset {test_subsets}\n"
         joined_dataset.undersample_majority_class(0.0, train_subsets + val_subsets, prop = 1)
@@ -72,20 +72,20 @@ for n_filters_1, n_filters_2, n_filters_3, n_filters_4, n_filters_5, n_filters_6
         model = Model(
             input_size = input_size,
             name = name1,
-            n_filters_1 = n_filters_1,
+            n_filters_1 = 8,
             kernel_size_Conv1 = 35,
-            n_filters_2 = n_filters_2,
+            n_filters_2 = 8,
             kernel_size_Conv2 = 50,
-            n_filters_3 = n_filters_3,
+            n_filters_3 = 128,
             kernel_size_Conv3 = 35,
-            n_filters_4 = n_filters_4,
+            n_filters_4 = 128,
             kernel_size_Conv4 = 35,
-            n_filters_5 = n_filters_5,
+            n_filters_5 = 128,
             kernel_size_Conv5 = 50,
-            n_filters_6 = n_filters_6,
+            n_filters_6 = 16,
             kernel_size_Conv6 = 50,
             dropout = 0.1,
-            maxpool = maxpool,
+            maxpool = 7
         ).to(device)
 
         model_arch = model.get_architecture()
@@ -146,13 +146,8 @@ for n_filters_1, n_filters_2, n_filters_3, n_filters_4, n_filters_5, n_filters_6
     plt.close()
 
     results.append({
-        'n_filters_1': n_filters_1,
-        'n_filters_2': n_filters_2,
-        'n_filters_3': n_filters_3,
-        'n_filters_4': n_filters_4,
-        'n_filters_5': n_filters_5,
-        'n_filters_6': n_filters_6,
-        'maxpool': maxpool,
+        'overlap': overlap,
+        'perc_apnea': perc_apnea,
         'Accuracy': f'{metrics_mean["Accuracy"]:.3f}±{metrics_std["Accuracy"]:.3f}',
         'Precision': f'{metrics_mean["Precision"]:.3f}±{metrics_std["Precision"]:.3f}',
         'Sensitivity': f'{metrics_mean["Sensitivity"]:.3f}±{metrics_std["Sensitivity"]:.3f}',
