@@ -5,12 +5,13 @@ from Training import Trainer
 from Testing import Tester
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-files = [4, 43, 53, 55, 63, 72, 84, 95, 105, 113, 122, 151]
-models_path = './models'
+files = [4, 43, 53, 55, 63, 72, 84, 95, 105, 113, 122, 151] 
+models_path = '../models'
 
-# path_annot = ""  #CHANGE
-# path_edf = "" #CHANGE
-# ApneaDataset.create_datasets(files, path_edf, path_annot, overlap = 10, perc_apnea = 0.3) 
+# path_annot = "C:/Users/elena/OneDrive/Documentos/Tesis/Dataset/HomePAP/polysomnography/annotations-events-profusion/lab/full"  #CHANGE
+# path_edf = "C:/Users/elena/OneDrive/Documentos/Tesis/Dataset/HomePAP/polysomnography/edfs/lab/full" #CHANGE
+# ApneaDataset.create_datasets(files, path_edf, path_annot, overlap = 10, perc_apnea = 0.3, filtering = True, filter = "FIR_Notch") 
+
 
 metrics_acum_total = {'Accuracy': [], 'Precision': [], 'Sensitivity': [], 'Specificity': [], 'F1': [], 'MCC': []}
 cm_acum_total = []
@@ -22,11 +23,11 @@ best_metrics_std_total = {'Accuracy': [], 'Precision': [], 'Sensitivity': [], 'S
 best_cm_std_total = []
 
 txt_file = ""
-name0 = f'model_files_' + "_".join([str(f) for f in files])
+name0 = f'model_borrar'
 if not os.path.exists(models_path + '/' + name0):
     os.makedirs(models_path + '/' + name0)
         
-for fold in range(0,10):        
+for fold in range(0,9):        
 
     metrics_acum = {'Accuracy': [], 'Precision': [], 'Sensitivity': [], 'Specificity': [], 'F1': [], 'MCC': []}
     cm_acum = []
@@ -39,14 +40,17 @@ for fold in range(0,10):
 
     for file in files: 
         txt_file += f"homepap-lab-full-1600{str(file).zfill(3)}\n"
-        ds = ApneaDataset.load_dataset(f"./data/ApneaDetection_HomePAPSignals/datasets/dataset_file_1600{file:03d}_overlap10_pa30.pth")
+        try:
+            ds = ApneaDataset.load_dataset(f"../data/ApneaDetection_HomePAPSignals/datasets/dataset_file_1600{file:03d}_overlap10_pa30.pth")
+        except:
+            continue
         if(ds._ApneaDataset__sr != 200):
             ds.resample_segments(200)
         datasets.append(ds)
         
-        train_idx = [(fold + i) % 10 for i in range(8)]
-        val_idx = [(fold - 2 + i) % 10 for i in range(1)]
-        test_idx = [(fold - 1 + i) % 10 for i in range(1)]
+        train_idx = [(fold + i) % 9 for i in range(8)]  
+        val_idx = [(fold + 8) % 9]
+        test_idx = [9]  
         traintestval.append([train_idx, val_idx, test_idx])
 
         if not os.path.exists(models_path + '/' + name0 + '/' + name1):
@@ -70,8 +74,6 @@ for fold in range(0,10):
 
     for i in range(0,5):
         name2 = name1 + f'_{i}'
-        # if not os.path.exists(models_path + '/' + name0 + '/' + name1 + '/' + name2):
-        #     os.makedirs(models_path + '/' + name0 + '/' + name1 + '/' + name2)
         
         input_size = joined_dataset.signal_len()
         model = Model(
@@ -261,9 +263,9 @@ metric_text = (f"Accuracy: ({mean_metrics['Accuracy']*100:.2f}±{std_metrics['Ac
 plt.gcf().text(0.1, 0.1, metric_text, ha='center', fontsize=10, bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray'))
 
 if os.path.exists(models_path):
-    if not os.path.exists(models_path + '/' + name0 + '/FINAL_CrossVal6'): 
-        os.makedirs(models_path + '/' + name0 + '/FINAL_CrossVal6') 
-    PATH = models_path + '/' + name0 + '/FINAL_CrossVal6/' + 'FINAL_CrossVal6_cm_metrics_mean_final.png'
+    if not os.path.exists(models_path + '/' + name0 + '/FINAL_CrossVal7'): 
+        os.makedirs(models_path + '/' + name0 + '/FINAL_CrossVal7') 
+    PATH = models_path + '/' + name0 + '/FINAL_CrossVal7/' + 'FINAL_CrossVal7_cm_metrics_mean_final.png'
     plt.savefig(PATH)
 plt.close()
 
@@ -305,8 +307,8 @@ plt.gcf().text(0.1, 0.1, metric_text, ha='center', fontsize=10, bbox=dict(faceco
 
 
 if os.path.exists(models_path):
-    if not os.path.exists(models_path + '/' + name0 + '/FINAL_CrossVal6'): 
-        os.makedirs(models_path + '/' + name0 + '/FINAL_CrossVal6') 
-    PATH = models_path + '/' + name0 + '/FINAL_CrossVal6/' + 'FINAL_CrossVal6_cm_metrics_mean_best.png'
+    if not os.path.exists(models_path + '/' + name0 + '/FINAL_CrossVal7'): 
+        os.makedirs(models_path + '/' + name0 + '/FINAL_CrossVal7') 
+    PATH = models_path + '/' + name0 + '/FINAL_CrossVal7/' + 'FINAL_CrossVal7_cm_metrics_mean_best.png'
     plt.savefig(PATH)
 plt.close()
