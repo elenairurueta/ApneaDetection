@@ -5,6 +5,7 @@ import copy
 from Imports import *
 from RealSignals import *
 from Annotations import get_annotations
+from Filtering import filter_Butter, filter_FIR2, filter_Notch_FIR
 
 class ApneaDataset(Dataset):
     """Dataset custom class"""
@@ -171,7 +172,7 @@ class ApneaDataset(Dataset):
         4. Updated test subset indices.
         """
 
-        if not isinstance(datasets[0], ApneaDataset):
+        if not isinstance(datasets, ApneaDataset):
             raise TypeError("Expected an instance of ApneaDataset")
         appended_dataset = copy.deepcopy(datasets[0]) #Create a deep copy of the first dataset to serve as the base
         new_subsets = []
@@ -277,7 +278,7 @@ class ApneaDataset(Dataset):
         return X,y
 
     @staticmethod
-    def create_datasets(files, path_edf, path_annot, overlap, perc_apnea):
+    def create_datasets(files, path_edf, path_annot, overlap, perc_apnea, filtering = False, filter = ""):
         """
         Creates datasets from EDF files and annotations by processing each file, generating segments, and saving them.
 
@@ -291,13 +292,31 @@ class ApneaDataset(Dataset):
         for file in files:
             all_signals = read_signals_EDF(path_edf + f"\\homepap-lab-full-1600{str(file).zfill(3)}.edf")
             annotations = get_annotations(path_annot + f"\\homepap-lab-full-1600{str(file).zfill(3)}-profusion.xml")
-            bipolar_signal, time, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])
-            segments = get_signal_segments(bipolar_signal, time, sampling, annotations, period_length=30, overlap=overlap, perc_apnea=perc_apnea)
+            bipolar_signal, time, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])  
+            
+
+            if(filtering):
+                if(filter == "Butter"):
+                    bipolar_signal = filter_Butter(bipolar_signal, sampling, plot = False)
+                elif(filter == "FIR"):
+                    bipolar_signal = filter_FIR2(bipolar_signal, sampling, plot = False)
+                elif(filter == "Notch_FIR"):
+                    bipolar_signal = filter_Notch_FIR(bipolar_signal, sampling, plot = False)
+                    bipolar_signal = filter_FIR2(bipolar_signal, sampling, plot = False)
+                elif(filter == "FIR_Notch"):
+                    bipolar_signal = filter_FIR2(bipolar_signal, sampling, plot = False)
+                    bipolar_signal = filter_Notch_FIR(bipolar_signal, sampling, plot = False)
+                elif(filter == "Notch"):
+                    bipolar_signal = filter_Notch_FIR(bipolar_signal, sampling, plot = False)
+
+
+
+            segments = get_signal_segments(bipolar_signal, time, sampling, annotations, period_length=30, overlap=overlap, perc_apnea=perc_apnea, t_descarte = 5*60)
 
             X,y = ApneaDataset.from_segments(segments)
             dataset = ApneaDataset(X, y, sampling, file)
             dataset.split_dataset()
-            dataset.save_dataset(f".\data\ApneaDetection_HomePAPSignals\datasets\dataset_file_1600{file:03d}_overlap{overlap}_pa{int(perc_apnea*100)}.pth")
+            dataset.save_dataset(f".\data\ApneaDetection_HomePAPSignals\datasets\dataset_file_1600{file:03d}_M1_F4_overlap{overlap}_pa{int(perc_apnea*100)}_{filter}.pth")
 
 
     def Zscore_normalization(self):

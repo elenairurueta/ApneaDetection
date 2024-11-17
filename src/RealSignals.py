@@ -42,7 +42,7 @@ def get_bipolar_signal(signal1, signal2):
     sampling = signal1['SamplingRate']
     return signal, time, sampling
     
-def get_signal_segments(signal, time, sampling_rate, annotations, period_length=30, overlap=10, perc_apnea=0.3):
+def get_signal_segments(signal, time, sampling_rate, annotations, period_length=30, overlap=10, perc_apnea=0.3, t_descarte = 0):
     """
     Divides the signal into overlapping segments and labels each one based on the percentage of apnea present during the segment.
 
@@ -65,17 +65,17 @@ def get_signal_segments(signal, time, sampling_rate, annotations, period_length=
     """
 
     step = period_length - overlap
-    num_periods = int(np.ceil((time[-1] - period_length) / step))+1 #Calculates the number of periods based on the total signal duration, segment length, and overlap.
+    num_periods = int(np.ceil((time[-1] - 2*t_descarte - period_length) / step))+1 #Calculates the number of periods based on the total signal duration, segment length, and overlap.
     segments = []
 
     for i in range(num_periods):
-        period_start = i * step
+        period_start = t_descarte + i * step
         period_end = period_start + period_length   
         start_index = int(period_start * sampling_rate)
         end_index = int(period_end * sampling_rate)
         label = 0
-        if end_index > len(signal):
-            end_index = len(signal)
+        if end_index > len(signal) - int(t_descarte * sampling_rate):
+            break
 
         for annotation in annotations:
             for anot in annotations[annotation]:
@@ -93,8 +93,9 @@ def get_signal_segments(signal, time, sampling_rate, annotations, period_length=
                     break
                 #If the overlap of the apnea event in the segment exceeds the specified percentage, the segment is labeled as containing apnea (Label = 1); otherwise, it is labeled as not containing apnea (Label = 0)
         segments.append({'Signal': signal[start_index:end_index], 'Label': label, 'Start': period_start, 'End': period_end, 'SamplingRate': sampling_rate})
-    if(len(segments[-1]['Signal']) < len(segments[0]['Signal'])):
-        segments.pop()
+        if(i>0):
+            if(len(segments[-1]['Signal']) < len(segments[0]['Signal'])):
+                segments.pop()
     return segments
 
 def get_signal_segments_strict(signal, tiempo, sampling_rate, annotations):
