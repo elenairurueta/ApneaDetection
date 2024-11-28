@@ -35,7 +35,7 @@ class Model(nn.Module):
 
         # Convolutional layers
         self.conv_layers = nn.Sequential(
-            nn.Conv1d(1, n_filters_1, kernel_size=kernel_size_Conv1, stride=1, padding='same'),
+            nn.Conv1d(2, n_filters_1, kernel_size=kernel_size_Conv1, stride=1, padding='same'),
             nn.ReLU(), 
             nn.Conv1d(n_filters_1, n_filters_2, kernel_size=kernel_size_Conv2, stride=1, padding='same'),
             nn.ReLU(),

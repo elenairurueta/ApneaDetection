@@ -147,13 +147,22 @@ class ApneaDataset(Dataset):
         new_X = []
         segment_length = 30
         num_puntos = segment_length * sampling_rate
-        for segment in self.__X:
-            new_segment = [resample(segment[0].numpy(), num_puntos)]
-            new_X.append(new_segment)
+        if(self.__X.shape[1] == 1):
+            for segment in self.__X:
+                new_segment = [resample(segment[0].numpy(), num_puntos)]
+                new_X.append(new_segment)
+        elif(self.__X.shape[1] == 2):
+            for signal in self.__X:
+                new_signal = []
+                for segment in signal:
+                    new_segment = resample(segment.numpy(), num_puntos)
+                    new_signal.append(new_segment)
+                new_X.append(new_signal)
         new_X_np = np.array(new_X)
         self.__X = torch.tensor(new_X_np)
         for idx, subset in enumerate(self.subsets):
             self.subsets[idx].dataset = self
+
 
     @staticmethod
     def join_datasets(datasets, traintestval=None):
@@ -172,7 +181,7 @@ class ApneaDataset(Dataset):
         4. Updated test subset indices.
         """
 
-        if not isinstance(datasets, ApneaDataset):
+        if not isinstance(datasets[0], ApneaDataset):
             raise TypeError("Expected an instance of ApneaDataset")
         appended_dataset = copy.deepcopy(datasets[0]) #Create a deep copy of the first dataset to serve as the base
         new_subsets = []
@@ -260,19 +269,31 @@ class ApneaDataset(Dataset):
         return X,y
 
     @staticmethod
-    def from_segments(segments):
+    def from_segments(segments1, segments2 = None):
         X = []
         y = []
 
-        for segment in segments:
-            X.append(segment['Signal'])
-            y.append(segment['Label'])
+        if(segments2 == None):
+            for segment in segments1:
+                X.append(segment['Signal'])
+                y.append(segment['Label'])
+        else:
+            if(len(segments1) == len(segments2)):
+                for i in range(0, len(segments1)):
+                    add = [segments1[i]['Signal'], segments2[i]['Signal']]
+                    X.append(add)
+                    if(segments1[i]['Label'] == segments2[i]['Label']):
+                        y.append(segments1[i]['Label'])
+                    else:
+                        print("LABELS DISTINTAS")
+            else:
+                print("LONGITUDES DISTINTAS")
 
-        # Convertimos las listas en arreglos numpy
-        X = np.vstack(X)
+        # Convertimos las listas en arreglos numpy para que sea más rápido
+        X = np.array(X)
         y = np.array(y)
 
-        X = torch.tensor(X, dtype=torch.float32).unsqueeze(1)
+        X = torch.tensor(X, dtype=torch.float32)#.unsqueeze(1)
         y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1)
 
         return X,y
@@ -292,31 +313,51 @@ class ApneaDataset(Dataset):
         for file in files:
             all_signals = read_signals_EDF(path_edf + f"\\homepap-lab-full-1600{str(file).zfill(3)}.edf")
             annotations = get_annotations(path_annot + f"\\homepap-lab-full-1600{str(file).zfill(3)}-profusion.xml")
-            bipolar_signal, time, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])  
-            
+            # bipolar_signal, time, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])  
+            # bipolar_signal, time, sampling = get_bipolar_signal(all_signals['C4'], all_signals['M1'])  
+            # bipolar_signal, time, sampling = all_signals['O1']['Signal'], all_signals['O1']['Time'], all_signals['O1']['SamplingRate']
+            # bipolar_signal, time, sampling = all_signals['M1']['Signal'], all_signals['M1']['Time'], all_signals['M1']['SamplingRate']
+            # bipolar_signal, time, sampling = get_bipolar_signal(all_signals['O1'], all_signals['F4'])  
+            # bipolar_signal, time, sampling = get_bipolar_signal(all_signals['M1'], all_signals['F4']) 
+            bipolar_signal1, time, sampling = get_bipolar_signal(all_signals['C4'], all_signals['M1']) 
 
             if(filtering):
                 if(filter == "Butter"):
-                    bipolar_signal = filter_Butter(bipolar_signal, sampling, plot = False)
+                    bipolar_signal1 = filter_Butter(bipolar_signal1, sampling, plot = False)
                 elif(filter == "FIR"):
-                    bipolar_signal = filter_FIR2(bipolar_signal, sampling, plot = False)
+                    bipolar_signal1 = filter_FIR2(bipolar_signal1, sampling, plot = False)
                 elif(filter == "Notch_FIR"):
-                    bipolar_signal = filter_Notch_FIR(bipolar_signal, sampling, plot = False)
-                    bipolar_signal = filter_FIR2(bipolar_signal, sampling, plot = False)
+                    bipolar_signal1 = filter_Notch_FIR(bipolar_signal1, sampling, plot = False)
+                    bipolar_signal1 = filter_FIR2(bipolar_signal1, sampling, plot = False)
                 elif(filter == "FIR_Notch"):
-                    bipolar_signal = filter_FIR2(bipolar_signal, sampling, plot = False)
-                    bipolar_signal = filter_Notch_FIR(bipolar_signal, sampling, plot = False)
+                    bipolar_signal1 = filter_FIR2(bipolar_signal1, sampling, plot = False)
+                    bipolar_signal1 = filter_Notch_FIR(bipolar_signal1, sampling, plot = False)
                 elif(filter == "Notch"):
-                    bipolar_signal = filter_Notch_FIR(bipolar_signal, sampling, plot = False)
+                    bipolar_signal1 = filter_Notch_FIR(bipolar_signal1, sampling, plot = False)
 
+            bipolar_signal2, time, sampling = get_bipolar_signal(all_signals['C3'], all_signals['M2']) 
 
+            if(filtering):
+                if(filter == "Butter"):
+                    bipolar_signal2 = filter_Butter(bipolar_signal2, sampling, plot = False)
+                elif(filter == "FIR"):
+                    bipolar_signal2 = filter_FIR2(bipolar_signal2, sampling, plot = False)
+                elif(filter == "Notch_FIR"):
+                    bipolar_signal2 = filter_Notch_FIR(bipolar_signal2, sampling, plot = False)
+                    bipolar_signal2 = filter_FIR2(bipolar_signal2, sampling, plot = False)
+                elif(filter == "FIR_Notch"):
+                    bipolar_signal2 = filter_FIR2(bipolar_signal2, sampling, plot = False)
+                    bipolar_signal2 = filter_Notch_FIR(bipolar_signal2, sampling, plot = False)
+                elif(filter == "Notch"):
+                    bipolar_signal2 = filter_Notch_FIR(bipolar_signal2, sampling, plot = False)
 
-            segments = get_signal_segments(bipolar_signal, time, sampling, annotations, period_length=30, overlap=overlap, perc_apnea=perc_apnea, t_descarte = 5*60)
+            segments1 = get_signal_segments(bipolar_signal1, time, sampling, annotations, period_length=30, overlap=overlap, perc_apnea=perc_apnea, t_descarte = 5*60)
+            segments2 = get_signal_segments(bipolar_signal2, time, sampling, annotations, period_length=30, overlap=overlap, perc_apnea=perc_apnea, t_descarte = 5*60)
 
-            X,y = ApneaDataset.from_segments(segments)
+            X,y = ApneaDataset.from_segments(segments1, segments2)
             dataset = ApneaDataset(X, y, sampling, file)
             dataset.split_dataset()
-            dataset.save_dataset(f".\data\ApneaDetection_HomePAPSignals\datasets\dataset_file_1600{file:03d}_M1_F4_overlap{overlap}_pa{int(perc_apnea*100)}_{filter}.pth")
+            dataset.save_dataset(f".\data\ApneaDetection_HomePAPSignals\datasets\dataset_file_1600{file:03d}_C4M1_C3M2.pth")
 
 
     def Zscore_normalization(self):
@@ -324,9 +365,25 @@ class ApneaDataset(Dataset):
         Applies Z-score normalization to the input data (self.__X). 
         The normalization scales the features of the data such that they have a mean of 0 and a standard deviation of 1.
         """
-        scaler = StandardScaler()
-        original_shape = self.__X.shape
-        flattened_X = self.__X.reshape(-1, original_shape[-1])
-        scaler.fit(flattened_X)
-        scaled_X = scaler.transform(flattened_X)
-        self.__X = torch.tensor(scaled_X, dtype=torch.float32).view(original_shape)
+        # scaler = StandardScaler()
+        # original_shape = self.__X.shape
+        # flattened_X = self.__X.reshape(-1, original_shape[-1])
+        # scaler.fit(flattened_X)
+        # scaled_X = scaler.transform(flattened_X)
+        # self.__X = torch.tensor(scaled_X, dtype=torch.float32).view(original_shape)
+        for i in range(self.__X.shape[1]):
+            scaler = StandardScaler()
+            flat_X = []
+            for segment in self.__X:
+                flat_X.append(segment[i].numpy())
+            scaler.fit(flat_X)
+            scaled_X = scaler.transform(flat_X)
+            for idx in range(len(self.__X)):
+                self.__X[idx][i] = torch.tensor(scaled_X[idx])
+
+        # Para comprobar la normalizacion:
+        # normalized_X = np.array([segment.numpy() for segment in self.__X])  # Forma [x, 2, 6000]
+        # means = normalized_X.mean(axis=(0, 2))  # Media por señal
+        # stds = normalized_X.std(axis=(0, 2))   # STD por señal
+        # print("Media por señal después de la normalización:", means)
+        # print("Desviación estándar por señal después de la normalización:", stds)

@@ -5,12 +5,12 @@ from Training import Trainer
 from Testing import Tester
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-files = [4, 43, 53, 55, 63, 72, 84, 95, 105, 113, 122, 151] 
+files = [4, 43, 53, 55, 63, 72, 84, 95, 105, 113, 122, 151]
 models_path = '../models'
 
-# path_annot = "C:/Users/elena/OneDrive/Documentos/Tesis/Dataset/HomePAP/polysomnography/annotations-events-profusion/lab/full"  #CHANGE
-# path_edf = "C:/Users/elena/OneDrive/Documentos/Tesis/Dataset/HomePAP/polysomnography/edfs/lab/full" #CHANGE
-# ApneaDataset.create_datasets(files, path_edf, path_annot, overlap = 10, perc_apnea = 0.3, filtering = True, filter = "FIR_Notch") 
+path_annot = "C:/Users/elena/OneDrive/Documentos/Tesis/Dataset/HomePAP/polysomnography/annotations-events-profusion/lab/full"  #CHANGE
+path_edf = "C:/Users/elena/OneDrive/Documentos/Tesis/Dataset/HomePAP/polysomnography/edfs/lab/full" #CHANGE
+ApneaDataset.create_datasets(files, path_edf, path_annot, overlap = 10, perc_apnea = 0.3, filtering = True, filter = "FIR_Notch")
 
 
 metrics_acum_total = {'Accuracy': [], 'Precision': [], 'Sensitivity': [], 'Specificity': [], 'F1': [], 'MCC': []}
@@ -23,7 +23,7 @@ best_metrics_std_total = {'Accuracy': [], 'Precision': [], 'Sensitivity': [], 'S
 best_cm_std_total = []
 
 txt_file = ""
-name0 = f'model_borrar'
+name0 = f'model_DosSenales'
 if not os.path.exists(models_path + '/' + name0):
     os.makedirs(models_path + '/' + name0)
         
@@ -41,7 +41,7 @@ for fold in range(0,9):
     for file in files: 
         txt_file += f"homepap-lab-full-1600{str(file).zfill(3)}\n"
         try:
-            ds = ApneaDataset.load_dataset(f"../data/ApneaDetection_HomePAPSignals/datasets/dataset_file_1600{file:03d}_overlap10_pa30.pth")
+            ds = ApneaDataset.load_dataset(f"../data/ApneaDetection_HomePAPSignals/datasets/dataset_file_1600{file:03d}_pruebaDosSenales.pth")
         except:
             continue
         if(ds._ApneaDataset__sr != 200):
