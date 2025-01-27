@@ -25,7 +25,7 @@ for overlap, perc_apnea in param_combinations:
 
     path_annot = ""  #CHANGE
     path_edf = "" #CHANGE
-    ApneaDataset.create_datasets(files, path_edf, path_annot, overlap, perc_apnea) 
+    ApneaDataset.create_datasets_EEG(files, path_edf, path_annot, overlap, perc_apnea) 
 
     name0 = f'modelo_GS_overlap{overlap}_pa{int(perc_apnea)*100}'
     metrics_acum = {'Accuracy': [], 'Precision': [], 'Sensitivity': [], 'Specificity': [], 'F1': [], 'MCC': []}

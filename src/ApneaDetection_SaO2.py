@@ -1,16 +1,16 @@
 from Imports import *
-from DataFormatting import ApneaDataset
-from Models import Model, init_weights
-from Training import Trainer
-from Testing import Tester
+from DataFormatting import ApneaDataset_SaO2
+from Models import DualInputModel, init_weights
+from Training import Trainer_SaO2
+from Testing import Tester_SaO2
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 files = [4, 43, 53, 55, 63, 72, 84, 95, 105, 113, 122, 151]
-models_path = '../models'
+models_path = './models'
 
 path_annot = "C:/Users/elena/OneDrive/Documentos/Tesis/Dataset/HomePAP/polysomnography/annotations-events-profusion/lab/full"  #CHANGE
 path_edf = "C:/Users/elena/OneDrive/Documentos/Tesis/Dataset/HomePAP/polysomnography/edfs/lab/full" #CHANGE
-ApneaDataset.create_datasets_EEG(files, path_edf, path_annot, overlap = 10, perc_apnea = 0.3, filtering = True, filter = "FIR_Notch")
+ApneaDataset_SaO2.create_datasets_SaO2(files, path_edf, path_annot, overlap = 10, perc_apnea = 0.3)
 
 
 metrics_acum_total = {'Accuracy': [], 'Precision': [], 'Sensitivity': [], 'Specificity': [], 'F1': [], 'MCC': []}
@@ -40,12 +40,11 @@ for fold in range(0,9):
 
     for file in files: 
         txt_file += f"homepap-lab-full-1600{str(file).zfill(3)}\n"
-        try:
-            ds = ApneaDataset.load_dataset(f"../data/ApneaDetection_HomePAPSignals/datasets/dataset_file_1600{file:03d}_EEG.pth")
-        except:
-            continue
-        if(ds._ApneaDataset__sr != 200):
-            ds.resample_segments(200)
+        ds = ApneaDataset_SaO2.load_dataset(f"./data/ApneaDetection_HomePAPSignals/datasets/dataset_file_1600{file:03d}_EEG_SaO2.pth")
+        if(ds._ApneaDataset_SaO2__sr_EEG != 200):
+            ds.resample_segments_EEG(200)
+        if(ds._ApneaDataset_SaO2__sr_SaO2 != 25):
+            ds.resample_segments_SaO2(25)
         datasets.append(ds)
         
         train_idx = [(fold + i) % 9 for i in range(8)]  
@@ -56,18 +55,18 @@ for fold in range(0,9):
         if not os.path.exists(models_path + '/' + name0 + '/' + name1):
             os.makedirs(models_path + '/' + name0 + '/' + name1)
 
-    joined_dataset, train_subsets, val_subsets, test_subsets = ApneaDataset.join_datasets(datasets, traintestval)
-    joined_dataset.Zscore_normalization()
+    joined_dataset, train_subsets, val_subsets, test_subsets = ApneaDataset_SaO2.join_datasets(datasets, traintestval)
+    # joined_dataset.Zscore_normalization()
 
-    data_analysis = joined_dataset.data_analysis()
-    data_analysis += f"\nTrain: subsets {train_subsets}\nVal: subset {val_subsets}\nTest: subset {test_subsets}\n"
+    # data_analysis = joined_dataset.data_analysis()
+    data_analysis = f"\nTrain: subsets {train_subsets}\nVal: subset {val_subsets}\nTest: subset {test_subsets}\n"
     joined_dataset.undersample_majority_class(0.0, train_subsets + val_subsets, prop = 1)
-    data_analysis += "\nUNDERSAMPLING\n" + joined_dataset.data_analysis()
+    # data_analysis += "\nUNDERSAMPLING\n" + joined_dataset.data_analysis()
 
     joined_trainset = joined_dataset.get_subsets(train_subsets)
     joined_valset = joined_dataset.get_subsets(val_subsets)
     joined_testset = joined_dataset.get_subsets(test_subsets)
-    data_analysis += f"\nTrain count: {len(joined_trainset)}\n\tWith apnea: {int(sum(sum((joined_trainset[:][1]).tolist(), [])))}\n\tWithout apnea: {len(joined_trainset) - int(sum(sum((joined_trainset[:][1]).tolist(), [])))}\nVal count: {len(joined_valset)}\n\tWith apnea: {int(sum(sum((joined_valset[:][1]).tolist(), [])))}\n\tWithout apnea: {len(joined_valset) - int(sum(sum((joined_valset[:][1]).tolist(), [])))}\nTest count: {len(joined_testset)}\n\tWith apnea: {int(sum(sum((joined_testset[:][1]).tolist(), [])))}\n\tWithout apnea: {len(joined_testset) - int(sum(sum((joined_testset[:][1]).tolist(), [])))}"
+    # data_analysis += f"\nTrain count: {len(joined_trainset)}\n\tWith apnea: {int(sum(sum((joined_trainset[:][1]).tolist(), [])))}\n\tWithout apnea: {len(joined_trainset) - int(sum(sum((joined_trainset[:][1]).tolist(), [])))}\nVal count: {len(joined_valset)}\n\tWith apnea: {int(sum(sum((joined_valset[:][1]).tolist(), [])))}\n\tWithout apnea: {len(joined_valset) - int(sum(sum((joined_valset[:][1]).tolist(), [])))}\nTest count: {len(joined_testset)}\n\tWith apnea: {int(sum(sum((joined_testset[:][1]).tolist(), [])))}\n\tWithout apnea: {len(joined_testset) - int(sum(sum((joined_testset[:][1]).tolist(), [])))}"
 
     if not os.path.exists(models_path + '/' + name0 + '/' + name1):
         os.makedirs(models_path + '/' + name0 + '/' + name1)
@@ -75,9 +74,11 @@ for fold in range(0,9):
     for i in range(0,5):
         name2 = name1 + f'_{i}'
         
-        input_size = joined_dataset.signal_len()
-        model = Model(
-                input_size = input_size,
+        input_size_EEG = joined_dataset.signal_len_EEG()
+        input_size_SaO2 = joined_dataset.signal_len_SaO2()
+        model = DualInputModel(
+                eeg_input_size = input_size_EEG, 
+                sao2_input_size = input_size_SaO2,
                 name = name2,
                 n_filters_1 = 8,
                 kernel_size_Conv1 = 35,
@@ -96,7 +97,7 @@ for fold in range(0,9):
             ).to(device)
 
         model_arch = model.get_architecture()
-        trainer = Trainer(
+        trainer = Trainer_SaO2(
             model = model,
             trainset = joined_trainset,
             valset = joined_valset,
@@ -111,7 +112,7 @@ for fold in range(0,9):
         trainer.train(models_path + '/' + name0 + '/' + name1, verbose = True, plot = False, save_best_model = True) # + '/' + name2
         
         # test final with joined dataset
-        tester = Tester(model = model,
+        tester = Tester_SaO2(model = model,
                         testset = joined_testset,
                         batch_size = 32,
                         device = device, 
@@ -122,8 +123,8 @@ for fold in range(0,9):
             metrics_acum[key].append(float(metrics[key]))
 
         # test best with joined dataset
-        best_model = Model.load_model(models_path + '/' + name0 + '/' + name1, name2, # + '/' + name2
-                input_size, best = True,                 
+        best_model = DualInputModel.load_model(models_path + '/' + name0 + '/' + name1, name2, # + '/' + name2
+                input_size_EEG,input_size_SaO2, best = True,                 
                 n_filters_1 = 8,
                 kernel_size_Conv1 = 35,
                 n_filters_2 = 8,
@@ -139,7 +140,7 @@ for fold in range(0,9):
                 dropout = 0.1,
                 maxpool = 7
                 ).to(device)
-        best_tester = Tester(model = best_model,
+        best_tester = Tester_SaO2(model = best_model,
                         testset = joined_testset,
                         batch_size = 32,
                         device = device, 
