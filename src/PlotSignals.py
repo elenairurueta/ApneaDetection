@@ -111,7 +111,7 @@ def plot_all_segments(segments):
         plt.title(f'Senal: {start} a {end}seg - Label: {label}')
         plt.show()
 
-def plot_signals(annotations, tiempo, signal1, s1, signal2 = [ ], s2 = ' ', signal3 = [ ], s3 = ' '):
+def plot_signals(annotations, tiempo1, signal1, s1, tiempo2 = [], signal2 = [ ], s2 = ' ', tiempo3 = [], signal3 = [ ], s3 = ' '):
 
     # pg.setConfigOption('background', 'w')  # Fondo blanco
     # pg.setConfigOption('foreground', 'k')  # Texto y líneas negras
@@ -138,20 +138,20 @@ def plot_signals(annotations, tiempo, signal1, s1, signal2 = [ ], s2 = ' ', sign
     p1.addLegend()
     p1.setDownsampling(auto=False, ds=4, mode='mean')
     p1.showGrid(x = True, y = True, alpha = 0.3)     
-    p1.plot(tiempo, signal1 + 10, pen=(255,0,0), name = s1)
+    p1.plot(tiempo1, signal1 + 10, pen=(255,0,0), name = s1)
     if(len(signal2) > 0):
-        p1.plot(tiempo, signal2 + 5, pen=(0,255,0), name = s2)
+        p1.plot(tiempo2, signal2 + 5, pen=(0,255,0), name = s2)
     if(len(signal3) > 0):
-        p1.plot(tiempo, signal3, pen=(0,0,255), name = s3)
+        p1.plot(tiempo3, signal3, pen=(0,0,255), name = s3)
     p1.setMouseEnabled(x=True, y=False)
     p1.enableAutoRange(x=False, y=True)
-    lr = pg.LinearRegionItem([0, max(tiempo)/3])
+    lr = pg.LinearRegionItem([0, max(tiempo1)/3])
     lr.setZValue(-10)
     p1.addItem(lr)
     win.nextRow()
 
     p2 = win.addPlot(title=s1)
-    p2.plot(tiempo, signal1, pen=(255,0,0))
+    p2.plot(tiempo1, signal1, pen=(255,0,0))
     p2.setDownsampling(auto=False, ds=4, mode='mean')
     p2.showGrid(x = True, y = True, alpha = 0.3)     
     def updatePlot():
@@ -168,7 +168,7 @@ def plot_signals(annotations, tiempo, signal1, s1, signal2 = [ ], s2 = ' ', sign
 
     if(len(signal2) > 0):
         p3 = win.addPlot(title=s2)
-        p3.plot(tiempo, signal2, pen=(0,255,0))
+        p3.plot(tiempo2, signal2, pen=(0,255,0))
         p3.setDownsampling(auto=False, ds=4, mode='mean')
         p3.showGrid(x = True, y = True, alpha = 0.3)     
         p3.setXLink(p2)
@@ -182,13 +182,13 @@ def plot_signals(annotations, tiempo, signal1, s1, signal2 = [ ], s2 = ' ', sign
         win.nextRow()
         if(len(signal3) > 0):
             p4 = win.addPlot(title= s3)
-            p4.plot(tiempo, signal3, pen=(0,0,255))
+            p4.plot(tiempo3, signal3, pen=(0,0,255))
             p4.setDownsampling(auto=False, ds=4, mode='mean')
             p4.showGrid(x = True, y = True, alpha = 0.3)     
             p4.setXLink(p2)
             p4.setYLink(p2)
             p4.setMouseEnabled(x=True, y=False)
-            p4.enableAutoRange(x=False, y=False)
+            p4.enableAutoRange(x=False, y=True)
             lr.sigRegionChanged.connect(updatePlot)
             p4.sigXRangeChanged.connect(updateRegion)
             updatePlot()
@@ -212,13 +212,17 @@ def plot_signals(annotations, tiempo, signal1, s1, signal2 = [ ], s2 = ' ', sign
     pg.exec()
 
 
-# file = 4 #CHANGE
-# path_annot = "C:\\Users\\elena\\OneDrive\\Documentos\\Tesis\\Dataset\\HomePAP\\polysomnography\\annotations-events-profusion\\lab\\full" + f"\\homepap-lab-full-1600{str(file).zfill(3)}-profusion.xml" #CHANGE
-# path_edf = "C:\\Users\\elena\\OneDrive\\Documentos\\Tesis\\Dataset\\HomePAP\\polysomnography\\edfs\\lab\\full" + f"\\homepap-lab-full-1600{str(file).zfill(3)}.edf" #CHANGE
+file = 4 #CHANGE
+path_annot = "C:\\Users\\elena\\OneDrive\\Documentos\\Tesis\\Dataset\\HomePAP\\polysomnography\\annotations-events-profusion\\lab\\full" + f"\\homepap-lab-full-1600{str(file).zfill(3)}-profusion.xml" #CHANGE
+path_edf = "C:\\Users\\elena\\OneDrive\\Documentos\\Tesis\\Dataset\\HomePAP\\polysomnography\\edfs\\lab\\full" + f"\\homepap-lab-full-1600{str(file).zfill(3)}.edf" #CHANGE
 
-# all_signals = read_signals_EDF(path_edf)
-# annotations = get_annotations(path_annot)
+all_signals = read_signals_EDF(path_edf)
+annotations = get_annotations(path_annot)
 
-# bipolar_signal, time, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])
+#bipolar_signal, time, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])
+#plot_signals(annotations, time, all_signals['C3']['Signal'], 'C3', all_signals['O1']['Signal'], 'O1', bipolar_signal, 'C3-O1')
 
-# plot_signals(annotations, time, all_signals['C3']['Signal'], 'C3', all_signals['O1']['Signal'], 'O1', bipolar_signal, 'C3-O1')
+plot_signals(annotations, all_signals['SaO2']['Time'], all_signals['SaO2']['Signal'], 'SaO2')
+# plt.figure()
+# plt.plot(all_signals['SaO2']['Time'], all_signals['SaO2']['Signal'])
+# plt.show()
