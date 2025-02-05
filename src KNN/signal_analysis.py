@@ -3,19 +3,16 @@ import xml.etree.ElementTree as ET
 import numpy as np
 from collections import Counter
 import matplotlib.pyplot as plt
-from scipy.signal import welch
 from scipy.signal import butter, filtfilt
 import seaborn as sns
 import pandas as pd
 import random
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, ConfusionMatrixDisplay
 
-
-def main():
-    file = 43
-    models_path = '../models'
+def main_single_file():
+    file = 4
 
     path_annot = "C:/Users/elena/OneDrive/Documentos/Tesis/Dataset/HomePAP/polysomnography/annotations-events-profusion/lab/full"
     path_edf = "C:/Users/elena/OneDrive/Documentos/Tesis/Dataset/HomePAP/polysomnography/edfs/lab/full"
@@ -25,19 +22,20 @@ def main():
 
     bipolar_signal1, time1, sampling1 = get_bipolar_signal(all_signals['C3'], all_signals['M2'])
     bipolar_signal2, time2, sampling2 = get_bipolar_signal(all_signals['C4'], all_signals['M1'])
-
+    """AVERAGING IN TIME DOMAIN"""
     avg_signal = (bipolar_signal1 + bipolar_signal2) / 2
 
-    # plt.figure(figsize=(12, 6))
-    # plt.plot(time2, bipolar_signal2, label="Bipolar C4-A1", alpha=0.7)
-    # plt.plot(time1, bipolar_signal1, label="Bipolar C3-A2", alpha=0.7)
-    # plt.plot(time1, avg_signal1, label="Señal Promedio", linestyle="dashed", linewidth=2, color="black")
-    # plt.xlabel("Tiempo (s)")
-    # plt.ylabel("Amplitud")
-    # plt.title("Señales Bipolares y Promedio")
-    # plt.legend()
-    # plt.grid()
-    # plt.show()
+    """PLOT C3-M2, C4-M1 AND AVERAGE"""
+    plt.figure(figsize=(12, 6))
+    plt.plot(time2, bipolar_signal2, label="Bipolar C4-A1", alpha=0.7)
+    plt.plot(time1, bipolar_signal1, label="Bipolar C3-A2", alpha=0.7)
+    plt.plot(time1, avg_signal, label="Señal Promedio", linestyle="dashed", linewidth=2, color="black")
+    plt.xlabel("Tiempo (s)")
+    plt.ylabel("Amplitud")
+    plt.title("Señales Bipolares y Promedio")
+    plt.legend()
+    plt.grid()
+    plt.show()
 
     segments_EEG = get_signal_segments(avg_signal, time1, sampling1, annotations, period_length=30, overlap=10, perc_apnea=0.3, t_descarte = 5*60)
     label_counts = Counter(segment['Label'] for segment in segments_EEG)
@@ -50,6 +48,7 @@ def main():
     print(f"Cantidad de segmentos con Label = 0: {label_counts.get(0, 0)}")
     print(f"Cantidad de segmentos con Label = 1: {label_counts.get(1, 0)}")
     
+    """PRE-PROCESSING: remove dc offset, amplitude normalisation"""
     segments_EEG = segment_preprocessing(segments_EEG, plot = False)
     
     bands = {
@@ -59,29 +58,39 @@ def main():
         "sigma": (12, 16),
         "beta": (16, 40)
     }
+    """ENERGIES COMPUTATION"""
     segments_EEG = compute_band_energy(segments_EEG, bands)
     segments_EEG = compute_energy_ratios(segments_EEG, bands)
+    #segments_EEG = compute_energy_ratios(segments_EEG, bands, norm = True)
 
+    """energy is mainly shifted from lower- to higher-frequency bands"""
     selected_ratios = ['Ratio_delta_theta', 'Ratio_delta_alpha', 'Ratio_delta_sigma', 'Ratio_delta_beta', 'Ratio_theta_alpha']
-    #plot_energy_ratios_boxplot(segments_EEG, selected_ratios)
+    #selected_ratios = ['Ratio_delta_theta', 'Ratio_delta_alpha', 'Ratio_delta_sigma', 'Ratio_delta_beta']
+    
+    plot_energy_ratios_boxplot(segments_EEG, selected_ratios)
+    #plot_energy_ratios_boxplot(segments_EEG)
+
+    plot_energy_ratio_variation(segments_EEG, 'Ratio_delta_beta')
+    #plot_energy_ratio_variation(segments_EEG, 'Ratio_delta_sigma')
+
+    detect_and_plot_outliers(segments_EEG, 'Ratio_delta_theta')
 
     features = []
     labels = []
 
     for segment in segments_EEG:
         #ratio_features = [segment[key] for key in segment if key.startswith('Ratio')]
-        ratio_features = [segment[key] for key in selected_ratios[:-1]]
+        ratio_features = [segment[key] for key in selected_ratios]
         features.append(ratio_features)
         labels.append(segment['Label'])
 
-    # Convertir a arrays de NumPy
     X = np.array(features)
     y = np.array(labels)
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-    # Probar con diferentes valores de k (n_neighbors)
-    k_values = [5]#[3, 5, 7, 9, 11, 13, 15]
+    #k_values = [3, 5, 7, 9, 11, 13, 15]
+    k_values = [5]
     for k in k_values:
         knn = KNeighborsClassifier(n_neighbors=k, metric='cosine')
         knn.fit(X_train, y_train)
@@ -95,7 +104,93 @@ def main():
         print(f'n_neighbors={k}, Cross-validated recall_macro={cross_val_score(knn, X, y, cv=5, scoring="recall_macro").mean()}')
         print(f'n_neighbors={k}, Cross-validated f1_macro={cross_val_score(knn, X, y, cv=5, scoring="f1_macro").mean()}')
 
+        plot_confusion_matrix(y_test, y_pred)
 
+    # metrics = ['cosine', 'euclidean', 'manhattan', 'cityblock']
+    # for metric in metrics:
+    #     knn = KNeighborsClassifier(n_neighbors=5, metric=metric)
+    #     knn.fit(X_train, y_train)
+    #     y_pred = knn.predict(X_test)
+    #     print(f'metric={metric}, Accuracy={accuracy_score(y_test, y_pred)}')
+    #     print(f'metric={metric}, Precisión={precision_score(y_test, y_pred)}')
+    #     print(f'metric={metric}, Recall={recall_score(y_test, y_pred)}')
+    #     print(f'metric={metric}, F1-score={f1_score(y_test, y_pred)}')
+    #     print(f'metric={metric}, Cross-validated accuracy={cross_val_score(knn, X, y, cv=5, scoring="accuracy").mean()}')
+    #     print(f'metric={metric}, Cross-validated precision_macro={cross_val_score(knn, X, y, cv=5, scoring="precision_macro").mean()}')
+    #     print(f'metric={metric}, Cross-validated recall_macro={cross_val_score(knn, X, y, cv=5, scoring="recall_macro").mean()}')
+    #     print(f'metric={metric}, Cross-validated f1_macro={cross_val_score(knn, X, y, cv=5, scoring="f1_macro").mean()}')
+
+def main_multiple_files():
+    files = [4, 43, 53, 55, 63, 72, 84, 95, 105, 113, 122, 151]
+    combined_segments = []
+    for file in files:
+        path_annot = "C:/Users/elena/OneDrive/Documentos/Tesis/Dataset/HomePAP/polysomnography/annotations-events-profusion/lab/full"
+        path_edf = "C:/Users/elena/OneDrive/Documentos/Tesis/Dataset/HomePAP/polysomnography/edfs/lab/full"
+
+        all_signals = read_signals_EDF(path_edf + f"\\homepap-lab-full-1600{str(file).zfill(3)}.edf")
+        annotations = get_annotations(path_annot + f"\\homepap-lab-full-1600{str(file).zfill(3)}-profusion.xml")
+
+        bipolar_signal1, time1, sampling1 = get_bipolar_signal(all_signals['C3'], all_signals['M2'])
+        bipolar_signal2, time2, sampling2 = get_bipolar_signal(all_signals['C4'], all_signals['M1'])
+        """AVERAGING IN TIME DOMAIN"""
+        avg_signal = (bipolar_signal1 + bipolar_signal2) / 2
+
+        segments_EEG = get_signal_segments(avg_signal, time1, sampling1, annotations, period_length=30, overlap=10, perc_apnea=0.3, t_descarte = 5*60)
+        segments_EEG = undersample_segments(segments_EEG)
+        
+        """PRE-PROCESSING: remove dc offset, amplitude normalisation"""
+        segments_EEG = segment_preprocessing(segments_EEG, plot = False)
+        combined_segments += segments_EEG
+    
+    """ENERGIES COMPUTATION"""
+    bands = {
+            "delta": (0.25, 4),
+            "theta": (4, 8),
+            "alpha": (8, 12),
+            "sigma": (12, 16),
+            "beta": (16, 40)
+        }
+    
+    label_counts = Counter(segment['Label'] for segment in combined_segments)
+    print(f"Cantidad de segmentos con Label = 0: {label_counts.get(0, 0)}")
+    print(f"Cantidad de segmentos con Label = 1: {label_counts.get(1, 0)}")
+
+    combined_segments = compute_band_energy(combined_segments, bands)
+    combined_segments = compute_energy_ratios(combined_segments, bands)
+    
+    """energy is mainly shifted from lower- to higher-frequency bands"""
+    selected_ratios = ['Ratio_delta_theta', 'Ratio_delta_alpha', 'Ratio_delta_sigma', 'Ratio_delta_beta', 'Ratio_theta_alpha']
+    
+    plot_energy_ratios_boxplot(combined_segments, selected_ratios)
+    plot_energy_ratio_variation(combined_segments, 'Ratio_delta_beta')
+
+    features = []
+    labels = []
+
+    for segment in combined_segments:
+        ratio_features = [segment[key] for key in selected_ratios]
+        features.append(ratio_features)
+        labels.append(segment['Label'])
+
+    X = np.array(features)
+    y = np.array(labels)
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    k_values = [5]
+    for k in k_values:
+        knn = KNeighborsClassifier(n_neighbors=k, metric='cosine')
+        knn.fit(X_train, y_train)
+        y_pred = knn.predict(X_test)
+        print(f'n_neighbors={k}, Accuracy={accuracy_score(y_test, y_pred)}')
+        print(f'n_neighbors={k}, Precisión={precision_score(y_test, y_pred)}')
+        print(f'n_neighbors={k}, Recall={recall_score(y_test, y_pred)}')
+        print(f'n_neighbors={k}, F1-score={f1_score(y_test, y_pred)}')
+        print(f'n_neighbors={k}, Cross-validated accuracy={cross_val_score(knn, X, y, cv=5, scoring="accuracy").mean()}')
+        print(f'n_neighbors={k}, Cross-validated precision_macro={cross_val_score(knn, X, y, cv=5, scoring="precision_macro").mean()}')
+        print(f'n_neighbors={k}, Cross-validated recall_macro={cross_val_score(knn, X, y, cv=5, scoring="recall_macro").mean()}')
+        print(f'n_neighbors={k}, Cross-validated f1_macro={cross_val_score(knn, X, y, cv=5, scoring="f1_macro").mean()}')
+
+        plot_confusion_matrix(y_test, y_pred)
 
 
 def read_signals_EDF(path:str):
@@ -284,11 +379,15 @@ def undersample_segments(segments_EEG, seed=42):
     return balanced_segments
 
 def segment_preprocessing(segments_EEG, plot = True):
+    
     for segment in segments_EEG[:20]:
+        """REMOVING DC OFFSET: subtracting the mean value of that frame from each sample value"""
         segmento_vmedio = segment['Signal'] - np.mean(segment['Signal'])
-
+        """AMPLITUDE NORMALISATION: with reference to the maximum sample value of that frame"""
         segmento_norm = segmento_vmedio / np.max(np.abs(segmento_vmedio))
+        
         segment['Signal'] = segmento_norm
+
         if(plot):
             plt.figure(figsize=(12, 6))
             tiempo = np.arange(0, 30, 1/segment['SamplingRate'])
@@ -301,6 +400,7 @@ def segment_preprocessing(segments_EEG, plot = True):
             plt.legend()
             plt.grid()
             plt.show()
+
     return segments_EEG
 
 def bandpass_filter(signal, fs, f_min, f_max, order=4):
@@ -309,6 +409,7 @@ def bandpass_filter(signal, fs, f_min, f_max, order=4):
     return filtfilt(b, a, signal)
 
 def compute_band_energy(segments_EEG, bands):
+    
     processed_segments = []
 
     for segment in segments_EEG:
@@ -317,8 +418,10 @@ def compute_band_energy(segments_EEG, bands):
 
         band_energies = {}
         for band_name, (f_min, f_max) in bands.items():
+            """BAND LIMITED SIGNAL EXTRACTION"""
             filtered_signal = bandpass_filter(signal, fs, f_min, f_max)
-            energy = np.sum(filtered_signal ** 2) #EN EL DOMINIO DEL TIEMPO
+            """ENERGY IN TIME DOMAIN: xp[n]^2"""
+            energy = np.sum(filtered_signal[100:-100] ** 2)
             band_energies[f'Energy_{band_name}'] = energy
 
         processed_segment = {**segment, **band_energies}
@@ -326,28 +429,89 @@ def compute_band_energy(segments_EEG, bands):
 
     return processed_segments
 
-def compute_energy_ratios(segments_EEG, bands):
+def compute_energy_ratios(segments_EEG, bands, norm = False):
+    
     band_names = list(bands.keys())
     processed_segments = []
+
+    all_ratios = {f'Ratio_{band_p}_{band_q}': [] 
+                  for i in range(len(band_names)) 
+                  for j in range(i + 1, len(band_names)) 
+                  for band_p, band_q in [(band_names[i], band_names[j]), (band_names[j], band_names[i])]} 
 
     for segment in segments_EEG:
         energy_ratios = {}
 
         for i in range(len(band_names)):
             for j in range(i + 1, len(band_names)):
+
                 band_p, band_q = band_names[i], band_names[j]
+                
                 Ep = segment.get(f'Energy_{band_p}', 1e-10)
                 Eq = segment.get(f'Energy_{band_q}', 1e-10)
 
-                energy_ratios[f'Ratio_{band_p}_{band_q}'] = Ep / Eq
-                energy_ratios[f'Ratio_{band_q}_{band_p}'] = Eq / Ep
+                ratio_pq = Ep / Eq
+                ratio_qp = Eq / Ep
+
+                energy_ratios[f'Ratio_{band_p}_{band_q}'] = ratio_pq
+                energy_ratios[f'Ratio_{band_q}_{band_p}'] = ratio_qp
+
+                all_ratios[f'Ratio_{band_p}_{band_q}'].append(ratio_pq)
+                all_ratios[f'Ratio_{band_q}_{band_p}'].append(ratio_qp)
 
         processed_segment = {**segment, **energy_ratios}
         processed_segments.append(processed_segment)
 
+    if(norm):
+        max_values = {key: max(values) if len(values) > 0 else 1 for key, values in all_ratios.items()}
+
+        for segment in processed_segments:
+            for key in max_values:
+                if key in segment:
+                    segment[key] /= max_values[key]
+
     return processed_segments
 
-def plot_energy_ratios_boxplot(segments_EEG, selected_ratios):
+def detect_and_plot_outliers(segments_EEG, ratio_name, threshold_percentile=2):
+    
+    ratio_values = [segment[ratio_name] for segment in segments_EEG if ratio_name in segment]
+    
+    if not ratio_values:
+        print(f"No se encontraron valores para {ratio_name}.")
+        return
+    
+    lower_threshold = np.percentile(ratio_values, threshold_percentile)
+    upper_threshold = np.percentile(ratio_values, 100 - threshold_percentile)
+
+    print(f"Thresholds para {ratio_name}: Inferior={lower_threshold:.4f}, Superior={upper_threshold:.4f}")
+
+    outlier_segments = [segment for segment in segments_EEG if segment[ratio_name] < lower_threshold or segment[ratio_name] > upper_threshold]
+
+    for idx, segment in enumerate(outlier_segments):
+        signal = segment['Signal']
+        time = np.linspace(0, len(signal) / segment['SamplingRate'], len(signal))
+
+        bands = ratio_name.replace("Ratio_", "").split("_")
+        energy_p = segment.get(f'Energy_{bands[0]}', 'N/A')
+        energy_q = segment.get(f'Energy_{bands[1]}', 'N/A')
+        ratio_value = segment.get(ratio_name, 'N/A')
+
+        print(f"\nOutlier {idx + 1}: {ratio_name} = {ratio_value:.4f}")
+        print(f"Energía {bands[0]}: {energy_p:.4f}, Energía {bands[1]}: {energy_q:.4f}")
+
+        plt.figure(figsize=(10, 4))
+        plt.plot(time, signal, label="EEG Signal")
+        plt.axhline(y=0, color='r', linestyle='--', label="Baseline")
+        plt.title(f"Segmento Outlier {idx + 1} - {ratio_name}: {ratio_value:.4f}")
+        plt.xlabel("Tiempo (s)")
+        plt.ylabel("Amplitud")
+        plt.legend()
+        plt.show()
+
+def plot_energy_ratios_boxplot(segments_EEG, selected_ratios = []):
+
+    if selected_ratios == []:
+        selected_ratios += [key for key in segments_EEG[0] if key.startswith('Ratio')]
     df = pd.DataFrame(segments_EEG)
     df_melted = df.melt(id_vars=['Label'], value_vars=selected_ratios, var_name='Energy Ratio', value_name='Value')
 
@@ -362,10 +526,38 @@ def plot_energy_ratios_boxplot(segments_EEG, selected_ratios):
 
     plt.xticks(rotation=15)
     plt.grid(which='both', axis='y', linestyle='--', alpha=0.7)
-    # plt.grid(which='both', axis='x', linestyle='--', alpha=0.7)
     plt.show()
 
+def plot_energy_ratio_variation(segments_EEG, energy_ratio = 'Ratio_delta_beta'):
 
+    df = pd.DataFrame(segments_EEG)
+    segment_numbers = range(len(df))
+    df_label_0 = df[df['Label'] == 0]
+    df_label_1 = df[df['Label'] == 1]
 
+    plt.figure(figsize=(12, 6))
+    plt.scatter(df_label_0.index, df_label_0[energy_ratio], marker='*', edgecolors='blue', facecolors='none', label='Label 0')
+    plt.scatter(df_label_1.index, df_label_1[energy_ratio], marker='o', edgecolors='red', facecolors='none', label='Label 1')
 
-main()
+    plt.xlabel('Segment Number')
+    plt.ylabel(f'{energy_ratio} Value')
+    plt.title(f'Variation of {energy_ratio} by Segment')
+    plt.legend()
+
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.show()
+
+def plot_confusion_matrix(y_test, y_pred):
+    cm = confusion_matrix(y_test, y_pred)
+    fig, ax = plt.subplots(figsize=(13, 6))
+    cm_display = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['without apnea', 'with apnea'])
+    cm_display.plot(cmap='Blues', ax=ax)
+    for text in ax.texts:
+        text.set_visible(False)
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            text = ax.text(j, i, f'{cm[i, j]}', ha='center', va='center', color='black')
+    ax.set_title("Confusion Matrix")
+    plt.show()
+
+main_single_file()
