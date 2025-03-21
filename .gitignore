@@ -10,3 +10,4 @@
 *.png
 *.txt
 /src CNN/__pycache__
+*.pkl

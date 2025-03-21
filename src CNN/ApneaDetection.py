@@ -3,14 +3,18 @@ from DataFormatting import ApneaDataset
 from Models import Model, init_weights
 from Training import Trainer
 from Testing import Tester
+import os
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-files = [4, 43, 53, 55, 63, 72, 84, 95, 105, 113, 122, 151]
 models_path = '../models'
 
-path_annot = "C:/Users/elena/OneDrive/Documentos/Tesis/Dataset/HomePAP/polysomnography/annotations-events-profusion/lab/full"  #CHANGE
-path_edf = "C:/Users/elena/OneDrive/Documentos/Tesis/Dataset/HomePAP/polysomnography/edfs/lab/full" #CHANGE
-ApneaDataset.create_datasets_EEG(files, path_edf, path_annot, overlap = 10, perc_apnea = 0.3, filtering = True, filter = "FIR_Notch")
+path_annot = "C:/Users/elena/OneDrive/Documentos/TFG/Dataset/HomePAP/polysomnography/annotations-events-profusion/lab/full"  #CHANGE
+path_edf = "C:/Users/elena/OneDrive/Documentos/TFG/Dataset/HomePAP/polysomnography/edfs/lab/full" #CHANGE
+
+# Get all files in the specified directories
+files = [int(''.join(filter(str.isdigit, f))) for f in os.listdir(path_edf) if f.endswith('.edf')]
+
+ApneaDataset.create_datasets(files, path_edf, path_annot, overlap = 10, perc_apnea = 0.3, filtering = True, filter = "FIR_Notch")
 
 
 metrics_acum_total = {'Accuracy': [], 'Precision': [], 'Sensitivity': [], 'Specificity': [], 'F1': [], 'MCC': []}
@@ -23,7 +27,7 @@ best_metrics_std_total = {'Accuracy': [], 'Precision': [], 'Sensitivity': [], 'S
 best_cm_std_total = []
 
 txt_file = ""
-name0 = f'model_DosSenales'
+name0 = f'model_allfiles'
 if not os.path.exists(models_path + '/' + name0):
     os.makedirs(models_path + '/' + name0)
         
@@ -39,9 +43,9 @@ for fold in range(0,9):
     traintestval = []
 
     for file in files: 
-        txt_file += f"homepap-lab-full-1600{str(file).zfill(3)}\n"
+        txt_file += f"homepap-lab-full-{str(file)}\n"
         try:
-            ds = ApneaDataset.load_dataset(f"../data/ApneaDetection_HomePAPSignals/datasets/dataset_file_1600{file:03d}_EEG.pth")
+            ds = ApneaDataset.load_dataset(f"../data/ApneaDetection_HomePAPSignals/datasets/dataset_file_{file}.pth")
         except:
             continue
         if(ds._ApneaDataset__sr != 200):
@@ -206,6 +210,7 @@ for fold in range(0,9):
                 f"F1: ({best_metrics_mean['F1']:.3f}±{best_metrics_std['F1']:.3f})\n"
                 f"MCC: ({best_metrics_mean['MCC']:.3f}±{best_metrics_std['MCC']:.3f})")
     plt.gcf().text(0.1, 0.1, best_metric_text, ha='center', fontsize=10, bbox=dict(facecolor='white', alpha=0.8, edgecolor='gray'))
+
 
     if os.path.exists(models_path):
         if not os.path.exists(models_path + '/' + name0 + '/' + name1): 
