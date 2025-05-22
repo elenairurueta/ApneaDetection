@@ -113,12 +113,12 @@ def plot_all_segments(segments):
 
 def plot_signals(annotations, tiempo1, signal1, s1, tiempo2 = [], signal2 = [ ], s2 = ' ', tiempo3 = [], signal3 = [ ], s3 = ' '):
 
-    # pg.setConfigOption('background', 'w')  # Fondo blanco
-    # pg.setConfigOption('foreground', 'k')  # Texto y líneas negras
+    pg.setConfigOption('background', 'w')  # Fondo blanco
+    pg.setConfigOption('foreground', 'w')  # Texto y líneas negras
 
     colors = [
-            [QColor(255, 255, 0, 100),  # Amarillo transparente
-            QColor(255, 255, 0, 255)], # Amarillo 
+            [QColor(255,217,102, 100),  # Amarillo transparente
+            QColor(255,217,102, 255)], # Amarillo 
             [QColor(128, 0, 128, 100),  # Violeta transparente
             QColor(128, 0, 128, 255)], # Violeta
             [QColor(255, 165, 0, 100),  # Naranja transparente
@@ -213,16 +213,16 @@ def plot_signals(annotations, tiempo1, signal1, s1, tiempo2 = [], signal2 = [ ],
 
 
 file = 4 #CHANGE
-path_annot = "C:\\Users\\elena\\OneDrive\\Documentos\\Tesis\\Dataset\\HomePAP\\polysomnography\\annotations-events-profusion\\lab\\full" + f"\\homepap-lab-full-1600{str(file).zfill(3)}-profusion.xml" #CHANGE
-path_edf = "C:\\Users\\elena\\OneDrive\\Documentos\\Tesis\\Dataset\\HomePAP\\polysomnography\\edfs\\lab\\full" + f"\\homepap-lab-full-1600{str(file).zfill(3)}.edf" #CHANGE
+path_annot = "C:\\Users\\elena\\OneDrive\\Documentos\\TFG\\Dataset\\HomePAP\\polysomnography\\annotations-events-profusion\\lab\\full" + f"\\homepap-lab-full-1600{str(file).zfill(3)}-profusion.xml" #CHANGE
+path_edf = "C:\\Users\\elena\\OneDrive\\Documentos\\TFG\\Dataset\\HomePAP\\polysomnography\\edfs\\lab\\full" + f"\\homepap-lab-full-1600{str(file).zfill(3)}.edf" #CHANGE
 
 all_signals = read_signals_EDF(path_edf)
 annotations = get_annotations(path_annot)
 
-#bipolar_signal, time, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])
-#plot_signals(annotations, time, all_signals['C3']['Signal'], 'C3', all_signals['O1']['Signal'], 'O1', bipolar_signal, 'C3-O1')
+bipolar_signal, time, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])
+#plot_signals(annotations, all_signals['C3']['Signal'], 'C3', all_signals['O1']['Signal'], 'O1', bipolar_signal, 'C3-O1')
 
-plot_signals(annotations, all_signals['SaO2']['Time'], all_signals['SaO2']['Signal'], 'SaO2')
+plot_signals(annotations, time, bipolar_signal, 'C3-O1')
 # plt.figure()
-# plt.plot(all_signals['SaO2']['Time'], all_signals['SaO2']['Signal'])
+# plt.plot(time, bipolar_signal)
 # plt.show()

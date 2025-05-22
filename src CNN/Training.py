@@ -544,4 +544,3 @@ class Trainer_SaO2:
             f = open(PATH, "w")
             f.write(self.text)
             f.close()
-

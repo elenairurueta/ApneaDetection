@@ -3,7 +3,7 @@ from Models import Model, DualInputModel
 
 class Tester:
     """Class to test the model with testset"""
-    def __init__(self, model:Model, testset:Subset, batch_size:int=32, device = "cpu", best_final = ""):
+    def __init__(self, model:Model, testset, batch_size:int=32, device = "cpu", best_final = ""):
         """
         Initializes the Tester object.
 
@@ -546,7 +546,8 @@ class Tester_SaO2:
             "Sensitivity": recall_score(self.__all_labels__, self.__all_preds__),
             "Specificity": recall_score(self.__all_labels__, self.__all_preds__, pos_label=0),
             "F1": f1_score(self.__all_labels__, self.__all_preds__),
-            "MCC": matthews_corrcoef(self.__all_labels__, self.__all_preds__)
+            "MCC": matthews_corrcoef(self.__all_labels__, self.__all_preds__),
+            "AUC": roc_auc_score(self.__all_labels__, self.__all_preds__)
         }
 
         self.__metrics__ = {k: f"{v:.2f}" for k, v in metrics.items()}

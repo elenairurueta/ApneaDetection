@@ -158,6 +158,10 @@ class ApneaDataset(Dataset):
                     new_segment = resample(segment.numpy(), num_puntos)
                     new_signal.append(new_segment)
                 new_X.append(new_signal)
+        else:
+            for segment in self.__X:
+                new_segment = resample(segment, num_puntos)
+                new_X.append(new_segment)
         new_X_np = np.array(new_X)
         self.__X = torch.tensor(new_X_np)
         for idx, subset in enumerate(self.subsets):
@@ -299,7 +303,10 @@ class ApneaDataset(Dataset):
         return X,y
 
     @staticmethod
-    def create_datasets(files, path_edf, path_annot, overlap, perc_apnea, filtering = False, filter = "", split_dataset = True):
+    def create_datasets(files, path_edf, path_annot, overlap, perc_apnea, signal,
+                        filtering = False, 
+                        filter = "", 
+                        split_dataset = True):
         """
         Creates datasets from EDF files and annotations by processing each file, generating segments, and saving them.
 
@@ -313,53 +320,34 @@ class ApneaDataset(Dataset):
         for file in files:
             all_signals = read_signals_EDF(path_edf + f"\\homepap-lab-full-{str(file)}.edf")
             annotations = get_annotations(path_annot + f"\\homepap-lab-full-{str(file)}-profusion.xml")
-            bipolar_signal, time, sampling = get_bipolar_signal(all_signals['C3'], all_signals['O1'])  
-            # bipolar_signal, time, sampling = get_bipolar_signal(all_signals['C4'], all_signals['M1'])  
-            # bipolar_signal, time, sampling = all_signals['O1']['Signal'], all_signals['O1']['Time'], all_signals['O1']['SamplingRate']
-            # bipolar_signal, time, sampling = all_signals['M1']['Signal'], all_signals['M1']['Time'], all_signals['M1']['SamplingRate']
-            # bipolar_signal, time, sampling = get_bipolar_signal(all_signals['O1'], all_signals['F4'])  
-            # bipolar_signal, time, sampling = get_bipolar_signal(all_signals['M1'], all_signals['F4']) 
 
-            #bipolar_signal1, time, sampling = get_bipolar_signal(all_signals['M1'], all_signals['F4']) 
+            try:
+                bipolar_signal, time, sampling = get_bipolar_signal(all_signals[signal[0]], all_signals[signal[1]])  
 
-            if(filtering):
-                if(filter == "Butter"):
-                    bipolar_signal1 = filter_Butter(bipolar_signal, sampling, plot = False)
-                elif(filter == "FIR"):
-                    bipolar_signal1 = filter_FIR2(bipolar_signal, sampling, plot = False)
-                elif(filter == "Notch_FIR"):
-                    bipolar_signal1 = filter_Notch_FIR(bipolar_signal, sampling, plot = False)
-                    bipolar_signal1 = filter_FIR2(bipolar_signal1, sampling, plot = False)
-                elif(filter == "FIR_Notch"):
-                    bipolar_signal1 = filter_FIR2(bipolar_signal, sampling, plot = False)
-                    bipolar_signal1 = filter_Notch_FIR(bipolar_signal1, sampling, plot = False)
-                elif(filter == "Notch"):
-                    bipolar_signal1 = filter_Notch_FIR(bipolar_signal1, sampling, plot = False)
+                if(filtering):
+                    if(filter == "Butter"):
+                        bipolar_signal = filter_Butter(bipolar_signal, sampling, plot = False)
+                    elif(filter == "FIR"):
+                        bipolar_signal = filter_FIR2(bipolar_signal, sampling, plot = False)
+                    elif(filter == "Notch_FIR"):
+                        bipolar_signal = filter_Notch_FIR(bipolar_signal, sampling, plot = False)
+                        bipolar_signal = filter_FIR2(bipolar_signal, sampling, plot = False)
+                    elif(filter == "FIR_Notch"):
+                        bipolar_signal = filter_FIR2(bipolar_signal, sampling, plot = False)
+                        bipolar_signal = filter_Notch_FIR(bipolar_signal, sampling, plot = False)
+                    elif(filter == "Notch"):
+                        bipolar_signal = filter_Notch_FIR(bipolar_signal, sampling, plot = False)
 
-            # bipolar_signal2, time, sampling = get_bipolar_signal(all_signals['C3'], all_signals['M2']) 
+                segments = get_signal_segments(bipolar_signal, time, sampling, annotations, period_length=30, overlap=overlap, perc_apnea=perc_apnea, t_descarte = 5*60)
+                #segments = get_signal_segments_strict(bipolar_signal, time, sampling, annotations)
+                X,y = ApneaDataset.from_segments(segments)
+                dataset = ApneaDataset(X, y, sampling, file)
+                if split_dataset:
+                    dataset.split_dataset()
+                dataset.save_dataset(f".\data\ApneaDetection_HomePAPSignals\datasets\dataset_file_{file}_C4M1_nonstrict.pth")
 
-            # if(filtering):
-            #     if(filter == "Butter"):
-            #         bipolar_signal2 = filter_Butter(bipolar_signal2, sampling, plot = False)
-            #     elif(filter == "FIR"):
-            #         bipolar_signal2 = filter_FIR2(bipolar_signal2, sampling, plot = False)
-            #     elif(filter == "Notch_FIR"):
-            #         bipolar_signal2 = filter_Notch_FIR(bipolar_signal2, sampling, plot = False)
-            #         bipolar_signal2 = filter_FIR2(bipolar_signal2, sampling, plot = False)
-            #     elif(filter == "FIR_Notch"):
-            #         bipolar_signal2 = filter_FIR2(bipolar_signal2, sampling, plot = False)
-            #         bipolar_signal2 = filter_Notch_FIR(bipolar_signal2, sampling, plot = False)
-            #     elif(filter == "Notch"):
-            #         bipolar_signal2 = filter_Notch_FIR(bipolar_signal2, sampling, plot = False)
-
-            segments = get_signal_segments(bipolar_signal1, time, sampling, annotations, period_length=30, overlap=overlap, perc_apnea=perc_apnea, t_descarte = 5*60)
-            #segments2 = get_signal_segments(bipolar_signal2, time, sampling, annotations, period_length=30, overlap=overlap, perc_apnea=perc_apnea, t_descarte = 5*60)
-
-            X,y = ApneaDataset.from_segments(segments) #, segments2)
-            dataset = ApneaDataset(X, y, sampling, file)
-            if split_dataset:
-                dataset.split_dataset()
-            dataset.save_dataset(f".\data\ApneaDetection_HomePAPSignals\datasets\dataset_file_{file}_C3O1.pth")
+            except:
+                continue
 
     def Zscore_normalization(self):
         """
@@ -662,7 +650,7 @@ class ApneaDataset_SaO2(Dataset):
             all_signals = read_signals_EDF(path_edf + f"\\homepap-lab-full-1600{str(file).zfill(3)}.edf")
             annotations = get_annotations(path_annot + f"\\homepap-lab-full-1600{str(file).zfill(3)}-profusion.xml")
 
-            signal_EEG, time_EEG, sampling_EEG = get_bipolar_signal(all_signals['C4'], all_signals['M1']) 
+            signal_EEG, time_EEG, sampling_EEG = get_bipolar_signal(all_signals['C3'], all_signals['O1']) 
 
             if(filtering):
                 if(filter == "Butter"):
@@ -691,7 +679,7 @@ class ApneaDataset_SaO2(Dataset):
             X_EEG, X_SaO2, y = ApneaDataset_SaO2.from_segments_SaO2(segments_EEG, segments_SaO2)
             dataset = ApneaDataset_SaO2(X_EEG, X_SaO2, y, sampling_EEG, sampling_SaO2, file)
             dataset.split_dataset()
-            dataset.save_dataset(f".\data\ApneaDetection_HomePAPSignals\datasets\dataset_file_1600{file:03d}_EEG_C4M1_SaO2.pth")
+            dataset.save_dataset(f".\data\ApneaDetection_HomePAPSignals\datasets\dataset_file_1600{file:03d}_EEG_C3O1_SaO2.pth")
 
 
     def Zscore_normalization(self):

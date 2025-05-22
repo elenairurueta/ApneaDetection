@@ -14,7 +14,7 @@ path_edf = "C:/Users/elena/OneDrive/Documentos/TFG/Dataset/HomePAP/polysomnograp
 # Get all files in the specified directories
 files = [int(''.join(filter(str.isdigit, f))) for f in os.listdir(path_edf) if f.endswith('.edf')]
 
-ApneaDataset.create_datasets(files, path_edf, path_annot, overlap = 10, perc_apnea = 0.3, filtering = True, filter = "FIR_Notch")
+#ApneaDataset.create_datasets(files, path_edf, path_annot, overlap = 10, perc_apnea = 0.3, signal=['C3', 'O1'], filtering = True, filter = "FIR_Notch")
 
 
 metrics_acum_total = {'Accuracy': [], 'Precision': [], 'Sensitivity': [], 'Specificity': [], 'F1': [], 'MCC': []}
@@ -45,7 +45,7 @@ for fold in range(0,9):
     for file in files: 
         txt_file += f"homepap-lab-full-{str(file)}\n"
         try:
-            ds = ApneaDataset.load_dataset(f"../data/ApneaDetection_HomePAPSignals/datasets/dataset_file_{file}.pth")
+            ds = ApneaDataset.load_dataset(f"./data/ApneaDetection_HomePAPSignals/datasets/dataset_file_{file}_overlap10_pa30.pth")
         except:
             continue
         if(ds._ApneaDataset__sr != 200):
